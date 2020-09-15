@@ -5,7 +5,11 @@ params.star_index = '/Users/westc/nextflow/dev/data/chr20/star_index'
 ch_star = Channel.fromPath(params.star_index)
 params.fai = '/Users/westc/nextflow/dev/data/chr20/chr20.fa.fai'
 ch_fai = Channel.fromPath(params.fai)
+params.bt2_index = '/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind'
+
+
 opts_cutadapt = params['cutadapt']
+opts_bowtie2 = params['bowtie2_align']
 opts_star = params['star_align_reads']
 opts_umi = params['umi_tools']
 opts_crosslinks = params['get_crosslinks']
@@ -112,7 +116,7 @@ process cutadapt {
 
 
 /*
- * STEP 3: Pre-map to rRNA (bowtie, skip for now)
+ * STEP 3: Pre-map to rRNA (bowtie2)
  */
 
 
