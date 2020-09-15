@@ -3,9 +3,12 @@
 //params.input = '/Users/westc/nextflow/dev/data/metadata-char-edit.csv'
 params.star_index = '/Users/westc/nextflow/dev/data/chr20/star_index'
 ch_star = Channel.fromPath(params.star_index)
+params.fai = '/Users/westc/nextflow/dev/data/chr20/chr20.fa.fai'
+ch_fai = Channel.fromPath(params.fai)
 opts_cutadapt = params['cutadapt']
 opts_star = params['star_align_reads']
 opts_umi = params['umi_tools']
+opts_crosslinks = params['get_crosslinks']
 
 //// Option params ////
 //params.opts.cutadapt = params['cutadapt']
@@ -238,7 +241,7 @@ process umitools_dedup {
         tuple val(meta), path(bam), path(bai) from ch_aligned
        
     output:
-        tuple val(meta), path("${prefix}.bam"), path("${prefix}.bam.bai"), emit: dedupBam
+        tuple val(meta), path("${prefix}.bam"), path("${prefix}.bam.bai") into ch_dup_removed//, emit: dedupBam
         path "*.log", emit: report
 
     script:
@@ -268,4 +271,40 @@ process umitools_dedup {
     """
 }
 
+
+// /*
+//  * STEP 6: Get Crosslinks
+//  */
+
+process getcrosslinks {
+    publishDir "${params.outdir}/${opts_crosslinks.publish_dir}",
+        mode: "copy", 
+        overwrite: true,
+        saveAs: { filename ->
+                      if (opts_crosslinks.publish_results == "none") null
+                      else filename }
+
+    container 'luslab/nf-modules-get_crosslinks:latest'
+
+    input:
+      //val(opts)
+      tuple val(meta), path(bam), path(bai) from ch_dup_removed
+      path(fai) from ch_fai
+
+    output:
+      tuple val(meta), path ("${prefix}.bed.gz"), emit: crosslinkBed
+
+    script:
+
+      prefix = opts_crosslinks.suffix ? "${meta.sample_id}${opts_crosslinks.suffix}" : "${meta.sample_id}"
+
+      //SHELL
+      """
+      bedtools bamtobed -i ${bam[0]} > dedupe.bed
+      bedtools shift -m 1 -p -1 -i dedupe.bed -g $fai > shifted.bed
+      bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "+"}' > pos.bed
+      bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "-"}' > neg.bed
+      cat pos.bed neg.bed | sort -k1,1 -k2,2n | pigz > ${prefix}.bed.gz
+      """
+}
 
