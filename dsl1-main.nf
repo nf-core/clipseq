@@ -138,7 +138,7 @@ process star_align_reads {
 
     output:
       tuple val(meta), path("*.sam"), optional: true, emit: sam_files
-      tuple val(meta), path("*.bam"), path("*.bai"), optional: true, emit: bam_files
+      tuple val(meta), path("*.bam"), path("*.bai") into ch_aligned //, optional: true, emit: bam_files
       tuple val(meta), path("*.SJ.out.tab"), optional: true, emit: sj_files
       tuple val(meta), path("*.junction"), optional: true, emit: ch_junctions
       tuple val(meta), path("*.ReadsPerGene.out.tab"),  optional: true, emit: reads_per_gene
@@ -216,154 +216,56 @@ process star_align_reads {
     """
 }
 
-// process star_align_reads {
-//     tag "${meta.sample_id}"
 
-//     publishDir "${params.outdir}/${opts.publish_dir}",
-//         mode: "copy", 
-//         overwrite: true,
-//         saveAs: { filename ->
-//                       if (opts.publish_results == "none") null
-//                       else filename }
-
-//     // container 'quay.io/biocontainers/star:2.7.5b--0'
-//     container 'luslab/luslab-nf-star:latest'
-
-//     input:
-//       // val opts
-//       tuple val(meta), path(reads) from ch_cut_fastq
-//       path star_index from ch_star
-
-//     output:
-//       tuple val(meta), path("*.sam"), optional: true, emit: sam_files
-//       tuple val(meta), path("*.bam"), path("*.bai"), optional: true, emit: bam_files //into ch_aligned
-//       tuple val(meta), path("*.SJ.out.tab"), optional: true, emit: sj_files
-//       tuple val(meta), path("*.junction"), optional: true, emit: ch_junctions
-//       tuple val(meta), path("*.ReadsPerGene.out.tab"),  optional: true, emit: reads_per_gene
-//       tuple val(meta), path("*.Log.final.out"), emit: final_log_files
-//       tuple val(meta), path("*.Log.out"), emit: out_log_files
-//       tuple val(meta), path("*.Log.progress.out"), emit: progress_log_files
-//       path "*.Log.final.out", emit: report
-
-//     script:
-
-//     // Add the main arguments
-//     args = "--runMode alignReads --runDirPerm All_RWX --genomeDir $star_index --readFilesIn $reads "
-
-//     // Check and add custom arguments
-//     if ( opts.args ) {
-//       if ( opts.args =~ /(--solo)/ ) {
-//         exit 1, "Error: This module does not support STARsolo (--solo* options). For processing of single-cell RNA-seq data with STAR please use a dedicated module. Exit."
-//       }
-//       if ( opts.args =~ /(--runMode)/ ) {
-//         exit 1, "Error: --runMode is automatically set to 'alignReads'. You do not need to provide it manually. Exit."
-//       }
-//       if ( opts.args =~ /(--parametersFiles)/ ) {
-//         exit 1, "Error: Parameter files (--parametersFiles option) are not supported in this module. Please provide all options not covered by input channels and module parameters via the params.modules['star_align_reads'].args parameter. Exit."
-//       }
-//       ext_args = opts.args
-//       args += ext_args.trim() + " "
-//     }
-
-//     prefix = opts.suffix ? "${meta.sample_id}${opts.suffix}" : "${meta.sample_id}"
-
-//     // Add the number of threads
-//     args += "--runThreadN $task.cpus "
-
-//     // Add output file name prefix
-//     args += "--outFileNamePrefix ${prefix}. "
-
-//     // Add compression parameters 
-//     test_file_name = "$reads"
-//     if ( "$test_file_name" =~ /(.gz$)/ ) {
-//       args += "--readFilesCommand gunzip -c "
-//     } 
-//     if ( "$test_file_name" =~ /(.bz2$)/ ) {
-//       args += "--readFilesCommand bunzip2 -c "
-//     }
-
-//     // Add optional input parameters
-//     if ( opts.sjdbGTFfile ) {
-//       args += "--sjdbGTFfile ${opts.sjdbGTFfile} "
-//     }
-//     if ( opts.sjdbFileChrStartEnd ) {
-//       args += "--sjdbFileChrStartEnd ${opts.sjdbFileChrStartEnd} "
-//     }
-//     if ( opts.varVCFfile ) {
-//       args += "--varVCFfile ${opts.varVCFfile} "
-//     }
-
-//     // Add memory constraints
-//     avail_mem = task.memory ? "--limitGenomeGenerateRAM ${task.memory.toBytes() - 100000000} " : ''
-//     avail_mem += task.memory ? "--limitBAMsortRAM ${task.memory.toBytes() - 100000000}" : ''
-//     args += avail_mem
-
-//     index_command = "samtools index -@ ${task.cpus} ${prefix}.Aligned.sortedByCoord.out.bam"
-
-//     // Construct command line
-//     map_command = "STAR $args && $index_command"
-
-//     // Log
-//     if (params.verbose) {
-//         println ("[MODULE] star_align_reads command: " + map_command)
-//     }
-
-//     // Run read mapping with STAR
-//     """
-//     ${map_command}
-//     """
-// }
 
 
 // /*
 //  * STEP 5: PCR Duplicate Removal
 //  */
 
-// def opts = params['umi_tools']
-//     opts.args = '--umi-separator="_"'
+process umitools_dedup {
+    publishDir "${params.outdir}/${opts_umi.publish_dir}",
+        mode: "copy", 
+        overwrite: true,
+        saveAs: { filename ->
+                      if (opts_umi.publish_results == "none") null
+                      else filename }
 
+    container 'luslab/nf-modules-umi_tools:latest'
 
-// process umitools_dedup {
-//     publishDir "${params.outdir}/${opts.publish_dir}",
-//         mode: "copy", 
-//         overwrite: true,
-//         saveAs: { filename ->
-//                       if (opts.publish_results == "none") null
-//                       else filename }
-
-//     container 'luslab/nf-modules-umi_tools:latest'
-
-//     input:
-//         //val(opts)
-//         tuple val(meta), path(bam), path(bai) from ch_aligned
+    input:
+        //val opts
+        tuple val(meta), path(bam), path(bai) from ch_aligned
        
-//     output:
-//         tuple val(meta), path("${prefix}.bam"), path("${prefix}.bam.bai"), emit: dedupBam
-//         path "*.log", emit: report
+    output:
+        tuple val(meta), path("${prefix}.bam"), path("${prefix}.bam.bai"), emit: dedupBam
+        path "*.log", emit: report
 
-//     script:
+    script:
 
-//     // Init
-//     prefix = opts.suffix ? "${meta.sample_id}${opts.suffix}" : "${meta.sample_id}"
+    // Init
+    prefix = opts_umi.suffix ? "${meta.sample_id}${opts_umi.suffix}" : "${meta.sample_id}"
 
-//     args = "--log=${prefix}.log "
+    args = "--log=${prefix}.log "
 
-//     if(opts.args && opts.args != '') {
-//         ext_args = opts.args
-//         args += ext_args.trim()
-//     }
+    if(opts_umi.args && opts_umi.args != '') {
+        ext_args = opts_umi.args
+        args += ext_args.trim()
+    }
 
-//     // Construct CL line
-//     dedup_command = "umi_tools dedup ${args} -I ${bam[0]} -S ${prefix}.bam --output-stats=${prefix}"
+    // Construct CL line
+    dedup_command = "umi_tools dedup ${args} -I ${bam[0]} -S ${prefix}.bam --output-stats=${prefix}"
 
-//     // Log
-//     if (params.verbose){
-//         println ("[MODULE] umi_tools/dedup command: " + dedup_command)
-//     }
+    // Log
+    if (params.verbose){
+        println ("[MODULE] umi_tools/dedup command: " + dedup_command)
+    }
 
-//     //SHELL
-//     """
-//     ${dedup_command}
-//     samtools index ${prefix}.bam
-//     """
-// }
+    //SHELL
+    """
+    ${dedup_command}
+    samtools index ${prefix}.bam
+    """
+}
+
+
