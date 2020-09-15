@@ -5,8 +5,13 @@ params.star_index = '/Users/westc/nextflow/dev/data/chr20/star_index'
 ch_star = Channel.fromPath(params.star_index)
 params.fai = '/Users/westc/nextflow/dev/data/chr20/chr20.fa.fai'
 ch_fai = Channel.fromPath(params.fai)
-params.bt2_index = '/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/*'
-ch_bt2_index = Channel.fromPath(params.bt2_index)
+params.bt2_index = ["/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.1.bt2",
+"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.2.bt2",
+"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.3.bt2",
+"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.4.bt2",
+"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.1.bt2",
+"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.2.bt2"]
+ch_bt2_index = Channel.value(params.bt2_index)
 
 
 opts_cutadapt = params['cutadapt']
