@@ -119,6 +119,78 @@ process cutadapt {
  * STEP 3: Pre-map to rRNA (bowtie2)
  */
 
+process bowtie2_align {
+    publishDir "${params.outdir}/${opts.publish_dir}",
+        mode: "copy", 
+        overwrite: true,
+        saveAs: { filename ->
+                      if (opts.publish_results == "none") null
+                      else filename }
+    
+    container 'luslab/nf-modules-bowtie2:latest'
+
+    input:
+        val opts
+        tuple val(meta), path(reads)
+        path index
+
+    output:
+        tuple val(meta), path("*.sam"), optional: true, emit: sam
+        tuple val(meta), path("*.bam"), path("*.bai"), optional: true, emit: bam
+        tuple val(meta), path("${prefix}${opts.unmapped_suffix}.1.fastq.gz"), path("${prefix}${opts.unmapped_suffix}.2.fastq.gz"), optional: true, emit: unmappedFastqPaired
+        tuple val(meta), path("${prefix}${opts.unmapped_suffix}.fastq.gz"), optional: true, emit: unmappedFastqSingle
+        path "*stats.txt", emit: report
+
+    script:
+        args = "-p ${task.cpus} --no-unal"
+        files = ''
+
+        if(opts.args && opts.args != '') {
+            ext_args = opts.args
+            args += ' ' + ext_args.trim()
+        }
+
+        readList = reads.collect{it.toString()}
+        if(readList.size > 1){
+            files = '-1 ' + reads[0] + ' -2 ' + reads[1]
+        }
+        else {
+            files = '-U ' + reads[0]
+        }
+
+        prefix = opts.suffix ? "${meta.sample_id}${opts.suffix}" : "${meta.sample_id}"
+
+        // If clause for creating unmapped filename if requested
+        if(opts.unmapped_suffix && opts.unmapped_suffix != '') {
+            if(readList.size > 1){
+                args += ' --un-conc-gz ' + "${prefix}${opts.unmapped_suffix}" + '.fastq.gz'
+            }
+            else {
+                args += ' --un-gz ' + "${prefix}${opts.unmapped_suffix}" + '.fastq.gz'
+            }
+        }
+
+        // command = "bowtie2 -x ${index[0].simpleName} $args $files 2>bowtie2_stats.txt > ${prefix}.sam"
+
+        sort_command = "samtools sort -@ ${task.cpus} /dev/stdin > ${prefix}.bam"
+        index_command = "samtools index -@ ${task.cpus} ${prefix}.bam"
+
+        if ( opts.output_sam && opts.output_sam == true ) {
+            command = "bowtie2 -x ${index[0].simpleName} $args $files 2>bowtie2_stats.txt > ${prefix}.sam"
+        }
+        else {
+            command = "bowtie2 -x ${index[0].simpleName} $args $files 2>bowtie2_stats.txt | $sort_command && $index_command"
+        }
+
+        if (params.verbose){
+            println ("[MODULE] bowtie2 command: " + command)
+        }
+
+        """
+        $command
+        cat bowtie2_stats.txt
+        """
+}
 
 
 /*
