@@ -5,7 +5,8 @@ params.star_index = '/Users/westc/nextflow/dev/data/chr20/star_index'
 ch_star = Channel.fromPath(params.star_index)
 params.fai = '/Users/westc/nextflow/dev/data/chr20/chr20.fa.fai'
 ch_fai = Channel.fromPath(params.fai)
-params.bt2_index = '/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind'
+params.bt2_index = '/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/*'
+ch_bt2_index = Channel.fromPath(params.bt2_index)
 
 
 opts_cutadapt = params['cutadapt']
@@ -13,6 +14,7 @@ opts_bowtie2 = params['bowtie2_align']
 opts_star = params['star_align_reads']
 opts_umi = params['umi_tools']
 opts_crosslinks = params['get_crosslinks']
+opts_bt2 = params['bowtie2_align']
 
 //// Option params ////
 //params.opts.cutadapt = params['cutadapt']
@@ -120,33 +122,33 @@ process cutadapt {
  */
 
 process bowtie2_align {
-    publishDir "${params.outdir}/${opts.publish_dir}",
+    publishDir "${params.outdir}/${opts_bt2.publish_dir}",
         mode: "copy", 
         overwrite: true,
         saveAs: { filename ->
-                      if (opts.publish_results == "none") null
+                      if (opts_bt2.publish_results == "none") null
                       else filename }
     
     container 'luslab/nf-modules-bowtie2:latest'
 
     input:
-        val opts
-        tuple val(meta), path(reads)
-        path index
+        //val opts
+        tuple val(meta), path(reads) from ch_cut_fastq
+        path index from ch_bt2_index
 
     output:
         tuple val(meta), path("*.sam"), optional: true, emit: sam
         tuple val(meta), path("*.bam"), path("*.bai"), optional: true, emit: bam
-        tuple val(meta), path("${prefix}${opts.unmapped_suffix}.1.fastq.gz"), path("${prefix}${opts.unmapped_suffix}.2.fastq.gz"), optional: true, emit: unmappedFastqPaired
-        tuple val(meta), path("${prefix}${opts.unmapped_suffix}.fastq.gz"), optional: true, emit: unmappedFastqSingle
+        tuple val(meta), path("${prefix}${opts_bt2.unmapped_suffix}.1.fastq.gz"), path("${prefix}${opts_bt2.unmapped_suffix}.2.fastq.gz"), optional: true, emit: unmappedFastqPaired
+        tuple val(meta), path("${prefix}${opts_bt2.unmapped_suffix}.fastq.gz") into ch_from_bt2 //, optional: true, emit: unmappedFastqSingle
         path "*stats.txt", emit: report
 
     script:
         args = "-p ${task.cpus} --no-unal"
         files = ''
 
-        if(opts.args && opts.args != '') {
-            ext_args = opts.args
+        if(opts_bt2.args && opts_bt2.args != '') {
+            ext_args = opts_bt2.args
             args += ' ' + ext_args.trim()
         }
 
@@ -158,15 +160,15 @@ process bowtie2_align {
             files = '-U ' + reads[0]
         }
 
-        prefix = opts.suffix ? "${meta.sample_id}${opts.suffix}" : "${meta.sample_id}"
+        prefix = opts_bt2.suffix ? "${meta.sample_id}${opts_bt2.suffix}" : "${meta.sample_id}"
 
         // If clause for creating unmapped filename if requested
-        if(opts.unmapped_suffix && opts.unmapped_suffix != '') {
+        if(opts_bt2.unmapped_suffix && opts_bt2.unmapped_suffix != '') {
             if(readList.size > 1){
-                args += ' --un-conc-gz ' + "${prefix}${opts.unmapped_suffix}" + '.fastq.gz'
+                args += ' --un-conc-gz ' + "${prefix}${opts_bt2.unmapped_suffix}" + '.fastq.gz'
             }
             else {
-                args += ' --un-gz ' + "${prefix}${opts.unmapped_suffix}" + '.fastq.gz'
+                args += ' --un-gz ' + "${prefix}${opts_bt2.unmapped_suffix}" + '.fastq.gz'
             }
         }
 
@@ -175,7 +177,7 @@ process bowtie2_align {
         sort_command = "samtools sort -@ ${task.cpus} /dev/stdin > ${prefix}.bam"
         index_command = "samtools index -@ ${task.cpus} ${prefix}.bam"
 
-        if ( opts.output_sam && opts.output_sam == true ) {
+        if ( opts_bt2.output_sam && opts_bt2.output_sam == true ) {
             command = "bowtie2 -x ${index[0].simpleName} $args $files 2>bowtie2_stats.txt > ${prefix}.sam"
         }
         else {
@@ -212,7 +214,7 @@ process star_align_reads {
 
     input:
       // val opts
-      tuple val(meta), path(reads) from ch_cut_fastq
+      tuple val(meta), path(reads) from ch_from_bt2//from ch_cut_fastq
       path star_index from ch_star
 
     output:
