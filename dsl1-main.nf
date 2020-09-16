@@ -2,9 +2,9 @@
 
 //params.input = '/Users/westc/nextflow/dev/data/metadata-char-edit.csv'
 params.star_index = '/Users/westc/nextflow/dev/data/chr20/star_index'
-ch_star = Channel.fromPath(params.star_index)
+ch_star = Channel.value(params.star_index)
 params.fai = '/Users/westc/nextflow/dev/data/chr20/chr20.fa.fai'
-ch_fai = Channel.fromPath(params.fai)
+ch_fai = Channel.value(params.fai)
 params.bt2_index = ["/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.1.bt2",
 "/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.2.bt2",
 "/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.3.bt2",
