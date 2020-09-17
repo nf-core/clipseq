@@ -20,6 +20,7 @@ opts_star = params['star_align_reads']
 opts_umi = params['umi_tools']
 opts_crosslinks = params['get_crosslinks']
 opts_bt2 = params['bowtie2_align']
+opts_fastqc = params['fastqc']
 
 //// Option params ////
 //params.opts.cutadapt = params['cutadapt']
@@ -54,17 +55,69 @@ def processRow(LinkedHashMap row) {
  * STEP 1: FastQ
  */
 // setting up metadata structure
-ch_fastq_metadata = Channel
+ch_fastq_metadata_pre = Channel
                         .fromPath(params.input)
                         .splitCsv(header:true)
                         .map{ row -> processRow(row) }
-                        .set{ metadata }
+                        .into{ ch_fastq_metadata;
+                               ch_fastqc_pretrim }
+                        //.set{ metadata }
 
 //metadata.view()
-
 //def meta = [:]
 
 
+/*
+ * STEP 1.5: FastQC
+ */
+
+process fastqc {
+    publishDir "${params.outdir}/${opts_fastqc.publish_dir}",
+        mode: "copy", 
+        overwrite: true,
+        saveAs: { filename ->
+                      if (opts_fastqc.publish_results == "none") null
+                      else filename }
+    
+    container 'biocontainers/fastqc:v0.11.9_cv6'
+
+    input:
+        //val opts
+        tuple val(meta), path(reads) from ch_fastqc_pretrim
+
+    output:
+        path "*.zip", emit: report
+
+    script:
+    args = ""
+        if(opts_fastqc.args && opts_fastqc.args != '') {
+            ext_args = opts_fastqc.args
+            args += ext_args.trim()
+        }
+
+    prefix = opts_fastqc.suffix ? "${meta.sample_id}${opts_fastqc.suffix}" : "${meta.sample_id}"
+
+    fastqc_command = "fastqc ${args} --threads ${task.cpus} $reads"
+    if (params.verbose){
+        println ("[MODULE] fastqc command: " + fastqc_command)
+    }
+    
+    //SHELL
+    readList = reads.collect{it.toString()}
+    if(readList.size > 1){
+            """
+            ${fastqc_command}
+            mv ${reads[0].simpleName}*.zip ${prefix}_fastqc.zip
+            mv ${reads[1].simpleName}*.zip ${prefix}_fastqc.zip
+            """
+    }
+    else {
+            """
+            ${fastqc_command}
+            mv ${reads[0].simpleName}*.zip ${prefix}_fastqc.zip
+            """
+    }
+}
 
 /*
  * STEP 2: Read Trimming
@@ -85,7 +138,7 @@ process cutadapt {
 
     input:
         //val opts
-        tuple val(meta), path(reads) from metadata
+        tuple val(meta), path(reads) from ch_fastq_metadata
 
     output:
         tuple val(meta), path("*.fq.gz") into ch_cut_fastq//, emit: fastq
