@@ -1,18 +1,17 @@
 #!/usr/bin/env nextflow
 
 //params.input = '/Users/westc/nextflow/dev/data/metadata-char-edit.csv'
-params.star_index = '/Users/westc/nextflow/dev/data/chr20/star_index'
-ch_star = Channel.value(params.star_index)
+//params.star_index = '/Users/westc/nextflow/dev/data/chr20/star_index_2_6'
+//ch_star = Channel.value(params.star_index)
+// params.bt2_index = ["/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.1.bt2",
+// "/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.2.bt2",
+// "/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.3.bt2",
+// "/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.4.bt2",
+// "/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.1.bt2",
+// "/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.2.bt2"]
+// ch_bt2_index = Channel.value(params.bt2_index)
 params.fai = '/Users/westc/nextflow/dev/data/chr20/chr20.fa.fai'
 ch_fai = Channel.value(params.fai)
-params.bt2_index = ["/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.1.bt2",
-"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.2.bt2",
-"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.3.bt2",
-"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.4.bt2",
-"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.1.bt2",
-"/Users/westc/nextflow/dev/data/chr20/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.2.bt2"]
-ch_bt2_index = Channel.value(params.bt2_index)
-
 
 opts_cutadapt = params['cutadapt']
 opts_bowtie2 = params['bowtie2_align']
@@ -22,10 +21,44 @@ opts_crosslinks = params['get_crosslinks']
 opts_bt2 = params['bowtie2_align']
 opts_fastqc = params['fastqc']
 
-//// Option params ////
-//params.opts.cutadapt = params['cutadapt']
-//params.opts.cutadapt.args = "-j 8 -a AGATCGGAAGAGC -m 12"
-//////////////////////
+////////////////////////////////////////////////////////////
+/* --        iGenomes and smRNA logical actions        -- */
+////////////////////////////////////////////////////////////
+// Set params and channels based on presence/absence of genome and smRNA associated parameters
+
+// Check if genome exists in the config file
+if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
+    exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
+}
+
+// If igenomes is specified and no smRNA bt2 index is given
+if (params.genome && !params.bt2_index && params.genomes.containsKey(params.genome) && params.smRNA.containsKey(params.genome)) {
+  params.bt2_index = params.smRNA[ params.genome ].bt2_ind
+}
+
+
+//////////////////////////////////
+/* --        iGenomes        -- */
+//////////////////////////////////
+
+
+// Reference index path configuration
+// Define these here - after the profiles are loaded with the iGenomes paths
+params.star_index = params.genome ? params.genomes[ params.genome ].star ?: false : false
+// params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
+// params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
+// params.gff = params.genome ? params.genomes[ params.genome ].gff ?: false : false
+// params.bed12 = params.genome ? params.genomes[ params.genome ].bed12 ?: false : false
+// params.hisat2_index = params.genome ? params.genomes[ params.genome ].hisat2 ?: false : false
+ch_star = Channel.value(params.star_index)
+
+
+///////////////////////////////////////
+/* --        Stored smRNA         -- */
+///////////////////////////////////////
+//params.bt2_index = params.smRNA_species ? params.smRNA[ params.smRNA_species ].bt2_ind ?: false : false
+ch_bt2_index = Channel.value(params.bt2_index)
+
 
 /////// Process needed for Step 1 /////////
 def processRow(LinkedHashMap row) {
