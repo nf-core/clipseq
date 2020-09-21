@@ -1,5 +1,5 @@
 FROM nfcore/base:1.9
-LABEL authors="Luscombe Lab" \
+LABEL authors="anob.chakrabarti@crick.ac.uk,charlotte.west@crick.ac.uk" \
       description="Docker image containing all software requirements for the nf-core/clipseq pipeline"
 
 # Install the conda environment
