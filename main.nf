@@ -21,15 +21,16 @@ def helpMessage() {
     nextflow run nf-core/clipseq --reads '*_R{1,2}.fastq.gz' -profile docker
 
     Mandatory arguments:
-      --input [file]                Comma-separated file with details of samples and reads
-      -profile [str]                Configuration profile to use. Can use multiple (comma separated)
-                                    Available: conda, docker, singularity, test, awsbatch, <institute> and more
+      --input [file]                  Comma-separated file with details of samples and reads
+      -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
+                                      Available: conda, docker, singularity, test, awsbatch, <institute> and more
 
     Options:
       --genome [str]                  Name of iGenomes reference
 
     References:                       If not specified in the configuration file or you wish to overwrite any of the references
       --fasta [file]                  Path to fasta reference
+      --smrna_fasta [file]            Path to small RNA fasta reference
 
     Adapter trimming:
       --adapter [string]              Adapter to trim from reads (default: AGATCGGAAGAGC)
@@ -116,18 +117,21 @@ SET-UP INPUTS
 params.adapter = "AGATCGGAAGAGC"
 params.umi_separator = ":"
 
-params.bt2_index = ["/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.1.bt2",
-"/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.2.bt2",
-"/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.3.bt2",
-"/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.4.bt2",
-"/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.1.bt2",
-"/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.2.bt2"]
+// params.bt2_index = ["/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.1.bt2",
+// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.2.bt2",
+// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.3.bt2",
+// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.4.bt2",
+// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.1.bt2",
+// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.2.bt2"]
+
+params.smrna_fasta = "/Users/chakraa2/projects/nfclip/small_rna_bowtie.fa.gz"
 
 params.star_index = "/Users/chakraa2/projects/nfclip/star_chr20"
 
 params.fai = '/Users/chakraa2/projects/nfclip/chr20.fa.fai'
 
-ch_bt2_index = Channel.value(params.bt2_index)
+// ch_bt2_index = Channel.value(params.bt2_index)
+ch_smrna_fasta = Channel.value(params.smrna_fasta)
 ch_star_index = Channel.value(params.star_index)
 ch_fai = Channel.value(params.fai)
 
@@ -289,6 +293,23 @@ process cutadapt {
 /*
  * STEP 4 - Premapping
  */
+
+process generate_premap_index {
+
+    tag "$name"    
+
+    input:
+    path(smrna_fasta) from ch_smrna_fasta
+
+    output:
+    path "${smrna_fasta.simpleName}.*.bt2" into ch_bt2_index
+
+    script:
+
+    """
+    bowtie2-build --threads $task.cpus $smrna_fasta ${smrna_fasta.simpleName}
+    """
+}
 
 process premap {
 
