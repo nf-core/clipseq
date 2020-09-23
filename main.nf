@@ -430,7 +430,7 @@ process premap {
 
     input:
     tuple val(name), path(reads) from ch_trimmed
-    path(index) from ch_bt2_index
+    path(index) from ch_bt2_index.collect()
 
     output:
     tuple val(name), path("*.fastq.gz") into ch_unmapped
@@ -459,7 +459,7 @@ process align {
 
     input:
     tuple val(name), path(reads) from ch_unmapped
-    path(index) from ch_star_index
+    path(index) from ch_star_index.collect()
 
     output:
     tuple val(name), path("*.bam"), path("*.bai") into ch_aligned
