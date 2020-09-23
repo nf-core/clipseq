@@ -29,7 +29,8 @@ def helpMessage() {
       --genome [str]                  Name of iGenomes reference
 
     References:                       If not specified in the configuration file or you wish to overwrite any of the references
-      --fasta [file]                  Path to fasta reference
+      --fasta [file]                  Path to genome fasta reference
+      --gtf [file]                    Path to genome annotation gtf reference
       --smrna_fasta [file]            Path to small RNA fasta reference
 
     Adapter trimming:
@@ -126,13 +127,14 @@ params.umi_separator = ":"
 
 params.smrna_fasta = "/Users/chakraa2/projects/nfclip/small_rna_bowtie.fa.gz"
 
-params.star_index = "/Users/chakraa2/projects/nfclip/star_chr20"
+// params.fasta = "/Users/chakraa2/projects/nfclip/chr20.fa.gz"
+// params.star_index = "/Users/chakraa2/projects/nfclip/star_chr20"
 
 params.fai = '/Users/chakraa2/projects/nfclip/chr20.fa.fai'
 
 // ch_bt2_index = Channel.value(params.bt2_index)
 ch_smrna_fasta = Channel.value(params.smrna_fasta)
-ch_star_index = Channel.value(params.star_index)
+// ch_star_index = Channel.value(params.star_index)
 ch_fai = Channel.value(params.fai)
 
 if(params.input)    { Channel
@@ -155,9 +157,9 @@ def summary = [:]
 if (workflow.revision) summary['Pipeline Release'] = workflow.revision
 summary['Run Name']         = custom_runName ?: workflow.runName
 // TODO nf-core: Report custom parameters here
-summary['Reads']            = params.reads
-summary['Fasta Ref']        = params.fasta
-// summary['Data Type']        = params.single_end ? 'Single-End' : 'Paired-End'
+summary['Input']            = params.input
+summary['Fasta ref']        = params.fasta
+summary['GTF ref']          = params.gtf
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -228,6 +230,132 @@ log.info "-\033[2m--------------------------------------------------\033[0m-"
 
 /*
 ================================================================================
+PREPROCESSING
+================================================================================
+*/
+
+/*
+ * Generating premapping index
+ */
+
+process generate_premap_index {
+
+    tag "$smrna_fasta"    
+
+    input:
+    path(smrna_fasta) from ch_smrna_fasta
+
+    output:
+    path "${smrna_fasta.simpleName}.*.bt2" into ch_bt2_index
+
+    script:
+
+    """
+    bowtie2-build --threads $task.cpus $smrna_fasta ${smrna_fasta.simpleName}
+    """
+}
+
+/*
+ * Generating STAR index
+ */
+
+// Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
+
+if (params.fasta) {
+    if (hasExtension(params.fasta, 'gz')) {
+        ch_fasta_gz = Channel
+            .fromPath(params.fasta, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
+    } else {
+        ch_fasta = Channel
+            .fromPath(params.fasta, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
+    }
+}
+
+if (params.fasta) {
+    if (hasExtension(params.fasta, 'gz')) {
+
+        process decompress_fasta {
+
+            tag "$fasta_gz"
+
+            input:
+            path(fasta_gz) from ch_fasta_gz
+
+            output:
+            path("*.fa") into ch_fasta
+
+            script:
+
+            """
+            pigz -d -c $fasta_gz > ${fasta_gz.baseName}
+            """
+
+        }
+    }
+}
+
+if (params.gtf) {
+    if (hasExtension(params.gtf, 'gz')) {
+        ch_gtf_gz = Channel
+            .fromPath(params.gtf, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
+    } else {
+        ch_gtf = Channel
+            .fromPath(params.gtf, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
+    }
+}
+
+if (params.gtf) {
+    if (hasExtension(params.gtf, 'gz')) {
+
+        process decompress_gtf {
+
+            tag "$gtf_gz"
+
+            input:
+            path(gtf_gz) from ch_gtf_gz
+
+            output:
+            path("*.gtf") into ch_gtf
+
+            script:
+
+            """
+            pigz -d -c $gtf_gz > ${gtf_gz.baseName}
+            """
+
+        }
+    }
+}
+
+process generate_star_index {
+
+    tag "$fasta"    
+
+    input:
+    path(fasta) from ch_fasta
+    path(gtf) from ch_gtf
+
+    output:
+    path("STAR_${fasta.baseName}") into ch_star_index
+
+    script:
+
+    """
+    mkdir STAR_${fasta.baseName}
+    STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
+    --genomeDir STAR_${fasta.baseName} \
+    --genomeFastaFiles $fasta \
+    --genomeSAindexNbases 11 \
+    --sjdbGTFfile $gtf
+    """
+}
+
+/*
+================================================================================
 CLIP PIPELINE
 ================================================================================
 */
@@ -293,23 +421,6 @@ process cutadapt {
 /*
  * STEP 4 - Premapping
  */
-
-process generate_premap_index {
-
-    tag "$name"    
-
-    input:
-    path(smrna_fasta) from ch_smrna_fasta
-
-    output:
-    path "${smrna_fasta.simpleName}.*.bt2" into ch_bt2_index
-
-    script:
-
-    """
-    bowtie2-build --threads $task.cpus $smrna_fasta ${smrna_fasta.simpleName}
-    """
-}
 
 process premap {
 
@@ -600,6 +711,11 @@ NF-CORE ON COMPLETE
 //     }
 
 // }
+
+// Check file extension - from nf-core/rnaseq
+def hasExtension(it, extension) {
+    it.toString().toLowerCase().endsWith(extension.toLowerCase())
+}
 
 
 def nfcoreHeader() {
