@@ -35,14 +35,19 @@ def helpMessage() {
       --smrna_fasta [file]            Path to small RNA fasta reference
 
     Adapter trimming:
-      --adapter [string]              Adapter to trim from reads (default: AGATCGGAAGAGC)
+      --adapter [str]              Adapter to trim from reads (default: AGATCGGAAGAGC)
 
     Deduplication:
-      --umi_separator [string]        UMI separator character in read header/name (default: :)
+      --umi_separator [st]        UMI separator character in read header/name (default: :)
 
-    Peak-calling:
-      --peakcaller [string]           Peak caller (options: icount, paraclu)
+    Peak calling:
+      --peakcaller [str]           Peak caller (options: icount, paraclu)
       --segment [file]                Path to iCount segment file
+      --half_window [int]             iCount half-window size (default: 3)
+      --merge_window [int]            iCount merge-window size (default: 3)
+      --min_value [int]               Paraclu minimum cluster count/value (default: 10)
+      --min_density_increase [int]    Paraclu minimum density increase (default: 2)
+      --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
 
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -168,6 +173,11 @@ if (params.gtf) summary['GTF ref']            = params.gtf
 if (params.star_index) summary['STAR index'] = params.star_index
 if (params.peakcaller) summary['Peak caller']            = params.peakcaller
 if (params.segment) summary['iCount segment']            = params.segment
+if (params.peakcaller == "icount") summary['Half window']            = params.half_window
+if (params.peakcaller == "icount") summary['Merge window']            = params.merge_window
+if (params.peakcaller == "paraclu") summary['Min value']            = params.min_value
+if (params.peakcaller == "paraclu") summary['Max density increase']            = params.min_density_increase
+if (params.peakcaller == "paraclu") summary['Max cluster length']            = params.max_cluster_length
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -619,8 +629,8 @@ if (params.peakcaller && params.peakcaller == 'icount') {
 
         script:
 
-        half_window = 3
-        merge_window = 3
+        half_window = params.half_window
+        merge_window = params.merge_window
 
         """
         iCount peaks $segment $xlinks ${name}.${half_window}nt.sigxl.bed.gz --half_window ${half_window} --fdr 0.05
@@ -679,9 +689,9 @@ if (params.peakcaller && params.peakcaller == 'paraclu') {
 
         script:
 
-        min_value = 10
-        min_density_increase = 2
-        max_cluster_length = 200
+        min_value = params.min_value
+        min_density_increase = params.density_increase
+        max_cluster_length = params.max_cluster_length
 
         """
         pigz -d -c $xlinks | \
