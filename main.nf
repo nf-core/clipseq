@@ -41,7 +41,7 @@ def helpMessage() {
       --umi_separator [string]        UMI separator character in read header/name (default: :)
 
     Peak-calling:
-      --peakcaller [string]           Peak caller (options: icount)
+      --peakcaller [string]           Peak caller (options: icount, paraclu)
       --segment [file]                Path to iCount segment file
 
     Other options:
@@ -135,8 +135,8 @@ if (params.star_index) ch_star_index = Channel.value(params.star_index)
 ch_fai_crosslinks = Channel.value(params.fai)
 ch_fai_icount = Channel.value(params.fai)
 
-if (params.peakcaller && params.peakcaller != 'icount') {
-    exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount'"
+if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
+    exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
 }
 
 if (params.input) {
@@ -584,7 +584,7 @@ process get_crosslinks {
     path(fai) from ch_fai_crosslinks
 
     output:
-    tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks
+    tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu
 
     script:
 
@@ -599,7 +599,7 @@ process get_crosslinks {
 }
 
 /*
- * STEP 7 - Peak-call (iCount)
+ * STEP 7a - Peak-call (iCount)
  */
 
 if (params.peakcaller && params.peakcaller == 'icount') {
@@ -610,12 +610,12 @@ if (params.peakcaller && params.peakcaller == 'icount') {
         publishDir "${params.outdir}/icount", mode: 'copy'
 
         input:
-        tuple val(name), path(xlinks) from ch_xlinks
+        tuple val(name), path(xlinks) from ch_xlinks_icount
         path(segment) from ch_segment.collect()
 
         output:
         tuple val(name), path("${name}.${half_window}nt.sigxl.bed.gz") into ch_sigxlinks
-        tuple val(name), path("${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz") into ch_peaks
+        tuple val(name), path("${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
 
         script:
 
@@ -629,6 +629,70 @@ if (params.peakcaller && params.peakcaller == 'icount') {
         bedtools sort | \
         bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
         pigz > ${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz
+        """
+
+    }
+
+    // process icount_merge_sigxls {
+
+    //     tag "$name"
+    //     publishDir "${params.outdir}/icount", mode: 'copy'
+
+    //     input:
+    //     tuple val(name), path(sigxlinks) from ch_sigxlinks
+
+    //     output:
+    //     tuple val(name), path("${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
+
+    //     script:
+
+    //     half_window = 3
+
+
+    //     """
+    //     pigz -d -c $sigxlinks | \
+    //     bedtools sort | \
+    //     bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
+    //     pigz > ${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz
+    //     """
+
+    // }
+
+}
+
+/*
+ * STEP 7b - Peak-call (paraclu)
+ */
+
+if (params.peakcaller && params.peakcaller == 'paraclu') {
+
+    process paraclu_peak_call {
+
+        tag "$name"
+        publishDir "${params.outdir}/paraclu", mode: 'copy'
+
+        input:
+        tuple val(name), path(xlinks) from ch_xlinks_paraclu
+
+        output:
+        tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
+
+        script:
+
+        min_value = 10
+        min_density_increase = 2
+        max_cluster_length = 200
+
+        """
+        pigz -d -c $xlinks | \
+        awk '{OFS = "\t"}{print \$1, \$6, \$2, \$5}' | \
+        sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
+
+        paraclu ${min_value} paraclu_input.tsv | \
+        paraclu-cut.sh -d ${min_density_increase} -l ${max_cluster_length} | \
+        awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
+        bedtools sort |
+        pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
         """
 
     }
