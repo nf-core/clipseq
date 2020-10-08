@@ -35,10 +35,19 @@ def helpMessage() {
       --smrna_fasta [file]            Path to small RNA fasta reference
 
     Adapter trimming:
-      --adapter [string]              Adapter to trim from reads (default: AGATCGGAAGAGC)
+      --adapter [str]              Adapter to trim from reads (default: AGATCGGAAGAGC)
 
     Deduplication:
-      --umi_separator [string]        UMI separator character in read header/name (default: :)
+      --umi_separator [st]        UMI separator character in read header/name (default: :)
+
+    Peak calling:
+      --peakcaller [str]           Peak caller (options: icount, paraclu)
+      --segment [file]                Path to iCount segment file
+      --half_window [int]             iCount half-window size (default: 3)
+      --merge_window [int]            iCount merge-window size (default: 3)
+      --min_value [int]               Paraclu minimum cluster count/value (default: 10)
+      --min_density_increase [int]    Paraclu minimum density increase (default: 2)
+      --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
 
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -119,24 +128,21 @@ SET-UP INPUTS
 params.adapter = "AGATCGGAAGAGC"
 params.umi_separator = ":"
 
-// params.bt2_index = ["/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.1.bt2",
-// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.2.bt2",
-// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.3.bt2",
-// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.4.bt2",
-// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.1.bt2",
-// "/Users/chakraa2/projects/nfclip/small_rna_bowtie_ind/small_rna_bowtie_ind.rev.2.bt2"]
-
-params.smrna_fasta = "/Users/chakraa2/projects/nfclip/small_rna_bowtie.fa.gz"
+params.smrna_fasta = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/small_rna.fa.gz"
 
 // params.fasta = "/Users/chakraa2/projects/nfclip/chr20.fa.gz"
 // params.star_index = "/Users/chakraa2/projects/nfclip/star_chr20"
 
-params.fai = '/Users/chakraa2/projects/nfclip/chr20.fa.fai'
+params.fai = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/chr20.fa.fai"
 
-// ch_bt2_index = Channel.value(params.bt2_index)
 ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
-ch_fai = Channel.value(params.fai)
+ch_fai_crosslinks = Channel.value(params.fai)
+ch_fai_icount = Channel.value(params.fai)
+
+if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
+    exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
+}
 
 if (params.input) {
     Channel
@@ -165,6 +171,13 @@ summary['Input']            = params.input
 if (params.fasta) summary['Fasta ref']        = params.fasta
 if (params.gtf) summary['GTF ref']            = params.gtf
 if (params.star_index) summary['STAR index'] = params.star_index
+if (params.peakcaller) summary['Peak caller']            = params.peakcaller
+if (params.segment) summary['iCount segment']            = params.segment
+if (params.peakcaller == "icount") summary['Half window']            = params.half_window
+if (params.peakcaller == "icount") summary['Merge window']            = params.merge_window
+if (params.peakcaller == "paraclu") summary['Min value']            = params.min_value
+if (params.peakcaller == "paraclu") summary['Max density increase']            = params.min_density_increase
+if (params.peakcaller == "paraclu") summary['Max cluster length']            = params.max_cluster_length
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -251,7 +264,7 @@ process generate_premap_index {
     path(smrna_fasta) from ch_smrna_fasta
 
     output:
-    path "${smrna_fasta.simpleName}.*.bt2" into ch_bt2_index
+    path("${smrna_fasta.simpleName}.*.bt2") into ch_bt2_index
 
     script:
 
@@ -305,11 +318,11 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
-            ch_gtf_gz = Channel
+            ch_gtf_gz_star = Channel
                 .fromPath(params.gtf, checkIfExists: true)
                 .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
         } else {
-            ch_gtf = Channel
+            ch_gtf_star = Channel
                 .fromPath(params.gtf, checkIfExists: true)
                 .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
         }
@@ -323,10 +336,10 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
                 tag "$gtf_gz"
 
                 input:
-                path(gtf_gz) from ch_gtf_gz
+                path(gtf_gz) from ch_gtf_gz_star
 
                 output:
-                path("*.gtf") into ch_gtf
+                path("*.gtf") into ch_gtf_star
 
                 script:
 
@@ -344,7 +357,7 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
 
         input:
         path(fasta) from ch_fasta
-        path(gtf) from ch_gtf
+        path(gtf) from ch_gtf_star
 
         output:
         path("STAR_${fasta.baseName}") into ch_star_index
@@ -359,6 +372,49 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
         --genomeSAindexNbases 11 \
         --sjdbGTFfile $gtf
         """
+    }
+
+}
+
+/*
+ * Generating iCount segment file
+ */
+
+// iCount GTF input autodetects gz
+
+if (params.peakcaller && params.peakcaller == 'icount') {
+
+    if(!params.segment) {
+
+        ch_gtf_icount = Channel
+            .fromPath(params.gtf, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
+
+        process icount_segment {
+
+            tag "$gtf"
+
+            publishDir "${params.outdir}/icount", mode: 'copy'
+
+            input:
+            path(gtf) from ch_gtf_icount
+            path(fai) from ch_fai_icount
+
+            output:
+            path("icount_${gtf}") into ch_segment
+
+            script:
+
+            """
+            iCount segment $gtf icount_${gtf} $fai
+            """
+
+        }
+
+    } else {
+
+        ch_segment = Channel.value(params.segment)
+
     }
 
 }
@@ -535,10 +591,10 @@ process get_crosslinks {
 
     input:
     tuple val(name), path(bam), path(bai) from ch_dedup
-    path(fai) from ch_fai
+    path(fai) from ch_fai_crosslinks
 
     output:
-    tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks
+    tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu
 
     script:
 
@@ -550,6 +606,131 @@ process get_crosslinks {
     cat pos.bed neg.bed | sort -k1,1 -k2,2n | pigz > ${name}.xl.bed.gz
     """
 
+}
+
+/*
+ * STEP 7a - Peak-call (iCount)
+ */
+
+if (params.peakcaller && params.peakcaller == 'icount') {
+
+    process icount_peak_call {
+
+        tag "$name"
+        publishDir "${params.outdir}/icount", mode: 'copy'
+
+        input:
+        tuple val(name), path(xlinks) from ch_xlinks_icount
+        path(segment) from ch_segment.collect()
+
+        output:
+        tuple val(name), path("${name}.${half_window}nt.sigxl.bed.gz") into ch_sigxlinks
+        tuple val(name), path("${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
+
+        script:
+
+        half_window = params.half_window
+        merge_window = params.merge_window
+
+        """
+        iCount peaks $segment $xlinks ${name}.${half_window}nt.sigxl.bed.gz --half_window ${half_window} --fdr 0.05
+
+        pigz -d -c ${name}.${half_window}nt.sigxl.bed.gz | \
+        bedtools sort | \
+        bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
+        pigz > ${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz
+        """
+
+    }
+
+    // process icount_merge_sigxls {
+
+    //     tag "$name"
+    //     publishDir "${params.outdir}/icount", mode: 'copy'
+
+    //     input:
+    //     tuple val(name), path(sigxlinks) from ch_sigxlinks
+
+    //     output:
+    //     tuple val(name), path("${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
+
+    //     script:
+
+    //     half_window = 3
+
+
+    //     """
+    //     pigz -d -c $sigxlinks | \
+    //     bedtools sort | \
+    //     bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
+    //     pigz > ${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz
+    //     """
+
+    // }
+
+}
+
+/*
+ * STEP 7b - Peak-call (paraclu)
+ */
+
+if (params.peakcaller && params.peakcaller == 'paraclu') {
+
+    process paraclu_peak_call {
+
+        tag "$name"
+        publishDir "${params.outdir}/paraclu", mode: 'copy'
+
+        input:
+        tuple val(name), path(xlinks) from ch_xlinks_paraclu
+
+        output:
+        tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
+
+        script:
+
+        min_value = params.min_value
+        min_density_increase = params.density_increase
+        max_cluster_length = params.max_cluster_length
+
+        """
+        pigz -d -c $xlinks | \
+        awk '{OFS = "\t"}{print \$1, \$6, \$2, \$5}' | \
+        sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
+
+        paraclu ${min_value} paraclu_input.tsv | \
+        paraclu-cut.sh -d ${min_density_increase} -l ${max_cluster_length} | \
+        awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
+        bedtools sort |
+        pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
+        """
+
+    }
+
+    // process icount_merge_sigxls {
+
+    //     tag "$name"
+    //     publishDir "${params.outdir}/icount", mode: 'copy'
+
+    //     input:
+    //     tuple val(name), path(sigxlinks) from ch_sigxlinks
+
+    //     output:
+    //     tuple val(name), path("${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz") into ch_peaks
+
+    //     script:
+
+    //     half_window = 3
+
+
+    //     """
+    //     pigz -d -c $sigxlinks | \
+    //     bedtools sort | \
+    //     bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
+    //     pigz > ${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz
+    //     """
+
+    // }
 
 }
 
