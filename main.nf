@@ -271,21 +271,23 @@ PREPROCESSING
  * Generating premapping index
  */
 
-process generate_premap_index {
+if (params.smrna_fasta) {
+    process generate_premap_index {
 
-    tag "$smrna_fasta"    
+        tag "$smrna_fasta"    
 
-    input:
-    path(smrna_fasta) from ch_smrna_fasta
+        input:
+        path(smrna_fasta) from ch_smrna_fasta
 
-    output:
-    path("${smrna_fasta.simpleName}.*.bt2") into ch_bt2_index
+        output:
+        path("${smrna_fasta.simpleName}.*.bt2") into ch_bt2_index
 
-    script:
+        script:
 
-    """
-    bowtie2-build --threads $task.cpus $smrna_fasta ${smrna_fasta.simpleName}
-    """
+        """
+        bowtie2-build --threads $task.cpus $smrna_fasta ${smrna_fasta.simpleName}
+        """
+    }
 }
 
 /*
@@ -502,29 +504,31 @@ process cutadapt {
  * STEP 4 - Premapping
  */
 
-process premap {
+if (params.smrna_fasta) {
+    process premap {
 
-    tag "$name"
-    // label 'process_high'
-    publishDir "${params.outdir}/premap", mode: 'copy'
+        tag "$name"
+        // label 'process_high'
+        publishDir "${params.outdir}/premap", mode: 'copy'
 
-    input:
-    tuple val(name), path(reads) from ch_trimmed
-    path(index) from ch_bt2_index.collect()
+        input:
+        tuple val(name), path(reads) from ch_trimmed
+        path(index) from ch_bt2_index.collect()
 
-    output:
-    tuple val(name), path("*.fastq.gz") into ch_unmapped
-    tuple val(name), path("*.bam"), path("*.bai")
-    path "*.log" into ch_premap_mqc
+        output:
+        tuple val(name), path("*.fastq.gz") into ch_unmapped
+        tuple val(name), path("*.bam"), path("*.bai")
+        path "*.log" into ch_premap_mqc
 
-    script:
+        script:
 
-    """
-    bowtie2 -p $task.cpus -x ${index[0].simpleName} --un-gz ${name}.unmapped.fastq.gz -U $reads 2> ${name}.premap.log | \
-    samtools sort -@ $task.cpus /dev/stdin > ${name}.premapped.bam && \
-    samtools index -@ $task.cpus ${name}.premapped.bam
-    """
+        """
+        bowtie2 -p $task.cpus -x ${index[0].simpleName} --un-gz ${name}.unmapped.fastq.gz -U $reads 2> ${name}.premap.log | \
+        samtools sort -@ $task.cpus /dev/stdin > ${name}.premapped.bam && \
+        samtools index -@ $task.cpus ${name}.premapped.bam
+        """
 
+    }
 }
 
 /*
