@@ -76,12 +76,19 @@ SET UP CONFIGURATION VARIABLES
 */
 
 // Check if genome exists in the config file
-// if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
-//     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
-// }
+if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
+    exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
+}
 
 // TODO nf-core: Add any reference files that are needed
-// Configurable reference genomes
+// Configurable reference genome variables
+params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
+params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
+params.star_index = params.genome ? params.genomes[ params.genome ].star ?: false : false
+
+
+
+
 //
 // NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
 // If you want to use the channel below in a process, define the following:
@@ -128,12 +135,12 @@ SET-UP INPUTS
 params.adapter = "AGATCGGAAGAGC"
 params.umi_separator = ":"
 
-params.smrna_fasta = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/small_rna.fa.gz"
+//params.smrna_fasta = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/small_rna.fa.gz"
 
 // params.fasta = "/Users/chakraa2/projects/nfclip/chr20.fa.gz"
 // params.star_index = "/Users/chakraa2/projects/nfclip/star_chr20"
 
-params.fai = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/chr20.fa.fai"
+//params.fai = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/chr20.fa.fai"
 
 ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
