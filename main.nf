@@ -290,13 +290,14 @@ if (params.smrna_fasta) {
     }
 }
 
+
 /*
  * Generating STAR index
  */
 
 // Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
 
-if (!params.star_index) { // will probably need to modify the logic once iGenomes incorporated
+if (!params.star_index || !params.fai) { // will probably need to modify the logic once iGenomes incorporated
 
     if (params.fasta) {
         if (hasExtension(params.fasta, 'gz')) {
@@ -309,29 +310,31 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
                 .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
         }
     }
+}
 
-    if (params.fasta) {
-        if (hasExtension(params.fasta, 'gz')) {
+if (params.fasta) {
+    if (hasExtension(params.fasta, 'gz')) {
 
-            process decompress_fasta {
+        process decompress_fasta {
 
-                tag "$fasta_gz"
+            tag "$fasta_gz"
 
-                input:
-                path(fasta_gz) from ch_fasta_gz
+            input:
+            path(fasta_gz) from ch_fasta_gz
 
-                output:
-                path("*.fa") into ch_fasta
+            output:
+            path("*.fa") into (ch_fasta, ch_fasta_fai)
 
-                script:
+            script:
 
-                """
-                pigz -d -c $fasta_gz > ${fasta_gz.baseName}
-                """
-
-            }
+            """
+            pigz -d -c $fasta_gz > ${fasta_gz.baseName}
+            """
         }
     }
+}
+
+if (!params.star_index) {
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
@@ -392,6 +395,34 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
     }
 
 }
+
+/*
+ * Generating fai index
+ */
+
+//ch_fasta_fai.view()
+
+if (!params.fai) {
+    process generate_fai {
+            tag "$fasta"
+
+            input:
+            path(fasta) from ch_fasta_fai
+
+            output:
+            //path("${fasta.baseName}.fa.fai") into (ch_fai_crosslinks, ch_fai_icount)
+            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount)
+
+            script:
+            
+            command = "samtools faidx $fasta"
+
+            """
+            ${command}
+            """
+    }
+}
+
 
 /*
  * Generating iCount segment file
