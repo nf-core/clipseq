@@ -78,6 +78,14 @@ SET UP CONFIGURATION VARIABLES
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
+// Link to smRNA if available
+} else if ( params.genomes && params.genome && params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
+    //params.smrna_genome = params.genome
+    params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
+// Show warning of no pre-mapping if smRNA fasta is unavailable and not specified. 
+} else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
+    log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+//     
 }
 
 // TODO nf-core: Add any reference files that are needed
