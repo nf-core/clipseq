@@ -297,20 +297,20 @@ if (params.smrna_fasta) {
 
 // Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
 
-if (!params.star_index || !params.fai) { // will probably need to modify the logic once iGenomes incorporated
+// if (!params.star_index || !params.fai) { // will probably need to modify the logic once iGenomes incorporated
 
-    if (params.fasta) {
-        if (hasExtension(params.fasta, 'gz')) {
-            ch_fasta_gz = Channel
-                .fromPath(params.fasta, checkIfExists: true)
-                .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-        } else {
-            ch_fasta = Channel
-                .fromPath(params.fasta, checkIfExists: true)
-                .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-        }
+if (params.fasta) {
+    if (hasExtension(params.fasta, 'gz')) {
+        ch_fasta_gz = Channel
+            .fromPath(params.fasta, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
+    } else {
+        ch_fasta = Channel
+            .fromPath(params.fasta, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
     }
 }
+//}
 
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
