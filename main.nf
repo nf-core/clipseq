@@ -150,10 +150,10 @@ params.umi_separator = ":"
 
 //params.fai = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/chr20.fa.fai"
 
-ch_smrna_fasta = Channel.value(params.smrna_fasta)
+if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
-ch_fai_crosslinks = Channel.value(params.fai)
-ch_fai_icount = Channel.value(params.fai)
+if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
+if (params.fai) ch_fai_icount = Channel.value(params.fai)
 
 if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
