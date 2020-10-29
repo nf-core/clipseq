@@ -305,9 +305,10 @@ if (params.fasta) {
             .fromPath(params.fasta, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
     } else {
-        ch_fasta = Channel
+        Channel
             .fromPath(params.fasta, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
+            .into { ch_fasta; ch_fasta_fai }
     }
 }
 //}
