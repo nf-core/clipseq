@@ -90,9 +90,9 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 
 // TODO nf-core: Add any reference files that are needed
 // Configurable reference genome variables
-params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
-params.star_index = params.genome ? params.genomes[ params.genome ].star ?: false : false
+params.fasta = params.genome ? file(params.genomes[ params.genome ].fasta).exists() ?: false : false
+params.gtf = params.genome ? file(params.genomes[ params.genome ].gtf).exists() ?: false : false
+params.star_index = params.genome ? file(params.genomes[ params.genome ].star).exists() ?: false : false
 
 
 
