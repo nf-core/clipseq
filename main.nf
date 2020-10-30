@@ -41,7 +41,7 @@ def helpMessage() {
       --umi_separator [st]        UMI separator character in read header/name (default: :)
 
     Peak calling:
-      --peakcaller [str]           Peak caller (options: icount, paraclu)
+      --peakcaller [str]           Peak caller. Can use multiple (comma separated). Available: icount, paraclu
       --segment [file]                Path to iCount segment file
       --half_window [int]             iCount half-window size (default: 3)
       --merge_window [int]            iCount merge-window size (default: 3)
@@ -104,7 +104,23 @@ if (!params.star_index && params.genome && file(params.genomes[ params.genome ].
 // params.star_index = params.genome ? params.genomes[ params.genome ].star ?: false : false
 
 
+// Set up peak caller logic
+def paraclu_check = false
+def icount_check = false
+if (params.peakcaller){
 
+    def peak_list = params.peakcaller.split(',').collect()
+    //print peak_list
+    peak_list.each {
+        if ( it == 'paraclu' && !paraclu_check ) {
+            paraclu_check = true
+        } else if ( it == 'icount' && !icount_check ) {
+            icount_check = true
+        } else {
+            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu'"
+        }
+    }
+}
 
 //
 // NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
@@ -164,9 +180,9 @@ if (params.star_index) ch_star_index = Channel.value(params.star_index)
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
 if (params.fai) ch_fai_icount = Channel.value(params.fai)
 
-if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
-    exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
-}
+// if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
+//     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
+// }
 
 if (params.input) {
     Channel
@@ -197,11 +213,16 @@ if (params.gtf) summary['GTF ref']            = params.gtf
 if (params.star_index) summary['STAR index'] = params.star_index
 if (params.peakcaller) summary['Peak caller']            = params.peakcaller
 if (params.segment) summary['iCount segment']            = params.segment
-if (params.peakcaller == "icount") summary['Half window']            = params.half_window
-if (params.peakcaller == "icount") summary['Merge window']            = params.merge_window
-if (params.peakcaller == "paraclu") summary['Min value']            = params.min_value
-if (params.peakcaller == "paraclu") summary['Max density increase']            = params.min_density_increase
-if (params.peakcaller == "paraclu") summary['Max cluster length']            = params.max_cluster_length
+if (icount_check) summary['Half window']            = params.half_window
+if (icount_check) summary['Merge window']            = params.merge_window
+if (paraclu_check) summary['Min value']            = params.min_value
+if (paraclu_check) summary['Max density increase']            = params.min_density_increase
+if (paraclu_check) summary['Max cluster length']            = params.max_cluster_length
+// if (params.peakcaller == "icount") summary['Half window']            = params.half_window
+// if (params.peakcaller == "icount") summary['Merge window']            = params.merge_window
+// if (params.peakcaller == "paraclu") summary['Min value']            = params.min_value
+// if (params.peakcaller == "paraclu") summary['Max density increase']            = params.min_density_increase
+// if (params.peakcaller == "paraclu") summary['Max cluster length']            = params.max_cluster_length
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -440,7 +461,7 @@ if (!params.fai) {
 
 // iCount GTF input autodetects gz
 
-if (params.peakcaller && params.peakcaller == 'icount') {
+if (params.peakcaller && icount_check) {
 
     if(!params.segment) {
 
@@ -672,7 +693,7 @@ process get_crosslinks {
  * STEP 7a - Peak-call (iCount)
  */
 
-if (params.peakcaller && params.peakcaller == 'icount') {
+if (params.peakcaller && icount_check) {
 
     process icount_peak_call {
 
@@ -734,7 +755,7 @@ if (params.peakcaller && params.peakcaller == 'icount') {
  * STEP 7b - Peak-call (paraclu)
  */
 
-if (params.peakcaller && params.peakcaller == 'paraclu') {
+if (params.peakcaller && paraclu_check) {
 
     process paraclu_peak_call {
 
