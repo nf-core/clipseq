@@ -41,7 +41,7 @@ def helpMessage() {
       --umi_separator [st]        UMI separator character in read header/name (default: :)
 
     Peak calling:
-      --peakcaller [str]           Peak caller (options: icount, paraclu)
+      --peakcaller [str]              Peak caller (options: icount, paraclu)
       --segment [file]                Path to iCount segment file
       --half_window [int]             iCount half-window size (default: 3)
       --merge_window [int]            iCount merge-window size (default: 3)
@@ -139,6 +139,7 @@ ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
 ch_fai_crosslinks = Channel.value(params.fai)
 ch_fai_icount = Channel.value(params.fai)
+ch_fai_dreme = Channel.value(params.fai) // If enabling option to do both peak callers, will need to double this up
 
 if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
@@ -304,7 +305,7 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
                 path(fasta_gz) from ch_fasta_gz
 
                 output:
-                path("*.fa") into ch_fasta
+                path("*.fa") into ch_fasta, ch_fasta_dreme  // If enabling option to do multiple peak callers, will need to add more channels
 
                 script:
 
@@ -643,30 +644,31 @@ if (params.peakcaller && params.peakcaller == 'icount') {
 
     }
 
-    // process icount_merge_sigxls {
+    process icount_motif_dreme {
 
-    //     tag "$name"
-    //     publishDir "${params.outdir}/icount", mode: 'copy'
+        tag "$name"
+        publishDir "${params.outdir}/icount_motif", mode: 'copy'
 
-    //     input:
-    //     tuple val(name), path(sigxlinks) from ch_sigxlinks
+        input:
+        tuple val(name), path(peaks) from ch_peaks_icount
+        path(fasta) from ch_fasta_dreme
+        path(fai) from ch_fai_crosslinks
 
-    //     output:
-    //     tuple val(name), path("${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme
 
-    //     script:
+        script:
 
-    //     half_window = 3
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if($6 == "+") print $1, $2, $2+1, $4, $5, $6; else print $1, $3-1, $3, $4, $5, $6}' | \
+        bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
+        bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
-    //     """
-    //     pigz -d -c $sigxlinks | \
-    //     bedtools sort | \
-    //     bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
-    //     pigz > ${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz
-    //     """
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """      
 
-    // }
+    }
 
 }
 
@@ -707,30 +709,31 @@ if (params.peakcaller && params.peakcaller == 'paraclu') {
 
     }
 
-    // process icount_merge_sigxls {
+    process paraclu_motif_dreme {
 
-    //     tag "$name"
-    //     publishDir "${params.outdir}/icount", mode: 'copy'
+        tag "$name"
+        publishDir "${params.outdir}/paraclu_motif", mode: 'copy'
 
-    //     input:
-    //     tuple val(name), path(sigxlinks) from ch_sigxlinks
+        input:
+        tuple val(name), path(peaks) from ch_peaks_paraclu
+        path(fasta) from ch_fasta_dreme
+        path(fai) from ch_fai_crosslinks
 
-    //     output:
-    //     tuple val(name), path("${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz") into ch_peaks
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme
 
-    //     script:
+        script:
 
-    //     half_window = 3
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if($6 == "+") print $1, $2, $2+1, $4, $5, $6; else print $1, $3-1, $3, $4, $5, $6}' | \
+        bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
+        bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
-    //     """
-    //     pigz -d -c $sigxlinks | \
-    //     bedtools sort | \
-    //     bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
-    //     pigz > ${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz
-    //     """
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """      
 
-    // }
+    }
 
 }
 
