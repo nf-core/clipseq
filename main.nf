@@ -609,7 +609,7 @@ process align {
     STAR --runThreadN $task.cpus --runMode alignReads --genomeDir $index \
     --readFilesIn $reads --readFilesCommand gunzip -c \
     --outFileNamePrefix ${name}. $clip_args && \
-    samtools index -@ task.cpus ${name}.Aligned.sortedByCoord.out.bam
+    samtools index -@ $task.cpus ${name}.Aligned.sortedByCoord.out.bam
     """
 
 }
