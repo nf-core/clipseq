@@ -839,6 +839,7 @@ process multiqc {
     // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file (fastqc:'fastqc/*') from ch_fastqc_pretrim_mqc.collect().ifEmpty([])
     file ('cutadapt/*') from ch_cutadapt_mqc
+    file ('premap/*') from ch_premap_mqc
     //file ('software_versions/*') from ch_software_versions_yaml.collect()
     //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
@@ -854,7 +855,7 @@ process multiqc {
     // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
     """
     multiqc . -f $rtitle $rfilename $custom_config_file \\
-        -m fastqc -m cutadapt
+        -m fastqc -m cutadapt -m bowtie2
     """
 }
 
