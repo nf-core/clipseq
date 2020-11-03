@@ -539,8 +539,8 @@ process fastqc {
 
     """
     fastqc --quiet --threads $task.cpus $reads
-    mv ${reads.simpleName}*.html ${name}_prefastqc.html
-    mv ${reads.simpleName}*.zip ${name}_prefastqc.zip
+    mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
+    mv ${reads.simpleName}*.zip ${name}_pre_fastqc.zip
     """
 
 }
