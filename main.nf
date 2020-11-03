@@ -91,14 +91,26 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 // TODO nf-core: Add any reference files that are needed
 // Configurable reference genome variables
 if (!params.fasta && params.genome && file(params.genomes[ params.genome ].fasta).exists()){
-    params.fasta = params.genomes[ params.genome ].fasta
+    if (file(params.genomes[ params.genome ].fasta).exists()) {
+        params.fasta = params.genomes[ params.genome ].fasta
+    }
+} else {
+    params.fasta = false
 }
-if (!params.gtf && params.genome && file(params.genomes[ params.genome ].gtf).exists()){
-    params.gtf = params.genomes[ params.genome ].gtf
-} 
-if (!params.star_index && params.genome && file(params.genomes[ params.genome ].star).exists()){
-    params.star_index = params.genomes[ params.genome ].star
-} 
+if (!params.gtf && params.genome && params.genomes[ params.genome ].gtf) {
+    if (file(params.genomes[ params.genome ].gtf).exists()){
+        params.gtf = params.genomes[ params.genome ].gtf
+    }
+} else {
+    params.gtf = false
+}
+if (!params.star_index && params.genome && params.genomes[ params.genome ].star) {
+    if (file(params.genomes[ params.genome ].star).exists()){
+        params.star_index = params.genomes[ params.genome ].star
+    }
+} else {
+    params.star_index = false
+}
 // params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
 // params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 // params.star_index = params.genome ? params.genomes[ params.genome ].star ?: false : false
