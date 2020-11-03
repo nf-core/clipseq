@@ -841,6 +841,7 @@ process multiqc {
     file ('cutadapt/*') from ch_cutadapt_mqc
     file ('premap/*') from ch_premap_mqc
     file ('premap/*') from ch_align_mqc
+    //file ('dedup/*') from ch_dedup_mqc
     //file ('software_versions/*') from ch_software_versions_yaml.collect()
     //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
