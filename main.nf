@@ -41,7 +41,7 @@ def helpMessage() {
       --umi_separator [st]        UMI separator character in read header/name (default: :)
 
     Peak calling:
-      --peakcaller [str]           Peak caller. Can use multiple (comma separated). Available: icount, paraclu
+      --peakcaller [str]           Peak caller. Can use multiple (comma separated), or specify 'all'. Available: icount, paraclu
       --segment [file]                Path to iCount segment file
       --half_window [int]             iCount half-window size (default: 3)
       --merge_window [int]            iCount merge-window size (default: 3)
@@ -124,7 +124,10 @@ if (params.peakcaller){
     def peak_list = params.peakcaller.split(',').collect()
     //print peak_list
     peak_list.each {
-        if ( it == 'paraclu' && !paraclu_check ) {
+        if ( it == 'all') {
+            paraclu_check = true
+            icount_check = true
+        } else if ( it == 'paraclu' && !paraclu_check ) {
             paraclu_check = true
         } else if ( it == 'icount' && !icount_check ) {
             icount_check = true
