@@ -543,11 +543,8 @@ process fastqc {
 
     read_ext = reads.getName().split('\\.', 2)[1]
     read_name = reads.getName().split('\\.', 2)[0]
-    new_reads = "${name}_pre_fastqc.${read_ext}"
-    new_reads_simple = "${name}_pre_fastqc"
-    // """
-    // echo $name $read_ext $new_reads
-    // """
+    new_reads = "${name}_reads_fastqc.${read_ext}"
+    new_reads_simple = "${name}_reads_fastqc"
 
     """
     cp ${reads} ${new_reads}
@@ -580,8 +577,15 @@ process cutadapt {
 
     script:
 
+    read_ext = reads.getName().split('\\.', 2)[1]
+    read_name = reads.getName().split('\\.', 2)[0]
+    new_reads = "${name}_trim.${read_ext}"
+    new_reads_simple = "${name}_trim"
+
     """
-    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.fastq.gz $reads > ${name}_cutadapt.log
+    cp ${reads} ${new_reads}
+    rm *${read_name}*
+    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.fastq.gz $new_reads > ${name}_cutadapt.log
     """
 
 }
