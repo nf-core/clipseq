@@ -542,6 +542,7 @@ process fastqc {
     script:
 
     read_ext = reads.getName().split('\\.', 2)[1]
+    read_name = reads.getName().split('\\.', 2)[0]
     new_reads = "${name}_pre_fastqc.${read_ext}"
     new_reads_simple = "${name}_pre_fastqc"
     // """
@@ -551,8 +552,9 @@ process fastqc {
     """
     cp ${reads} ${new_reads}
     fastqc --quiet --threads $task.cpus ${new_reads}
-    mv ${new_reads_simple}*.html ${name}_pre_fastqc.html
-    mv ${new_reads_simple}*.zip ${name}_pre_fastqc.zip
+    mv ${new_reads_simple}*.html ${name}_reads_fastqc.html
+    mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
+    rm *${read_name}*
     """
     // fastqc --quiet --threads $task.cpus $reads
     // mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
