@@ -537,15 +537,26 @@ process fastqc {
 
     output:
     file "*fastqc.{zip,html}" into ch_fastqc_pretrim_mqc
-
+    // tuple val(name), path(reads) into ch_fastqc_pretrim_mqc
+ 
     script:
 
-    """
-    fastqc --quiet --threads $task.cpus $reads
-    mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
-    mv ${reads.simpleName}*.zip ${name}_pre_fastqc.zip
-    """
+    read_ext = reads.getName().split('\\.', 2)[1]
+    new_reads = "${name}_pre_fastqc.${read_ext}"
+    new_reads_simple = "${name}_pre_fastqc"
+    // """
+    // echo $name $read_ext $new_reads
+    // """
 
+    """
+    cp ${reads} ${new_reads}
+    fastqc --quiet --threads $task.cpus ${new_reads}
+    mv ${new_reads_simple}*.html ${name}_pre_fastqc.html
+    mv ${new_reads_simple}*.zip ${name}_pre_fastqc.zip
+    """
+    // fastqc --quiet --threads $task.cpus $reads
+    // mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
+    // mv ${reads.simpleName}*.zip ${name}_pre_fastqc.zip
 }
 
 /*
