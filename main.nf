@@ -88,7 +88,6 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 //     
 }
 
-// TODO nf-core: Add any reference files that are needed
 // Configurable reference genome variables
 if (!params.fasta && params.genome && file(params.genomes[ params.genome ].fasta).exists()){
     if (file(params.genomes[ params.genome ].fasta).exists()) {
@@ -183,13 +182,6 @@ SET-UP INPUTS
 params.adapter = "AGATCGGAAGAGC"
 params.umi_separator = ":"
 
-//params.smrna_fasta = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/small_rna.fa.gz"
-
-// params.fasta = "/Users/chakraa2/projects/nfclip/chr20.fa.gz"
-// params.star_index = "/Users/chakraa2/projects/nfclip/star_chr20"
-
-//params.fai = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/chr20.fa.fai"
-
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
@@ -233,11 +225,6 @@ if (icount_check) summary['Merge window']            = params.merge_window
 if (paraclu_check) summary['Min value']            = params.min_value
 if (paraclu_check) summary['Max density increase']            = params.min_density_increase
 if (paraclu_check) summary['Max cluster length']            = params.max_cluster_length
-// if (params.peakcaller == "icount") summary['Half window']            = params.half_window
-// if (params.peakcaller == "icount") summary['Merge window']            = params.merge_window
-// if (params.peakcaller == "paraclu") summary['Min value']            = params.min_value
-// if (params.peakcaller == "paraclu") summary['Max density increase']            = params.min_density_increase
-// if (params.peakcaller == "paraclu") summary['Max cluster length']            = params.max_cluster_length
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -342,8 +329,6 @@ if (params.smrna_fasta) {
 
 // Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
 
-// if (!params.star_index || !params.fai) { // will probably need to modify the logic once iGenomes incorporated
-
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
         ch_fasta_gz = Channel
@@ -356,7 +341,6 @@ if (params.fasta) {
             .into { ch_fasta; ch_fasta_fai }
     }
 }
-//}
 
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
@@ -446,8 +430,6 @@ if (!params.star_index) {
  * Generating fai index
  */
 
-//ch_fasta_fai.view()
-
 if (!params.fai) {
     process generate_fai {
             tag "$fasta"
@@ -456,7 +438,6 @@ if (!params.fai) {
             path(fasta) from ch_fasta_fai
 
             output:
-            //path("${fasta.baseName}.fa.fai") into (ch_fai_crosslinks, ch_fai_icount)
             path("*.fai") into (ch_fai_crosslinks, ch_fai_icount)
 
             script:
