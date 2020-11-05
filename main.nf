@@ -703,7 +703,7 @@ process get_crosslinks {
     publishDir "${params.outdir}/xlinks", mode: 'copy'
 
     input:
-    tuple val(name), path(bam), path(bai) from ch_dedup
+    tuple val(name), path(bam), path(bai) from ch_dedup.collect()
     path(fai) from ch_fai_crosslinks
 
     output:
