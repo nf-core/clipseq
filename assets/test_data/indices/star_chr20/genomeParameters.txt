@@ -1,12 +1,10 @@
 ### STAR   --runMode genomeGenerate   --runThreadN 4   --genomeDir star_chr20   --genomeFastaFiles chr20.fa      --genomeSAindexNbases 11
 ### GstrandBit 32
-versionGenome	2.7.4a
+versionGenome	20201
 genomeFastaFiles	chr20.fa 
 genomeSAindexNbases	11
 genomeChrBinNbits	18
 genomeSAsparseD	1
-genomeTransformType	None
-genomeTransformVCF	-
 sjdbOverhang	0
 sjdbFileChrStartEnd	- 
 sjdbGTFfile	-
