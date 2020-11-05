@@ -812,7 +812,7 @@ if (params.peakcaller && paraclu_check) {
         sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
 
         paraclu ${min_value} paraclu_input.tsv | \
-        paraclu-cut.sh -d ${min_density_increase} -l ${max_cluster_length} | \
+        paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \
         awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
         bedtools sort |
         pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
