@@ -1,8 +1,7 @@
 ### STAR   --runMode genomeGenerate   --runThreadN 4   --genomeDir star_chr20   --genomeFastaFiles chr20.fa      --genomeSAindexNbases 11
 ### GstrandBit 32
 versionGenome	2.7.4a
-genomeType	Full
-genomeFastaFiles	chr20_bloop.fa 
+genomeFastaFiles	chr20.fa 
 genomeSAindexNbases	11
 genomeChrBinNbits	18
 genomeSAsparseD	1
