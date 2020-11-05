@@ -703,8 +703,8 @@ process get_crosslinks {
     publishDir "${params.outdir}/xlinks", mode: 'copy'
 
     input:
-    tuple val(name), path(bam), path(bai) from ch_dedup.collect()
-    path(fai) from ch_fai_crosslinks
+    tuple val(name), path(bam), path(bai) from ch_dedup
+    path(fai) from ch_fai_crosslinks.collect()
 
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu
