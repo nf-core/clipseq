@@ -401,27 +401,51 @@ if (!params.star_index) {
         }
     }
 
-    process generate_star_index {
+    if (params.gtf) {
+        process generate_star_index {
 
-        tag "$fasta"    
+            tag "$fasta"    
 
-        input:
-        path(fasta) from ch_fasta
-        path(gtf) from ch_gtf_star
+            input:
+            path(fasta) from ch_fasta
+            path(gtf) from ch_gtf_star
 
-        output:
-        path("STAR_${fasta.baseName}") into ch_star_index
+            output:
+            path("STAR_${fasta.baseName}") into ch_star_index
 
-        script:
+            script:
 
-        """
-        mkdir STAR_${fasta.baseName}
-        STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
-        --genomeDir STAR_${fasta.baseName} \
-        --genomeFastaFiles $fasta \
-        --genomeSAindexNbases 11 \
-        --sjdbGTFfile $gtf
-        """
+            """
+            mkdir STAR_${fasta.baseName}
+            STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
+            --genomeDir STAR_${fasta.baseName} \
+            --genomeFastaFiles $fasta \
+            --genomeSAindexNbases 11 \
+            --sjdbGTFfile $gtf
+            """
+        }
+    } else if (!params.gtf){
+            process generate_star_index_no_gtf {
+
+            tag "$fasta"    
+
+            input:
+            path(fasta) from ch_fasta
+            path(gtf) from ch_gtf_star
+
+            output:
+            path("STAR_${fasta.baseName}") into ch_star_index
+
+            script:
+
+            """
+            mkdir STAR_${fasta.baseName}
+            STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
+            --genomeDir STAR_${fasta.baseName} \
+            --genomeFastaFiles $fasta \
+            --genomeSAindexNbases 11 \
+            """
+        }
     }
 
 }
