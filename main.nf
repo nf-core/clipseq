@@ -431,7 +431,6 @@ if (!params.star_index) {
 
             input:
             path(fasta) from ch_fasta
-            path(gtf) from ch_gtf_star
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
