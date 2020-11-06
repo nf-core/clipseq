@@ -136,6 +136,29 @@ if (params.peakcaller){
     }
 }
 
+// Check compatability of gtf file with iCount if both supplied
+// if ( icount_check &&  params.gtf ) {
+//     process gtf_check_genes {
+//         tag "$gtf"    
+
+//         input:
+//         path(gtf) from ch_check_gtf
+
+//         output:
+        
+
+//         script:
+
+//         """
+        
+//         """
+//     }
+//     if (!genes_check) {
+//         log.warn " Genes are not included in the gtf annotation, which is needed for iCount. iCount peakcaller will be skipped "
+//         icount_check = false
+//     }
+// }
+
 //
 // NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
 // If you want to use the channel below in a process, define the following:
@@ -186,6 +209,7 @@ if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
 if (params.fai) ch_fai_icount = Channel.value(params.fai)
+if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
 
 // if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
 //     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
