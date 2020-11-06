@@ -164,11 +164,11 @@ quantTranscriptomeBan             IndelSoftclipSingleend
 twopass1readsN                    18446744073709551615
 twopassMode                       None
 ##### Command Line:
-STAR --runMode genomeGenerate --runThreadN 4 --genomeDir star_chr20 --genomeFastaFiles chr20.fa --genomeSAindexNbases 11
+STAR --runMode genomeGenerate --runThreadN 1 --genomeDir star_chr20 --genomeFastaFiles chr20.fa --genomeSAindexNbases 11
 ##### Initial USER parameters from Command Line:
 ###### All USER parameters from Command Line:
 runMode                       genomeGenerate     ~RE-DEFINED
-runThreadN                    4     ~RE-DEFINED
+runThreadN                    1     ~RE-DEFINED
 genomeDir                     star_chr20     ~RE-DEFINED
 genomeFastaFiles              chr20.fa        ~RE-DEFINED
 genomeSAindexNbases           11     ~RE-DEFINED
@@ -176,14 +176,14 @@ genomeSAindexNbases           11     ~RE-DEFINED
 
 ##### Final user re-defined parameters-----------------:
 runMode                           genomeGenerate
-runThreadN                        4
+runThreadN                        1
 genomeDir                         star_chr20
 genomeFastaFiles                  chr20.fa   
 genomeSAindexNbases               11
 
 -------------------------------
 ##### Final effective command line:
-STAR   --runMode genomeGenerate   --runThreadN 4   --genomeDir star_chr20   --genomeFastaFiles chr20.fa      --genomeSAindexNbases 11
+STAR   --runMode genomeGenerate   --runThreadN 1   --genomeDir star_chr20   --genomeFastaFiles chr20.fa      --genomeSAindexNbases 11
 
 ##### Final parameters after user input--------------------------------:
 versionSTAR                       20201
@@ -191,7 +191,7 @@ versionGenome                     20101   20200
 parametersFiles                   -   
 sysShell                          -
 runMode                           genomeGenerate
-runThreadN                        4
+runThreadN                        1
 runDirPerm                        User_RWX
 runRNGseed                        777
 genomeDir                         star_chr20
@@ -351,30 +351,27 @@ twopassMode                       None
 ----------------------------------------
 
 Finished loading and checking parameters
-Nov 05 15:21:17 ... starting to generate Genome files
+Nov 06 16:07:07 ... starting to generate Genome files
 chr20.fa : chr # 0  "chr20" chrStart: 0
 Estimated genome size=265487424   64487424   201000000
 GstrandBit=32
 Number of SA indices: 127888514
-Nov 05 15:21:18 ... starting to sort Suffix Array. This may take a long time...
-Number of chunks: 4;   chunks size limit: 341036032 bytes
-Nov 05 15:21:19 ... sorting Suffix Array chunks and saving them to disk...
-Writing 14066848 bytes into star_chr20/SA_3 ; empty space on disk = 70113299529728 bytes ... done
-Writing 333165744 bytes into star_chr20/SA_2 ; empty space on disk = 70109688233984 bytes ... done
-Writing 335152888 bytes into star_chr20/SA_0 ; empty space on disk = 70024397062144 bytes ... done
-Writing 340722632 bytes into star_chr20/SA_1 ; empty space on disk = 69938597330944 bytes ... done
-Nov 05 15:21:43 ... loading chunks from disk, packing SA...
-Nov 05 15:21:45 ... finished generating suffix array
-Nov 05 15:21:45 ... generating Suffix Array index
-Nov 05 15:21:48 ... completed Suffix Array index
-Nov 05 15:21:48 ... writing Genome to disk ...
-Writing 64487424 bytes into star_chr20/Genome ; empty space on disk = 70113289043968 bytes ... done
+Nov 06 16:07:09 ... starting to sort Suffix Array. This may take a long time...
+Number of chunks: 1;   chunks size limit: 18522603088 bytes
+Nov 06 16:07:09 ... sorting Suffix Array chunks and saving them to disk...
+Writing 1023108112 bytes into star_chr20/SA_0 ; empty space on disk = 69731092529152 bytes ... done
+Nov 06 16:08:15 ... loading chunks from disk, packing SA...
+Nov 06 16:08:17 ... finished generating suffix array
+Nov 06 16:08:17 ... generating Suffix Array index
+Nov 06 16:08:20 ... completed Suffix Array index
+Nov 06 16:08:20 ... writing Genome to disk ...
+Writing 64487424 bytes into star_chr20/Genome ; empty space on disk = 69731087286272 bytes ... done
 SA size in bytes: 527540124
-Nov 05 15:21:48 ... writing Suffix Array to disk ...
-Writing 527540124 bytes into star_chr20/SA ; empty space on disk = 70096780263424 bytes ... done
-Nov 05 15:21:48 ... writing SAindex to disk
-Writing 8 bytes into star_chr20/SAindex ; empty space on disk = 69961729966080 bytes ... done
-Writing 96 bytes into star_chr20/SAindex ; empty space on disk = 69961729966080 bytes ... done
-Writing 24466771 bytes into star_chr20/SAindex ; empty space on disk = 69961729966080 bytes ... done
-Nov 05 15:21:48 ..... finished successfully
+Nov 06 16:08:20 ... writing Suffix Array to disk ...
+Writing 527540124 bytes into star_chr20/SA ; empty space on disk = 69714578505728 bytes ... done
+Nov 06 16:08:20 ... writing SAindex to disk
+Writing 8 bytes into star_chr20/SAindex ; empty space on disk = 69579528208384 bytes ... done
+Writing 96 bytes into star_chr20/SAindex ; empty space on disk = 69579528208384 bytes ... done
+Writing 24466771 bytes into star_chr20/SAindex ; empty space on disk = 69579528208384 bytes ... done
+Nov 06 16:08:20 ..... finished successfully
 DONE: Genome generation, EXITING
