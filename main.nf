@@ -660,7 +660,7 @@ if (params.smrna_fasta) {
 process align {
 
     tag "$name"
-    // label 'process_high'
+    label 'process_high'
     publishDir "${params.outdir}/premap", mode: 'copy'
 
     input:
