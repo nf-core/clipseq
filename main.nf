@@ -41,7 +41,7 @@ def helpMessage() {
       --umi_separator [st]        UMI separator character in read header/name (default: :)
 
     Peak calling:
-      --peakcaller [str]           Peak caller (options: icount, paraclu)
+      --peakcaller [str]           Peak caller. Can use multiple (comma separated), or specify 'all'. Available: icount, paraclu
       --segment [file]                Path to iCount segment file
       --half_window [int]             iCount half-window size (default: 3)
       --merge_window [int]            iCount merge-window size (default: 3)
@@ -76,12 +76,95 @@ SET UP CONFIGURATION VARIABLES
 */
 
 // Check if genome exists in the config file
-// if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
-//     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
+if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
+    exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
+// Link to smRNA if available
+} else if ( params.genomes && params.genome && params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
+    //params.smrna_genome = params.genome
+    params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
+// Show warning of no pre-mapping if smRNA fasta is unavailable and not specified. 
+} else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
+    log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+//     
+}
+
+// Configurable reference genome variables
+if (!params.fasta && params.genome && file(params.genomes[ params.genome ].fasta).exists()){
+    if (file(params.genomes[ params.genome ].fasta).exists()) {
+        params.fasta = params.genomes[ params.genome ].fasta
+    }
+} else {
+    params.fasta = false
+}
+if (!params.gtf && params.genome && params.genomes[ params.genome ].gtf) {
+    if (file(params.genomes[ params.genome ].gtf).exists()){
+        params.gtf = params.genomes[ params.genome ].gtf
+    }
+} else {
+    params.gtf = false
+}
+if (!params.star_index && params.genome && params.genomes[ params.genome ].star) {
+    if (file(params.genomes[ params.genome ].star).exists()){
+        params.star_index = params.genomes[ params.genome ].star
+    }
+} else {
+    params.star_index = false
+}
+// params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
+// params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
+// params.star_index = params.genome ? params.genomes[ params.genome ].star ?: false : false
+
+
+// Set up peak caller logic
+def paraclu_check = false
+def icount_check = false
+if (params.peakcaller){
+
+    def peak_list = params.peakcaller.split(',').collect()
+    //print peak_list
+    peak_list.each {
+        if ( it == 'all') {
+            paraclu_check = true
+            icount_check = true
+        } else if ( it == 'paraclu' && !paraclu_check ) {
+            paraclu_check = true
+        } else if ( it == 'icount' && !icount_check ) {
+            icount_check = true
+        } else {
+            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu'"
+        }
+    }
+}
+
+// cannot run icount wihtout gtf file
+if (!params.gtf && icount_check) {
+    icount_check = false
+    log.warn "iCount can  only be run with a gtf annotation file - iCount will be skipped"
+}
+
+// Check compatability of gtf file with iCount if both supplied
+// if ( icount_check &&  params.gtf ) {
+//     process gtf_check_genes {
+//         tag "$gtf"    
+
+//         input:
+//         path(gtf) from ch_check_gtf
+
+//         output:
+        
+
+//         script:
+
+//         """
+        
+//         """
+//     }
+//     if (!genes_check) {
+//         log.warn " Genes are not included in the gtf annotation, which is needed for iCount. iCount peakcaller will be skipped "
+//         icount_check = false
+//     }
 // }
 
-// TODO nf-core: Add any reference files that are needed
-// Configurable reference genomes
 //
 // NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
 // If you want to use the channel below in a process, define the following:
@@ -128,21 +211,15 @@ SET-UP INPUTS
 params.adapter = "AGATCGGAAGAGC"
 params.umi_separator = ":"
 
-params.smrna_fasta = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/small_rna.fa.gz"
-
-// params.fasta = "/Users/chakraa2/projects/nfclip/chr20.fa.gz"
-// params.star_index = "/Users/chakraa2/projects/nfclip/star_chr20"
-
-params.fai = "/Users/chakraa2/Github/nf-core-clipseq/assets/test_data/indices/chr20.fa.fai"
-
-ch_smrna_fasta = Channel.value(params.smrna_fasta)
+if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
-ch_fai_crosslinks = Channel.value(params.fai)
-ch_fai_icount = Channel.value(params.fai)
+if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
+if (params.fai) ch_fai_icount = Channel.value(params.fai)
+if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
 
-if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
-    exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
-}
+// if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
+//     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
+// }
 
 if (params.input) {
     Channel
@@ -173,11 +250,11 @@ if (params.gtf) summary['GTF ref']            = params.gtf
 if (params.star_index) summary['STAR index'] = params.star_index
 if (params.peakcaller) summary['Peak caller']            = params.peakcaller
 if (params.segment) summary['iCount segment']            = params.segment
-if (params.peakcaller == "icount") summary['Half window']            = params.half_window
-if (params.peakcaller == "icount") summary['Merge window']            = params.merge_window
-if (params.peakcaller == "paraclu") summary['Min value']            = params.min_value
-if (params.peakcaller == "paraclu") summary['Max density increase']            = params.min_density_increase
-if (params.peakcaller == "paraclu") summary['Max cluster length']            = params.max_cluster_length
+if (icount_check) summary['Half window']            = params.half_window
+if (icount_check) summary['Merge window']            = params.merge_window
+if (paraclu_check) summary['Min value']            = params.min_value
+if (paraclu_check) summary['Max density increase']            = params.min_density_increase
+if (paraclu_check) summary['Max cluster length']            = params.max_cluster_length
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -256,22 +333,25 @@ PREPROCESSING
  * Generating premapping index
  */
 
-process generate_premap_index {
+if (params.smrna_fasta) {
+    process generate_premap_index {
 
-    tag "$smrna_fasta"    
+        tag "$smrna_fasta"    
 
-    input:
-    path(smrna_fasta) from ch_smrna_fasta
+        input:
+        path(smrna_fasta) from ch_smrna_fasta
 
-    output:
-    path("${smrna_fasta.simpleName}.*.bt2") into ch_bt2_index
+        output:
+        path("${smrna_fasta.simpleName}.*.bt2") into ch_bt2_index
 
-    script:
+        script:
 
-    """
-    bowtie2-build --threads $task.cpus $smrna_fasta ${smrna_fasta.simpleName}
-    """
+        """
+        bowtie2-build --threads $task.cpus $smrna_fasta ${smrna_fasta.simpleName}
+        """
+    }
 }
+
 
 /*
  * Generating STAR index
@@ -279,42 +359,42 @@ process generate_premap_index {
 
 // Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
 
-if (!params.star_index) { // will probably need to modify the logic once iGenomes incorporated
+if (params.fasta) {
+    if (hasExtension(params.fasta, 'gz')) {
+        ch_fasta_gz = Channel
+            .fromPath(params.fasta, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
+    } else {
+        Channel
+            .fromPath(params.fasta, checkIfExists: true)
+            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
+            .into { ch_fasta; ch_fasta_fai }
+    }
+}
 
-    if (params.fasta) {
-        if (hasExtension(params.fasta, 'gz')) {
-            ch_fasta_gz = Channel
-                .fromPath(params.fasta, checkIfExists: true)
-                .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-        } else {
-            ch_fasta = Channel
-                .fromPath(params.fasta, checkIfExists: true)
-                .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
+if (params.fasta) {
+    if (hasExtension(params.fasta, 'gz')) {
+
+        process decompress_fasta {
+
+            tag "$fasta_gz"
+
+            input:
+            path(fasta_gz) from ch_fasta_gz
+
+            output:
+            path("*.fa") into (ch_fasta, ch_fasta_fai)
+
+            script:
+
+            """
+            pigz -d -c $fasta_gz > ${fasta_gz.baseName}
+            """
         }
     }
+}
 
-    if (params.fasta) {
-        if (hasExtension(params.fasta, 'gz')) {
-
-            process decompress_fasta {
-
-                tag "$fasta_gz"
-
-                input:
-                path(fasta_gz) from ch_fasta_gz
-
-                output:
-                path("*.fa") into ch_fasta
-
-                script:
-
-                """
-                pigz -d -c $fasta_gz > ${fasta_gz.baseName}
-                """
-
-            }
-        }
-    }
+if (!params.star_index) {
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
@@ -351,30 +431,78 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
         }
     }
 
-    process generate_star_index {
+    if (params.gtf) {
+        process generate_star_index {
 
-        tag "$fasta"    
+            tag "$fasta"    
 
-        input:
-        path(fasta) from ch_fasta
-        path(gtf) from ch_gtf_star
+            input:
+            path(fasta) from ch_fasta
+            path(gtf) from ch_gtf_star
 
-        output:
-        path("STAR_${fasta.baseName}") into ch_star_index
+            output:
+            path("STAR_${fasta.baseName}") into ch_star_index
 
-        script:
+            script:
 
-        """
-        mkdir STAR_${fasta.baseName}
-        STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
-        --genomeDir STAR_${fasta.baseName} \
-        --genomeFastaFiles $fasta \
-        --genomeSAindexNbases 11 \
-        --sjdbGTFfile $gtf
-        """
+            """
+            mkdir STAR_${fasta.baseName}
+            STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
+            --genomeDir STAR_${fasta.baseName} \
+            --genomeFastaFiles $fasta \
+            --genomeSAindexNbases 11 \
+            --sjdbGTFfile $gtf
+            """
+        }
+    } else if (!params.gtf){
+            process generate_star_index_no_gtf {
+
+            tag "$fasta"    
+
+            input:
+            path(fasta) from ch_fasta
+
+            output:
+            path("STAR_${fasta.baseName}") into ch_star_index
+
+            script:
+
+            """
+            mkdir STAR_${fasta.baseName}
+            STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
+            --genomeDir STAR_${fasta.baseName} \
+            --genomeFastaFiles $fasta \
+            --genomeSAindexNbases 11 \
+            """
+        }
     }
 
 }
+
+/*
+ * Generating fai index
+ */
+
+if (!params.fai) {
+    process generate_fai {
+            tag "$fasta"
+
+            input:
+            path(fasta) from ch_fasta_fai
+
+            output:
+            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount)
+
+            script:
+            
+            command = "samtools faidx $fasta"
+
+            """
+            ${command}
+            """
+    }
+}
+
 
 /*
  * Generating iCount segment file
@@ -382,7 +510,7 @@ if (!params.star_index) { // will probably need to modify the logic once iGenome
 
 // iCount GTF input autodetects gz
 
-if (params.peakcaller && params.peakcaller == 'icount') {
+if (params.peakcaller && icount_check) {
 
     if(!params.segment) {
 
@@ -442,16 +570,26 @@ process fastqc {
     tuple val(name), path(reads) from ch_fastq_fastqc_pretrim
 
     output:
-    path "*fastqc.{zip,html}" into ch_fastqc_pretrim_mqc
-
+    file "*fastqc.{zip,html}" into ch_fastqc_pretrim_mqc
+    // tuple val(name), path(reads) into ch_fastqc_pretrim_mqc
+ 
     script:
 
-    """
-    fastqc --quiet --threads $task.cpus $reads
-    mv ${reads.simpleName}*.html ${name}_prefastqc.html
-    mv ${reads.simpleName}*.zip ${name}_prefastqc.zip
-    """
+    read_ext = reads.getName().split('\\.', 2)[1]
+    read_name = reads.getName().split('\\.', 2)[0]
+    new_reads = "${name}_reads_fastqc.${read_ext}"
+    new_reads_simple = "${name}_reads_fastqc"
 
+    """
+    cp ${reads} ${new_reads}
+    fastqc --quiet --threads $task.cpus ${new_reads}
+    mv ${new_reads_simple}*.html ${name}_reads_fastqc.html
+    mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
+    rm *${read_name}*
+    """
+    // fastqc --quiet --threads $task.cpus $reads
+    // mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
+    // mv ${reads.simpleName}*.zip ${name}_pre_fastqc.zip
 }
 
 /*
@@ -473,8 +611,15 @@ process cutadapt {
 
     script:
 
+    read_ext = reads.getName().split('\\.', 2)[1]
+    read_name = reads.getName().split('\\.', 2)[0]
+    new_reads = "${name}_trim.${read_ext}"
+    new_reads_simple = "${name}_trim"
+
     """
-    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.fastq.gz $reads > ${name}_cutadapt.log
+    cp ${reads} ${new_reads}
+    rm *${read_name}*
+    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.fastq.gz $new_reads > ${name}_cutadapt.log
     """
 
 }
@@ -487,29 +632,31 @@ process cutadapt {
  * STEP 4 - Premapping
  */
 
-process premap {
+if (params.smrna_fasta) {
+    process premap {
 
-    tag "$name"
-    // label 'process_high'
-    publishDir "${params.outdir}/premap", mode: 'copy'
+        tag "$name"
+        // label 'process_high'
+        publishDir "${params.outdir}/premap", mode: 'copy'
 
-    input:
-    tuple val(name), path(reads) from ch_trimmed
-    path(index) from ch_bt2_index.collect()
+        input:
+        tuple val(name), path(reads) from ch_trimmed
+        path(index) from ch_bt2_index.collect()
 
-    output:
-    tuple val(name), path("*.fastq.gz") into ch_unmapped
-    tuple val(name), path("*.bam"), path("*.bai")
-    path "*.log" into ch_premap_mqc
+        output:
+        tuple val(name), path("*.fastq.gz") into ch_unmapped
+        tuple val(name), path("*.bam"), path("*.bai")
+        path "*.log" into ch_premap_mqc
 
-    script:
+        script:
 
-    """
-    bowtie2 -p $task.cpus -x ${index[0].simpleName} --un-gz ${name}.unmapped.fastq.gz -U $reads 2> ${name}.premap.log | \
-    samtools sort -@ $task.cpus /dev/stdin > ${name}.premapped.bam && \
-    samtools index -@ $task.cpus ${name}.premapped.bam
-    """
+        """
+        bowtie2 -p $task.cpus -x ${index[0].simpleName} --un-gz ${name}.unmapped.fastq.gz -U $reads 2> ${name}.premap.log | \
+        samtools sort -@ $task.cpus /dev/stdin > ${name}.premapped.bam && \
+        samtools index -@ $task.cpus ${name}.premapped.bam
+        """
 
+    }
 }
 
 /*
@@ -519,7 +666,7 @@ process premap {
 process align {
 
     tag "$name"
-    // label 'process_high'
+    label 'process_high'
     publishDir "${params.outdir}/premap", mode: 'copy'
 
     input:
@@ -549,7 +696,7 @@ process align {
     STAR --runThreadN $task.cpus --runMode alignReads --genomeDir $index \
     --readFilesIn $reads --readFilesCommand gunzip -c \
     --outFileNamePrefix ${name}. $clip_args && \
-    samtools index -@ task.cpus ${name}.Aligned.sortedByCoord.out.bam
+    samtools index -@ $task.cpus ${name}.Aligned.sortedByCoord.out.bam
     """
 
 }
@@ -591,7 +738,7 @@ process get_crosslinks {
 
     input:
     tuple val(name), path(bam), path(bai) from ch_dedup
-    path(fai) from ch_fai_crosslinks
+    path(fai) from ch_fai_crosslinks.collect()
 
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu
@@ -612,7 +759,7 @@ process get_crosslinks {
  * STEP 7a - Peak-call (iCount)
  */
 
-if (params.peakcaller && params.peakcaller == 'icount') {
+if (params.peakcaller && icount_check) {
 
     process icount_peak_call {
 
@@ -674,7 +821,7 @@ if (params.peakcaller && params.peakcaller == 'icount') {
  * STEP 7b - Peak-call (paraclu)
  */
 
-if (params.peakcaller && params.peakcaller == 'paraclu') {
+if (params.peakcaller && paraclu_check) {
 
     process paraclu_peak_call {
 
@@ -699,7 +846,7 @@ if (params.peakcaller && params.peakcaller == 'paraclu') {
         sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
 
         paraclu ${min_value} paraclu_input.tsv | \
-        paraclu-cut.sh -d ${min_density_increase} -l ${max_cluster_length} | \
+        paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \
         awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
         bedtools sort |
         pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
@@ -734,34 +881,39 @@ if (params.peakcaller && params.peakcaller == 'paraclu') {
 
 }
 
-// /*
-//  * STEP 2 - MultiQC
-//  */
-// process multiqc {
-//     publishDir "${params.outdir}/MultiQC", mode: 'copy'
+/*
+ * STEP 8 - MultiQC
+ */
+process multiqc {
+    publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
-//     input:
-//     file (multiqc_config) from ch_multiqc_config
-//     file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-//     // TODO nf-core: Add in log files from your new processes for MultiQC to find!
-//     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
-//     file ('software_versions/*') from ch_software_versions_yaml.collect()
-//     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
+    input:
+    file (multiqc_config) from ch_multiqc_config
+    file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
+    // TODO nf-core: Add in log files from your new processes for MultiQC to find!
+    file ('fastqc/*') from ch_fastqc_pretrim_mqc.collect().ifEmpty([])
+    file ('cutadapt/*') from ch_cutadapt_mqc.collect().ifEmpty([])
+    file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
+    file ('premap/*') from ch_align_mqc.collect().ifEmpty([])
+    //file ('dedup/*') from ch_dedup_mqc
+    //file ('software_versions/*') from ch_software_versions_yaml.collect()
+    //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
-//     output:
-//     file "*multiqc_report.html" into ch_multiqc_report
-//     file "*_data"
-//     file "multiqc_plots"
+    output:
+    file "*multiqc_report.html" into ch_multiqc_report
+    file "*_data"
+    file "multiqc_plots"
 
-//     script:
-//     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
-//     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
-//     custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
-//     // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
-//     """
-//     multiqc -f $rtitle $rfilename $custom_config_file .
-//     """
-// }
+    script:
+    rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
+    rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
+    custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
+    // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
+    """
+    multiqc . -f $rtitle $rfilename $custom_config_file \\
+        -m fastqc -m cutadapt -m bowtie2 -m star
+    """
+}
 
 // /*
 //  * STEP 3 - Output Description HTML
