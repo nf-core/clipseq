@@ -434,7 +434,8 @@ if (!params.star_index) {
     if (params.gtf) {
         process generate_star_index {
 
-            tag "$fasta"    
+            tag "$fasta"
+            label 'process_high'
 
             input:
             path(fasta) from ch_fasta
@@ -457,7 +458,8 @@ if (!params.star_index) {
     } else if (!params.gtf){
             process generate_star_index_no_gtf {
 
-            tag "$fasta"    
+            tag "$fasta"
+            label 'process_high'
 
             input:
             path(fasta) from ch_fasta
@@ -560,7 +562,7 @@ CLIP PIPELINE
 process fastqc {
 
     tag "$name"
-    // label 'process_medium'
+    label 'process_medium'
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
                       filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
@@ -599,7 +601,7 @@ process fastqc {
 process cutadapt {
 
     tag "$name"
-    // label 'process_high'
+    label 'process_high'
     publishDir "${params.outdir}/cutadapt", mode: 'copy'
 
     input:
@@ -636,7 +638,7 @@ if (params.smrna_fasta) {
     process premap {
 
         tag "$name"
-        // label 'process_high'
+        label 'process_high'
         publishDir "${params.outdir}/premap", mode: 'copy'
 
         input:
@@ -708,7 +710,7 @@ process align {
 process dedup {
 
     tag "$name"
-    // label 'process_high'
+    label 'process_high'
     publishDir "${params.outdir}/dedup", mode: 'copy'
 
     input:
@@ -733,7 +735,7 @@ process dedup {
 process get_crosslinks {
 
     tag "$name"
-    // label 'process_medium'
+    label 'process_medium'
     publishDir "${params.outdir}/xlinks", mode: 'copy'
 
     input:
