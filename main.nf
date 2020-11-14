@@ -669,7 +669,7 @@ process align {
 
     tag "$name"
     label 'process_high'
-    publishDir "${params.outdir}/premap", mode: 'copy'
+    publishDir "${params.outdir}/mapped", mode: 'copy'
 
     input:
     tuple val(name), path(reads) from ch_unmapped
@@ -717,13 +717,14 @@ process dedup {
     tuple val(name), path(bam), path(bai) from ch_aligned
 
     output:
-    tuple val(name), path(bam), path(bai) into ch_dedup
+    tuple val(name), path("*.dedup.bam"), path("*.dedup.bam.bai") into ch_dedup
     path "*.log" into ch_dedup_mqc
 
     script:
 
     """
     umi_tools dedup --umi-separator="$params.umi_separator" -I $bam -S ${name}.dedup.bam --output-stats=${name} --log=${name}.log
+    samtools index -@ $task.cpus ${name}.dedup.bam
     """
 
 }
