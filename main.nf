@@ -213,11 +213,14 @@ params.umi_separator = ":"
 
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
+if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
+// fai channels
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
 if (params.fai) ch_fai_icount = Channel.value(params.fai)
 if (params.fai) ch_fai_icount_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
-if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
+if (params.fai) ch_fai_size = Channel.value(params.fai)
+
 
 // if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
 //     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
@@ -357,11 +360,9 @@ if (params.smrna_fasta) {
 
 
 /*
- * Generating STAR index
+ * Decompression
  */
-
 // Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
-
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
         ch_fasta_gz = Channel
@@ -387,7 +388,7 @@ if (params.fasta) {
             path(fasta_gz) from ch_fasta_gz
 
                 output:
-                path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme, ch_fasta_dreme_paraclu)
+                path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme, ch_fasta_dreme_paraclu )
 
             script:
 
@@ -397,6 +398,35 @@ if (params.fasta) {
         }
     }
 }
+
+/*
+ * Generating fai index
+ */
+
+if (!params.fai) {
+    process generate_fai {
+            tag "$fasta"
+            label 'process_low'
+
+            input:
+            path(fasta) from ch_fasta_fai
+
+            output:
+            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_size)
+
+            script:
+            
+            command = "samtools faidx $fasta"
+
+            """
+            ${command}
+            """
+    }
+}
+
+/*
+ * Generating STAR index
+ */
 
 if (!params.star_index) {
 
@@ -411,6 +441,32 @@ if (!params.star_index) {
                 .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
         }
     }
+
+    // Calculate genomeSAindexNbases for building star index
+    process check_genome_size {
+        tag "$name"
+        label 'process_low'
+
+        input:
+        path(fai) from ch_fai_size
+
+        output:
+        path("genome_size.txt") into ch_genome_size
+
+        """
+        awk '{total = total + \$2}END{print total}' $fai > genome_size.txt
+        """
+        
+    }
+
+    // transform genome size to calculate genomeSAindexNbases to generate STAR index
+    ch_genomeSAindexNbases = ch_genome_size
+    .map { it -> it.getText("UTF-8") as int } 
+    .map { it -> (it / 2) - 1 }
+    .map { it -> Math.round(Math.log(it) / Math.log(2)) }
+    .map { it -> Math.min( 14, it ).shortValue() }
+    .map { it -> it.toString() }
+
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
@@ -445,6 +501,7 @@ if (!params.star_index) {
             input:
             path(fasta) from ch_fasta
             path(gtf) from ch_gtf_star
+            val(sa_ind_base) from ch_genomeSAindexNbases
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
@@ -456,7 +513,7 @@ if (!params.star_index) {
             STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
             --genomeDir STAR_${fasta.baseName} \
             --genomeFastaFiles $fasta \
-            --genomeSAindexNbases 11 \
+            --genomeSAindexNbases $sa_ind_base \
             --sjdbGTFfile $gtf
             """
         }
@@ -468,6 +525,7 @@ if (!params.star_index) {
 
             input:
             path(fasta) from ch_fasta
+            val(sa_ind_base) from ch_genomeSAindexNbases
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
@@ -479,36 +537,11 @@ if (!params.star_index) {
             STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
             --genomeDir STAR_${fasta.baseName} \
             --genomeFastaFiles $fasta \
-            --genomeSAindexNbases 11 \
+            --genomeSAindexNbases $sa_ind_base \
             """
         }
     }
 
-}
-
-/*
- * Generating fai index
- */
-
-if (!params.fai) {
-    process generate_fai {
-            tag "$fasta"
-            label 'process_low'
-
-            input:
-            path(fasta) from ch_fasta_fai
-
-            output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif)
-
-            script:
-            
-            command = "samtools faidx $fasta"
-
-            """
-            ${command}
-            """
-    }
 }
 
 
