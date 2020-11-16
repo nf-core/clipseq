@@ -338,7 +338,8 @@ PREPROCESSING
 if (params.smrna_fasta) {
     process generate_premap_index {
 
-        tag "$smrna_fasta"    
+        tag "$smrna_fasta"
+        label 'process_low'    
 
         input:
         path(smrna_fasta) from ch_smrna_fasta
@@ -380,6 +381,7 @@ if (params.fasta) {
         process decompress_fasta {
 
             tag "$fasta_gz"
+            label 'process_low'
 
             input:
             path(fasta_gz) from ch_fasta_gz
@@ -416,6 +418,7 @@ if (!params.star_index) {
             process decompress_gtf {
 
                 tag "$gtf_gz"
+                label 'process_low'
 
                 input:
                 path(gtf_gz) from ch_gtf_gz_star
@@ -490,6 +493,7 @@ if (!params.star_index) {
 if (!params.fai) {
     process generate_fai {
             tag "$fasta"
+            label 'process_low'
 
             input:
             path(fasta) from ch_fasta_fai
