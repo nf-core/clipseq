@@ -382,8 +382,8 @@ if (params.fasta) {
             input:
             path(fasta_gz) from ch_fasta_gz
 
-            output:
-            path("*.fa") into (ch_fasta, ch_fasta_fai)
+                output:
+                path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme)
 
             script:
 
@@ -669,7 +669,7 @@ process align {
 
     tag "$name"
     label 'process_high'
-    publishDir "${params.outdir}/premap", mode: 'copy'
+    publishDir "${params.outdir}/mapped", mode: 'copy'
 
     input:
     tuple val(name), path(reads) from ch_unmapped
@@ -717,13 +717,14 @@ process dedup {
     tuple val(name), path(bam), path(bai) from ch_aligned
 
     output:
-    tuple val(name), path(bam), path(bai) into ch_dedup
+    tuple val(name), path("*.dedup.bam"), path("*.dedup.bam.bai") into ch_dedup
     path "*.log" into ch_dedup_mqc
 
     script:
 
     """
     umi_tools dedup --umi-separator="$params.umi_separator" -I $bam -S ${name}.dedup.bam --output-stats=${name} --log=${name}.log
+    samtools index -@ $task.cpus ${name}.dedup.bam
     """
 
 }
@@ -792,30 +793,31 @@ if (params.peakcaller && icount_check) {
 
     }
 
-    // process icount_merge_sigxls {
+    process icount_motif_dreme {
 
-    //     tag "$name"
-    //     publishDir "${params.outdir}/icount", mode: 'copy'
+        tag "$name"
+        publishDir "${params.outdir}/icount_motif", mode: 'copy'
 
-    //     input:
-    //     tuple val(name), path(sigxlinks) from ch_sigxlinks
+        input:
+        tuple val(name), path(peaks) from ch_peaks_icount
+        path(fasta) from ch_fasta_dreme
+        path(fai) from ch_fai_crosslinks
 
-    //     output:
-    //     tuple val(name), path("${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme
 
-    //     script:
+        script:
 
-    //     half_window = 3
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if($6 == "+") print $1, $2, $2+1, $4, $5, $6; else print $1, $3-1, $3, $4, $5, $6}' | \
+        bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
+        bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
-    //     """
-    //     pigz -d -c $sigxlinks | \
-    //     bedtools sort | \
-    //     bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
-    //     pigz > ${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz
-    //     """
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """      
 
-    // }
+    }
 
 }
 
@@ -856,30 +858,31 @@ if (params.peakcaller && paraclu_check) {
 
     }
 
-    // process icount_merge_sigxls {
+    process paraclu_motif_dreme {
 
-    //     tag "$name"
-    //     publishDir "${params.outdir}/icount", mode: 'copy'
+        tag "$name"
+        publishDir "${params.outdir}/paraclu_motif", mode: 'copy'
 
-    //     input:
-    //     tuple val(name), path(sigxlinks) from ch_sigxlinks
+        input:
+        tuple val(name), path(peaks) from ch_peaks_paraclu
+        path(fasta) from ch_fasta_dreme
+        path(fai) from ch_fai_crosslinks
 
-    //     output:
-    //     tuple val(name), path("${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz") into ch_peaks
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme
 
-    //     script:
+        script:
 
-    //     half_window = 3
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if($6 == "+") print $1, $2, $2+1, $4, $5, $6; else print $1, $3-1, $3, $4, $5, $6}' | \
+        bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
+        bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
-    //     """
-    //     pigz -d -c $sigxlinks | \
-    //     bedtools sort | \
-    //     bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
-    //     pigz > ${name}.${half_window}nt.${merge_window}nt.peaks.bed.gz
-    //     """
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """      
 
-    // }
+    }
 
 }
 
