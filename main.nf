@@ -89,7 +89,7 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 }
 
 // Configurable reference genome variables
-if (!params.fasta && params.genome && file(params.genomes[ params.genome ].fasta).exists()){
+if (!params.fasta && params.genome && params.genomes[ params.genome ].fasta) {
     if (file(params.genomes[ params.genome ].fasta).exists()) {
         params.fasta = params.genomes[ params.genome ].fasta
     }
@@ -213,9 +213,14 @@ params.umi_separator = ":"
 
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
+if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
+// fai channels
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
 if (params.fai) ch_fai_icount = Channel.value(params.fai)
-if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
+if (params.fai) ch_fai_icount_motif = Channel.value(params.fai)
+if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
+if (params.fai) ch_fai_size = Channel.value(params.fai)
+
 
 // if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
 //     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
@@ -336,7 +341,8 @@ PREPROCESSING
 if (params.smrna_fasta) {
     process generate_premap_index {
 
-        tag "$smrna_fasta"    
+        tag "$smrna_fasta"
+        label 'process_low'    
 
         input:
         path(smrna_fasta) from ch_smrna_fasta
@@ -354,11 +360,9 @@ if (params.smrna_fasta) {
 
 
 /*
- * Generating STAR index
+ * Decompression
  */
-
 // Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
-
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
         ch_fasta_gz = Channel
@@ -368,7 +372,7 @@ if (params.fasta) {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-            .into { ch_fasta; ch_fasta_fai }
+            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu }
     }
 }
 
@@ -378,12 +382,13 @@ if (params.fasta) {
         process decompress_fasta {
 
             tag "$fasta_gz"
+            label 'process_low'
 
             input:
             path(fasta_gz) from ch_fasta_gz
 
                 output:
-                path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme)
+                path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme, ch_fasta_dreme_paraclu )
 
             script:
 
@@ -393,6 +398,35 @@ if (params.fasta) {
         }
     }
 }
+
+/*
+ * Generating fai index
+ */
+
+if (!params.fai) {
+    process generate_fai {
+            tag "$fasta"
+            label 'process_low'
+
+            input:
+            path(fasta) from ch_fasta_fai
+
+            output:
+            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_size)
+
+            script:
+            
+            command = "samtools faidx $fasta"
+
+            """
+            ${command}
+            """
+    }
+}
+
+/*
+ * Generating STAR index
+ */
 
 if (!params.star_index) {
 
@@ -408,12 +442,39 @@ if (!params.star_index) {
         }
     }
 
+    // Calculate genomeSAindexNbases for building star index
+    process check_genome_size {
+        tag "$name"
+        label 'process_low'
+
+        input:
+        path(fai) from ch_fai_size
+
+        output:
+        path("genome_size.txt") into ch_genome_size
+
+        """
+        awk '{total = total + \$2}END{print total}' $fai > genome_size.txt
+        """
+        
+    }
+
+    // transform genome size to calculate genomeSAindexNbases to generate STAR index
+    ch_genomeSAindexNbases = ch_genome_size
+    .map { it -> it.getText("UTF-8") as int } 
+    .map { it -> (it / 2) - 1 }
+    .map { it -> Math.round(Math.log(it) / Math.log(2)) }
+    .map { it -> Math.min( 14, it ).shortValue() }
+    .map { it -> it.toString() }
+
+
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
 
             process decompress_gtf {
 
                 tag "$gtf_gz"
+                label 'process_low'
 
                 input:
                 path(gtf_gz) from ch_gtf_gz_star
@@ -440,6 +501,7 @@ if (!params.star_index) {
             input:
             path(fasta) from ch_fasta
             path(gtf) from ch_gtf_star
+            val(sa_ind_base) from ch_genomeSAindexNbases
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
@@ -451,7 +513,7 @@ if (!params.star_index) {
             STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
             --genomeDir STAR_${fasta.baseName} \
             --genomeFastaFiles $fasta \
-            --genomeSAindexNbases 11 \
+            --genomeSAindexNbases $sa_ind_base \
             --sjdbGTFfile $gtf
             """
         }
@@ -463,6 +525,7 @@ if (!params.star_index) {
 
             input:
             path(fasta) from ch_fasta
+            val(sa_ind_base) from ch_genomeSAindexNbases
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
@@ -474,35 +537,11 @@ if (!params.star_index) {
             STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
             --genomeDir STAR_${fasta.baseName} \
             --genomeFastaFiles $fasta \
-            --genomeSAindexNbases 11 \
+            --genomeSAindexNbases $sa_ind_base \
             """
         }
     }
 
-}
-
-/*
- * Generating fai index
- */
-
-if (!params.fai) {
-    process generate_fai {
-            tag "$fasta"
-
-            input:
-            path(fasta) from ch_fasta_fai
-
-            output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount)
-
-            script:
-            
-            command = "samtools faidx $fasta"
-
-            """
-            ${command}
-            """
-    }
 }
 
 
@@ -767,6 +806,7 @@ if (params.peakcaller && icount_check) {
     process icount_peak_call {
 
         tag "$name"
+        label 'process_low'
         publishDir "${params.outdir}/icount", mode: 'copy'
 
         input:
@@ -796,23 +836,24 @@ if (params.peakcaller && icount_check) {
     process icount_motif_dreme {
 
         tag "$name"
+        label 'process_low'
         publishDir "${params.outdir}/icount_motif", mode: 'copy'
 
         input:
         tuple val(name), path(peaks) from ch_peaks_icount
-        path(fasta) from ch_fasta_dreme
-        path(fai) from ch_fai_crosslinks
+        path(fasta) from ch_fasta_dreme_icount
+        path(fai) from ch_fai_icount_motif
 
         output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
 
         script:
 
         """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if($6 == "+") print $1, $2, $2+1, $4, $5, $6; else print $1, $3-1, $3, $4, $5, $6}' | \
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
         bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
-        bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
         dreme -norc -o ${name}_dreme -p resized_peaks.fasta
         """      
@@ -830,6 +871,7 @@ if (params.peakcaller && paraclu_check) {
     process paraclu_peak_call {
 
         tag "$name"
+        label 'process_low'
         publishDir "${params.outdir}/paraclu", mode: 'copy'
 
         input:
@@ -861,23 +903,24 @@ if (params.peakcaller && paraclu_check) {
     process paraclu_motif_dreme {
 
         tag "$name"
+        label 'process_low'
         publishDir "${params.outdir}/paraclu_motif", mode: 'copy'
 
         input:
         tuple val(name), path(peaks) from ch_peaks_paraclu
-        path(fasta) from ch_fasta_dreme
-        path(fai) from ch_fai_crosslinks
+        path(fasta) from ch_fasta_dreme_paraclu
+        path(fai) from ch_fai_paraclu_motif
 
         output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
 
         script:
 
         """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if($6 == "+") print $1, $2, $2+1, $4, $5, $6; else print $1, $3-1, $3, $4, $5, $6}' | \
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
         bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
-        bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
         dreme -norc -o ${name}_dreme -p resized_peaks.fasta
         """      
@@ -890,6 +933,9 @@ if (params.peakcaller && paraclu_check) {
  * STEP 8 - MultiQC
  */
 process multiqc {
+
+    tag "$name"
+    label 'process_low'
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
     input:
