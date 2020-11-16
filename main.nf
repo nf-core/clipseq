@@ -818,7 +818,7 @@ if (params.peakcaller && icount_check) {
         pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
         bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
-        bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
         dreme -norc -o ${name}_dreme -p resized_peaks.fasta
         """      
@@ -883,7 +883,7 @@ if (params.peakcaller && paraclu_check) {
         pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
         bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
-        bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
         dreme -norc -o ${name}_dreme -p resized_peaks.fasta
         """      
@@ -896,6 +896,9 @@ if (params.peakcaller && paraclu_check) {
  * STEP 8 - MultiQC
  */
 process multiqc {
+
+    tag "$name"
+    label 'process_low'
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
     input:
