@@ -89,7 +89,7 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 }
 
 // Configurable reference genome variables
-if (!params.fasta && params.genome && file(params.genomes[ params.genome ].fasta).exists()){
+if (!params.fasta && params.genome && params.genomes[ params.genome ].fasta) {
     if (file(params.genomes[ params.genome ].fasta).exists()) {
         params.fasta = params.genomes[ params.genome ].fasta
     }
@@ -215,6 +215,8 @@ if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
 if (params.fai) ch_fai_icount = Channel.value(params.fai)
+if (params.fai) ch_fai_icount_motif = Channel.value(params.fai)
+if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
 
 // if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
@@ -368,7 +370,7 @@ if (params.fasta) {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme }
+            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu }
     }
 }
 
@@ -383,7 +385,7 @@ if (params.fasta) {
             path(fasta_gz) from ch_fasta_gz
 
                 output:
-                path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme)
+                path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme, ch_fasta_dreme_paraclu)
 
             script:
 
@@ -493,7 +495,7 @@ if (!params.fai) {
             path(fasta) from ch_fasta_fai
 
             output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount)
+            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif)
 
             script:
             
@@ -800,11 +802,11 @@ if (params.peakcaller && icount_check) {
 
         input:
         tuple val(name), path(peaks) from ch_peaks_icount
-        path(fasta) from ch_fasta_dreme
-        path(fai) from ch_fai_crosslinks
+        path(fasta) from ch_fasta_dreme_icount
+        path(fai) from ch_fai_icount_motif
 
         output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
 
         script:
 
@@ -865,11 +867,11 @@ if (params.peakcaller && paraclu_check) {
 
         input:
         tuple val(name), path(peaks) from ch_peaks_paraclu
-        path(fasta) from ch_fasta_dreme
-        path(fai) from ch_fai_crosslinks
+        path(fasta) from ch_fasta_dreme_paraclu
+        path(fai) from ch_fai_paraclu_motif
 
         output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
 
         script:
 
