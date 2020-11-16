@@ -809,7 +809,7 @@ if (params.peakcaller && icount_check) {
         script:
 
         """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if($6 == "+") print $1, $2, $2+1, $4, $5, $6; else print $1, $3-1, $3, $4, $5, $6}' | \
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
         bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
         bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
@@ -874,7 +874,7 @@ if (params.peakcaller && paraclu_check) {
         script:
 
         """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if($6 == "+") print $1, $2, $2+1, $4, $5, $6; else print $1, $3-1, $3, $4, $5, $6}' | \
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
         bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
 
         bedtools getfasta -f -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
