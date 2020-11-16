@@ -806,6 +806,7 @@ if (params.peakcaller && icount_check) {
     process icount_peak_call {
 
         tag "$name"
+        label 'process_low'
         publishDir "${params.outdir}/icount", mode: 'copy'
 
         input:
@@ -835,6 +836,7 @@ if (params.peakcaller && icount_check) {
     process icount_motif_dreme {
 
         tag "$name"
+        label 'process_low'
         publishDir "${params.outdir}/icount_motif", mode: 'copy'
 
         input:
@@ -869,6 +871,7 @@ if (params.peakcaller && paraclu_check) {
     process paraclu_peak_call {
 
         tag "$name"
+        label 'process_low'
         publishDir "${params.outdir}/paraclu", mode: 'copy'
 
         input:
@@ -900,6 +903,7 @@ if (params.peakcaller && paraclu_check) {
     process paraclu_motif_dreme {
 
         tag "$name"
+        label 'process_low'
         publishDir "${params.outdir}/paraclu_motif", mode: 'copy'
 
         input:
