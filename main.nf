@@ -35,13 +35,13 @@ def helpMessage() {
       --smrna_fasta [file]            Path to small RNA fasta reference
 
     Adapter trimming:
-      --adapter [str]              Adapter to trim from reads (default: AGATCGGAAGAGC)
+      --adapter [str]                 Adapter to trim from reads (default: AGATCGGAAGAGC)
 
     Deduplication:
-      --umi_separator [st]        UMI separator character in read header/name (default: :)
+      --umi_separator [str]           UMI separator character in read header/name (default: :)
 
     Peak calling:
-      --peakcaller [str]           Peak caller. Can use multiple (comma separated), or specify 'all'. Available: icount, paraclu
+      --peakcaller [str]              Peak caller. Can use multiple (comma separated), or specify 'all'. Available: icount, paraclu
       --segment [file]                Path to iCount segment file
       --half_window [int]             iCount half-window size (default: 3)
       --merge_window [int]            iCount merge-window size (default: 3)
@@ -784,6 +784,7 @@ process get_crosslinks {
 
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu
+    tuple val(name), path("${name}.xl.bedgraph.gz") into ch_xlinks_bedgraphs
 
     script:
 
@@ -793,6 +794,8 @@ process get_crosslinks {
     bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "+"}' > pos.bed
     bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "-"}' > neg.bed
     cat pos.bed neg.bed | sort -k1,1 -k2,2n | pigz > ${name}.xl.bed.gz
+
+    zcat ${name}.xl.bed.gz | awk '{OFS = "\t"}{if (\$6 == "+") {print \$1, \$2, \$3, \$5} else {print \$1, \$2, \$3, -\$5}}' | pigz > ${name}.xl.bedgraph.gz
     """
 
 }
@@ -841,8 +844,8 @@ if (params.peakcaller && icount_check) {
 
         input:
         tuple val(name), path(peaks) from ch_peaks_icount
-        path(fasta) from ch_fasta_dreme_icount
-        path(fai) from ch_fai_icount_motif
+        path(fasta) from ch_fasta_dreme_icount.collect()
+        path(fai) from ch_fai_icount_motif.collect()
 
         output:
         tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
@@ -908,8 +911,8 @@ if (params.peakcaller && paraclu_check) {
 
         input:
         tuple val(name), path(peaks) from ch_peaks_paraclu
-        path(fasta) from ch_fasta_dreme_paraclu
-        path(fai) from ch_fai_paraclu_motif
+        path(fasta) from ch_fasta_dreme_paraclu.collect()
+        path(fai) from ch_fai_paraclu_motif.collect()
 
         output:
         tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
