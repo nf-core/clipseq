@@ -256,7 +256,7 @@ if (params.fasta) summary['Fasta ref']        = params.fasta
 if (params.gtf) summary['GTF ref']            = params.gtf
 if (params.star_index) summary['STAR index'] = params.star_index
 if (params.deduplicate) summary['Deduplicate'] = params.deduplicate
-if (params.umi_separator) summary['UMI separator'] = params.umi_separator
+if (params.deduplicate && params.umi_separator) summary['UMI separator'] = params.umi_separator
 if (params.peakcaller) summary['Peak caller']            = params.peakcaller
 if (params.segment) summary['iCount segment']            = params.segment
 if (icount_check) summary['Half window']            = params.half_window
@@ -777,7 +777,7 @@ if (params.deduplicate) {
         """
 
     } 
-    
+
 } else {
 
     ch_dedup = ch_aligned
