@@ -18,7 +18,7 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/clipseq --reads '*_R{1,2}.fastq.gz' -profile docker
+    nextflow run nf-core/clipseq --input metadata.csv -profile docker
 
     Mandatory arguments:
       --input [file]                  Comma-separated file with details of samples and reads
@@ -38,6 +38,7 @@ def helpMessage() {
       --adapter [str]                 Adapter to trim from reads (default: AGATCGGAAGAGC)
 
     Deduplication:
+      --deduplicate [bool]            Deduplicate using UMIs (default: true)
       --umi_separator [str]           UMI separator character in read header/name (default: :)
 
     Peak calling:
@@ -83,9 +84,19 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
     //params.smrna_genome = params.genome
     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
 // Show warning of no pre-mapping if smRNA fasta is unavailable and not specified. 
-} else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
-    log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
-//     
+} 
+
+// else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
+//     log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+// //     
+// }
+
+if(!params.smrna_fasta) {
+    if(params.genome) {
+        log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+    } else {
+        log.warn "There is no smRNA fasta file suppled or genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+    }
 }
 
 // Configurable reference genome variables
@@ -139,7 +150,7 @@ if (params.peakcaller){
 // cannot run icount wihtout gtf file
 if (!params.gtf && icount_check) {
     icount_check = false
-    log.warn "iCount can  only be run with a gtf annotation file - iCount will be skipped"
+    log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
 // Check compatability of gtf file with iCount if both supplied
@@ -210,6 +221,7 @@ SET-UP INPUTS
 
 params.adapter = "AGATCGGAAGAGC"
 params.umi_separator = ":"
+params.deduplicate = true
 
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
@@ -253,6 +265,8 @@ summary['Input']            = params.input
 if (params.fasta) summary['Fasta ref']        = params.fasta
 if (params.gtf) summary['GTF ref']            = params.gtf
 if (params.star_index) summary['STAR index'] = params.star_index
+if (params.deduplicate) summary['Deduplicate'] = params.deduplicate
+if (params.deduplicate && params.umi_separator) summary['UMI separator'] = params.umi_separator
 if (params.peakcaller) summary['Peak caller']            = params.peakcaller
 if (params.segment) summary['iCount segment']            = params.segment
 if (icount_check) summary['Half window']            = params.half_window
@@ -698,6 +712,11 @@ if (params.smrna_fasta) {
         """
 
     }
+} else {
+
+    ch_unmapped = ch_trimmed
+    ch_premap_mqc = Channel.empty()
+
 }
 
 /*
@@ -745,26 +764,34 @@ process align {
 /*
  * STEP 6 - Deduplicate
  */
+if (params.deduplicate) {
 
-process dedup {
+    process dedup {
 
-    tag "$name"
-    label 'process_high'
-    publishDir "${params.outdir}/dedup", mode: 'copy'
+        tag "$name"
+        label 'process_high'
+        publishDir "${params.outdir}/dedup", mode: 'copy'
 
-    input:
-    tuple val(name), path(bam), path(bai) from ch_aligned
+        input:
+        tuple val(name), path(bam), path(bai) from ch_aligned
 
-    output:
-    tuple val(name), path("*.dedup.bam"), path("*.dedup.bam.bai") into ch_dedup
-    path "*.log" into ch_dedup_mqc
+        output:
+        tuple val(name), path("*.dedup.bam"), path("*.dedup.bam.bai") into ch_dedup
+        path "*.log" into ch_dedup_mqc
 
-    script:
+        script:
 
-    """
-    umi_tools dedup --umi-separator="$params.umi_separator" -I $bam -S ${name}.dedup.bam --output-stats=${name} --log=${name}.log
-    samtools index -@ $task.cpus ${name}.dedup.bam
-    """
+        """
+        umi_tools dedup --umi-separator="$params.umi_separator" -I $bam -S ${name}.dedup.bam --output-stats=${name} --log=${name}.log
+        samtools index -@ $task.cpus ${name}.dedup.bam
+        """
+
+    } 
+
+} else {
+
+    ch_dedup = ch_aligned
+    ch_dedup_mqc = Channel.empty()
 
 }
 
