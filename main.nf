@@ -332,7 +332,7 @@ log.info "-\033[2m--------------------------------------------------\033[0m-"
 //  * Parse software version numbers
 //  */
 // process get_software_versions {
-//     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+//     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
 //         saveAs: { filename ->
 //                       if (filename.indexOf(".csv") > 0) filename
 //                       else null
@@ -590,7 +590,7 @@ if (params.peakcaller && icount_check) {
 
             tag "$gtf"
 
-            publishDir "${params.outdir}/icount", mode: 'copy'
+            publishDir "${params.outdir}/icount", mode: params.publish_dir_mode
 
             input:
             path(gtf) from ch_gtf_icount
@@ -629,7 +629,7 @@ process fastqc {
 
     tag "$name"
     label 'process_medium'
-    publishDir "${params.outdir}/fastqc", mode: 'copy',
+    publishDir "${params.outdir}/fastqc", mode: params.publish_dir_mode,
         saveAs: { filename ->
                       filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
                 }
@@ -670,7 +670,7 @@ process cutadapt {
 
     tag "$name"
     label 'process_high'
-    publishDir "${params.outdir}/cutadapt", mode: 'copy'
+    publishDir "${params.outdir}/cutadapt", mode: params.publish_dir_mode
 
     input:
     tuple val(name), path(reads) from ch_fastq
@@ -707,7 +707,7 @@ if (params.smrna_fasta) {
 
         tag "$name"
         label 'process_high'
-        publishDir "${params.outdir}/premap", mode: 'copy'
+        publishDir "${params.outdir}/premap", mode: params.publish_dir_mode
 
         input:
         tuple val(name), path(reads) from ch_trimmed
@@ -742,7 +742,7 @@ process align {
 
     tag "$name"
     label 'process_high'
-    publishDir "${params.outdir}/mapped", mode: 'copy'
+    publishDir "${params.outdir}/mapped", mode: params.publish_dir_mode
 
     input:
     tuple val(name), path(reads) from ch_unmapped
@@ -785,7 +785,7 @@ if (params.deduplicate) {
 
         tag "$name"
         label 'process_high'
-        publishDir "${params.outdir}/dedup", mode: 'copy'
+        publishDir "${params.outdir}/dedup", mode: params.publish_dir_mode
 
         input:
         tuple val(name), path(bam), path(bai) from ch_aligned
@@ -818,7 +818,7 @@ process get_crosslinks {
 
     tag "$name"
     label 'process_medium'
-    publishDir "${params.outdir}/xlinks", mode: 'copy'
+    publishDir "${params.outdir}/xlinks", mode: params.publish_dir_mode
 
     input:
     tuple val(name), path(bam), path(bai) from ch_dedup
@@ -852,7 +852,7 @@ if (params.peakcaller && icount_check) {
 
         tag "$name"
         label 'process_low'
-        publishDir "${params.outdir}/icount", mode: 'copy'
+        publishDir "${params.outdir}/icount", mode: params.publish_dir_mode
 
         input:
         tuple val(name), path(xlinks) from ch_xlinks_icount
@@ -882,7 +882,7 @@ if (params.peakcaller && icount_check) {
 
         tag "$name"
         label 'process_low'
-        publishDir "${params.outdir}/icount_motif", mode: 'copy'
+        publishDir "${params.outdir}/icount_motif", mode: params.publish_dir_mode
 
         input:
         tuple val(name), path(peaks) from ch_peaks_icount
@@ -917,7 +917,7 @@ if (params.peakcaller && paraclu_check) {
 
         tag "$name"
         label 'process_low'
-        publishDir "${params.outdir}/paraclu", mode: 'copy'
+        publishDir "${params.outdir}/paraclu", mode: params.publish_dir_mode
 
         input:
         tuple val(name), path(xlinks) from ch_xlinks_paraclu
@@ -949,7 +949,7 @@ if (params.peakcaller && paraclu_check) {
 
         tag "$name"
         label 'process_low'
-        publishDir "${params.outdir}/paraclu_motif", mode: 'copy'
+        publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
 
         input:
         tuple val(name), path(peaks) from ch_peaks_paraclu
@@ -981,7 +981,7 @@ process multiqc {
 
     tag "$name"
     label 'process_low'
-    publishDir "${params.outdir}/MultiQC", mode: 'copy'
+    publishDir "${params.outdir}/MultiQC", mode: params.publish_dir_mode
 
     input:
     file (multiqc_config) from ch_multiqc_config
