@@ -776,6 +776,8 @@ if (params.deduplicate) {
         samtools index -@ $task.cpus ${name}.dedup.bam
         """
 
+    } 
+    
 } else {
 
     ch_dedup = ch_aligned
