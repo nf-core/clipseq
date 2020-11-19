@@ -468,7 +468,7 @@ if (!params.star_index) {
         path("genome_size.txt") into ch_genome_size
 
         """
-        awk '{total = total + \$2}END{print total}' $fai > genome_size.txt
+        awk '{total = total + \$2}END{printf "%.0f", total}' $fai > genome_size.txt
         """
         
     }
