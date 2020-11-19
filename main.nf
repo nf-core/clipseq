@@ -84,9 +84,19 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
     //params.smrna_genome = params.genome
     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
 // Show warning of no pre-mapping if smRNA fasta is unavailable and not specified. 
-} else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
-    log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
-//     
+} 
+
+// else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
+//     log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+// //     
+// }
+
+if(!params.smrna_fasta) {
+    if(params.genome) {
+        log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+    } else {
+        log.warn "There is no smRNA fasta file suppled or genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+    }
 }
 
 // Configurable reference genome variables
