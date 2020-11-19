@@ -150,7 +150,7 @@ if (params.peakcaller){
 // cannot run icount wihtout gtf file
 if (!params.gtf && icount_check) {
     icount_check = false
-    log.warn "iCount can  only be run with a gtf annotation file - iCount will be skipped"
+    log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
 // Check compatability of gtf file with iCount if both supplied
