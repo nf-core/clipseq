@@ -468,7 +468,7 @@ if (!params.star_index) {
         path("genome_size.txt") into ch_genome_size
 
         script:
-        
+
         """
         awk '{total = total + \$2}END{if ((log(total)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(total)/log(2))/2 - 1}}' $fai > genome_size.txt 
         """
@@ -642,8 +642,10 @@ process fastqc {
     fastqc --quiet --threads $task.cpus ${new_reads}
     mv ${new_reads_simple}*.html ${name}_reads_fastqc.html
     mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
-    rm *${read_name}*
+    
     """
+    // rm *${read_name}*
+
     // fastqc --quiet --threads $task.cpus $reads
     // mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
     // mv ${reads.simpleName}*.zip ${name}_pre_fastqc.zip
