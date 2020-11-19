@@ -698,6 +698,10 @@ if (params.smrna_fasta) {
         """
 
     }
+} else {
+
+    ch_unmapped = ch_trimmed
+
 }
 
 /*
