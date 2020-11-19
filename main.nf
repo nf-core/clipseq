@@ -467,8 +467,10 @@ if (!params.star_index) {
         output:
         path("genome_size.txt") into ch_genome_size
 
+        script:
+        
         """
-        awk '{total = total + \$2}END{print total}' $fai > genome_size.txt
+        awk '{total = total + \$2}END{if ((log(total)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(total)/log(2))/2 - 1}}' $fai > genome_size.txt 
         """
         
     }
@@ -476,10 +478,10 @@ if (!params.star_index) {
     // transform genome size to calculate genomeSAindexNbases to generate STAR index
     ch_genomeSAindexNbases = ch_genome_size
     .map { it -> it.getText("UTF-8") as int } 
-    .map { it -> (it / 2) - 1 }
-    .map { it -> Math.round(Math.log(it) / Math.log(2)) }
-    .map { it -> Math.min( 14, it ).shortValue() }
-    .map { it -> it.toString() }
+    // .map { it -> (it / 2) - 1 }
+    // .map { it -> Math.round(Math.log(it) / Math.log(2)) }
+    // .map { it -> Math.min( 14, it ).shortValue() }
+    // .map { it -> it.toString() }
 
 
     if (params.gtf) {
