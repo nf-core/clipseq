@@ -18,7 +18,7 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/clipseq --reads '*_R{1,2}.fastq.gz' -profile docker
+    nextflow run nf-core/clipseq --input metadata.csv -profile docker
 
     Mandatory arguments:
       --input [file]                  Comma-separated file with details of samples and reads
@@ -35,13 +35,14 @@ def helpMessage() {
       --smrna_fasta [file]            Path to small RNA fasta reference
 
     Adapter trimming:
-      --adapter [str]              Adapter to trim from reads (default: AGATCGGAAGAGC)
+      --adapter [str]                 Adapter to trim from reads (default: AGATCGGAAGAGC)
 
     Deduplication:
-      --umi_separator [st]        UMI separator character in read header/name (default: :)
+      --deduplicate [bool]            Deduplicate using UMIs (default: true)
+      --umi_separator [str]           UMI separator character in read header/name (default: :)
 
     Peak calling:
-      --peakcaller [str]           Peak caller. Can use multiple (comma separated), or specify 'all'. Available: icount, paraclu
+      --peakcaller [str]              Peak caller. Can use multiple (comma separated), or specify 'all'. Available: icount, paraclu
       --segment [file]                Path to iCount segment file
       --half_window [int]             iCount half-window size (default: 3)
       --merge_window [int]            iCount merge-window size (default: 3)
@@ -83,9 +84,19 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
     //params.smrna_genome = params.genome
     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
 // Show warning of no pre-mapping if smRNA fasta is unavailable and not specified. 
-} else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
-    log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
-//     
+} 
+
+// else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
+//     log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+// //     
+// }
+
+if(!params.smrna_fasta) {
+    if(params.genome) {
+        log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+    } else {
+        log.warn "There is no smRNA fasta file suppled or genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+    }
 }
 
 // Configurable reference genome variables
@@ -139,7 +150,7 @@ if (params.peakcaller){
 // cannot run icount wihtout gtf file
 if (!params.gtf && icount_check) {
     icount_check = false
-    log.warn "iCount can  only be run with a gtf annotation file - iCount will be skipped"
+    log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
 // Check compatability of gtf file with iCount if both supplied
@@ -210,6 +221,7 @@ SET-UP INPUTS
 
 params.adapter = "AGATCGGAAGAGC"
 params.umi_separator = ":"
+params.deduplicate = true
 
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
@@ -253,6 +265,8 @@ summary['Input']            = params.input
 if (params.fasta) summary['Fasta ref']        = params.fasta
 if (params.gtf) summary['GTF ref']            = params.gtf
 if (params.star_index) summary['STAR index'] = params.star_index
+if (params.deduplicate) summary['Deduplicate'] = params.deduplicate
+if (params.deduplicate && params.umi_separator) summary['UMI separator'] = params.umi_separator
 if (params.peakcaller) summary['Peak caller']            = params.peakcaller
 if (params.segment) summary['iCount segment']            = params.segment
 if (icount_check) summary['Half window']            = params.half_window
@@ -453,8 +467,10 @@ if (!params.star_index) {
         output:
         path("genome_size.txt") into ch_genome_size
 
+        script:
+
         """
-        awk '{total = total + \$2}END{print total}' $fai > genome_size.txt
+        awk '{total = total + \$2}END{if ((log(total)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(total)/log(2))/2 - 1}}' $fai > genome_size.txt 
         """
         
     }
@@ -462,10 +478,10 @@ if (!params.star_index) {
     // transform genome size to calculate genomeSAindexNbases to generate STAR index
     ch_genomeSAindexNbases = ch_genome_size
     .map { it -> it.getText("UTF-8") as int } 
-    .map { it -> (it / 2) - 1 }
-    .map { it -> Math.round(Math.log(it) / Math.log(2)) }
-    .map { it -> Math.min( 14, it ).shortValue() }
-    .map { it -> it.toString() }
+    // .map { it -> (it / 2) - 1 }
+    // .map { it -> Math.round(Math.log(it) / Math.log(2)) }
+    // .map { it -> Math.min( 14, it ).shortValue() }
+    // .map { it -> it.toString() }
 
 
     if (params.gtf) {
@@ -626,8 +642,10 @@ process fastqc {
     fastqc --quiet --threads $task.cpus ${new_reads}
     mv ${new_reads_simple}*.html ${name}_reads_fastqc.html
     mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
-    rm *${read_name}*
+    
     """
+    // rm *${read_name}*
+
     // fastqc --quiet --threads $task.cpus $reads
     // mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
     // mv ${reads.simpleName}*.zip ${name}_pre_fastqc.zip
@@ -698,6 +716,11 @@ if (params.smrna_fasta) {
         """
 
     }
+} else {
+
+    ch_unmapped = ch_trimmed
+    ch_premap_mqc = Channel.empty()
+
 }
 
 /*
@@ -745,26 +768,34 @@ process align {
 /*
  * STEP 6 - Deduplicate
  */
+if (params.deduplicate) {
 
-process dedup {
+    process dedup {
 
-    tag "$name"
-    label 'process_high'
-    publishDir "${params.outdir}/dedup", mode: 'copy'
+        tag "$name"
+        label 'process_high'
+        publishDir "${params.outdir}/dedup", mode: 'copy'
 
-    input:
-    tuple val(name), path(bam), path(bai) from ch_aligned
+        input:
+        tuple val(name), path(bam), path(bai) from ch_aligned
 
-    output:
-    tuple val(name), path("*.dedup.bam"), path("*.dedup.bam.bai") into ch_dedup
-    path "*.log" into ch_dedup_mqc
+        output:
+        tuple val(name), path("*.dedup.bam"), path("*.dedup.bam.bai") into ch_dedup
+        path "*.log" into ch_dedup_mqc
 
-    script:
+        script:
 
-    """
-    umi_tools dedup --umi-separator="$params.umi_separator" -I $bam -S ${name}.dedup.bam --output-stats=${name} --log=${name}.log
-    samtools index -@ $task.cpus ${name}.dedup.bam
-    """
+        """
+        umi_tools dedup --umi-separator="$params.umi_separator" -I $bam -S ${name}.dedup.bam --output-stats=${name} --log=${name}.log
+        samtools index -@ $task.cpus ${name}.dedup.bam
+        """
+
+    } 
+
+} else {
+
+    ch_dedup = ch_aligned
+    ch_dedup_mqc = Channel.empty()
 
 }
 
@@ -784,6 +815,7 @@ process get_crosslinks {
 
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu
+    tuple val(name), path("${name}.xl.bedgraph.gz") into ch_xlinks_bedgraphs
 
     script:
 
@@ -793,6 +825,8 @@ process get_crosslinks {
     bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "+"}' > pos.bed
     bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "-"}' > neg.bed
     cat pos.bed neg.bed | sort -k1,1 -k2,2n | pigz > ${name}.xl.bed.gz
+
+    zcat ${name}.xl.bed.gz | awk '{OFS = "\t"}{if (\$6 == "+") {print \$1, \$2, \$3, \$5} else {print \$1, \$2, \$3, -\$5}}' | pigz > ${name}.xl.bedgraph.gz
     """
 
 }
@@ -841,8 +875,8 @@ if (params.peakcaller && icount_check) {
 
         input:
         tuple val(name), path(peaks) from ch_peaks_icount
-        path(fasta) from ch_fasta_dreme_icount
-        path(fai) from ch_fai_icount_motif
+        path(fasta) from ch_fasta_dreme_icount.collect()
+        path(fai) from ch_fai_icount_motif.collect()
 
         output:
         tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
@@ -851,7 +885,7 @@ if (params.peakcaller && icount_check) {
 
         """
         pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
+        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
 
         bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
@@ -908,8 +942,8 @@ if (params.peakcaller && paraclu_check) {
 
         input:
         tuple val(name), path(peaks) from ch_peaks_paraclu
-        path(fasta) from ch_fasta_dreme_paraclu
-        path(fai) from ch_fai_paraclu_motif
+        path(fasta) from ch_fasta_dreme_paraclu.collect()
+        path(fai) from ch_fai_paraclu_motif.collect()
 
         output:
         tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
@@ -918,7 +952,7 @@ if (params.peakcaller && paraclu_check) {
 
         """
         pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 0 -r 50 -i /dev/stdin -g $fai > resized_peaks.bed
+        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
 
         bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
@@ -945,7 +979,7 @@ process multiqc {
     file ('fastqc/*') from ch_fastqc_pretrim_mqc.collect().ifEmpty([])
     file ('cutadapt/*') from ch_cutadapt_mqc.collect().ifEmpty([])
     file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
-    file ('premap/*') from ch_align_mqc.collect().ifEmpty([])
+    file ('mapped/*') from ch_align_mqc.collect().ifEmpty([])
     //file ('dedup/*') from ch_dedup_mqc
     //file ('software_versions/*') from ch_software_versions_yaml.collect()
     //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
