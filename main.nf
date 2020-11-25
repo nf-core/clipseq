@@ -921,7 +921,7 @@ if (params.peakcaller && paraclu_check) {
         script:
 
         min_value = params.min_value
-        min_density_increase = params.density_increase
+        min_density_increase = params.min_density_increase
         max_cluster_length = params.max_cluster_length
 
         """
