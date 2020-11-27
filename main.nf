@@ -113,7 +113,7 @@ if(!params.smrna_fasta) {
     if(params.genome) {
         log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
     } else {
-        log.warn "There is no smRNA fasta file suppled or genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+        log.warn "There is no smRNA fasta file suppled for genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
     }
 }
 
