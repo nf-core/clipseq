@@ -117,28 +117,6 @@ if(!params.smrna_fasta) {
     }
 }
 
-// Configurable reference genome variables
-// if (!params.fasta && params.genome && params.genomes[ params.genome ].fasta) {
-//     if (file(params.genomes[ params.genome ].fasta).exists()) {
-//         params.fasta = params.genomes[ params.genome ].fasta
-//     }
-// } else {
-//     params.fasta = false
-// }
-// if (!params.gtf && params.genome && params.genomes[ params.genome ].gtf) {
-//     if (file(params.genomes[ params.genome ].gtf).exists()){
-//         params.gtf = params.genomes[ params.genome ].gtf
-//     }
-// } else {
-//     params.gtf = false
-// }
-// if (!params.star_index && params.genome && params.genomes[ params.genome ].star) {
-//     if (file(params.genomes[ params.genome ].star).exists()){
-//         params.star_index = params.genomes[ params.genome ].star
-//     }
-// } else {
-//     params.star_index = false
-// }
 
 // Set up peak caller logic
 def paraclu_check = false
