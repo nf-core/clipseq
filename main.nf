@@ -676,20 +676,13 @@ process cutadapt {
     tuple val(name), path(reads) from ch_fastq
 
     output:
-    tuple val(name), path("*.fastq.gz") into ch_trimmed
+    tuple val(name), path("${name}.trimmed.fastq.gz") into ch_trimmed
     path "*.log" into ch_cutadapt_mqc
 
     script:
 
-    read_ext = reads.getName().split('\\.', 2)[1]
-    read_name = reads.getName().split('\\.', 2)[0]
-    new_reads = "${name}_trim.${read_ext}"
-    new_reads_simple = "${name}_trim"
-
     """
-    cp ${reads} ${new_reads}
-    rm *${read_name}*
-    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.fastq.gz $new_reads > ${name}_cutadapt.log
+    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz $reads > ${name}_cutadapt.log
     """
 
 }
@@ -714,8 +707,8 @@ if (params.smrna_fasta) {
         path(index) from ch_bt2_index.collect()
 
         output:
-        tuple val(name), path("*.fastq.gz") into ch_unmapped
-        tuple val(name), path("*.bam"), path("*.bai")
+        tuple val(name), path("${name}.unmapped.fastq.gz") into ch_unmapped
+        tuple val(name), path("${name}.premapped.bam"), path("${name}.premapped.bam.bai")
         path "*.log" into ch_premap_mqc
 
         script:
@@ -749,7 +742,7 @@ process align {
     path(index) from ch_star_index.collect()
 
     output:
-    tuple val(name), path("*.bam"), path("*.bai") into ch_aligned
+    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned
     path "*.Log.final.out" into ch_align_mqc
 
     script:
@@ -791,7 +784,7 @@ if (params.deduplicate) {
         tuple val(name), path(bam), path(bai) from ch_aligned
 
         output:
-        tuple val(name), path("*.dedup.bam"), path("*.dedup.bam.bai") into ch_dedup
+        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup
         path "*.log" into ch_dedup_mqc
 
         script:
@@ -928,7 +921,7 @@ if (params.peakcaller && paraclu_check) {
         script:
 
         min_value = params.min_value
-        min_density_increase = params.density_increase
+        min_density_increase = params.min_density_increase
         max_cluster_length = params.max_cluster_length
 
         """
