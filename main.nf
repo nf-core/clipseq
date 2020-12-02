@@ -926,7 +926,7 @@ if (params.peakcaller && paraclu_check) {
 
         """
         pigz -d -c $xlinks | \
-        awk '{OFS = "\t"}{print \$1, \$6, \$2, \$5}' | \
+        awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \
         sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
 
         paraclu ${min_value} paraclu_input.tsv | \
