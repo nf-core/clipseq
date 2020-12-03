@@ -1066,7 +1066,7 @@ if (params.peakcaller && piranha_check) {
         """
 
         pigz -d -c $peaks | \
-        awk '{OFS="\t"}{for(i=0;i<$5;i++) print }' \
+        awk '{OFS="\t"}{for(i=0;i<\$5;i++) print }' \
         > expanded.bed
 
         Piranha \
