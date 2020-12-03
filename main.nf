@@ -149,6 +149,8 @@ if (params.peakcaller){
         if ( it == 'all') {
             paraclu_check = true
             icount_check = true
+            pureclip_check = true
+            piranha_check = true
         } else if ( it == 'paraclu' && !paraclu_check ) {
             paraclu_check = true
         } else if ( it == 'icount' && !icount_check ) {
@@ -158,7 +160,7 @@ if (params.peakcaller){
         } else if ( it == 'piranha' && !piranha_check ) {
             piranha_check = true
         } else {
-            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip'"
+            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip', 'piranha'"
         }
     }
 }
