@@ -49,7 +49,6 @@ def helpMessage() {
       --min_value [int]               Paraclu minimum cluster count/value (default: 10)
       --min_density_increase [int]    Paraclu minimum density increase (default: 2)
       --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
-      --iv [str]                      PureCLIP genomic chromosomes to learn HMM parameters, (default: 'chr1;chr2;chr3')
       --bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
       --dm [str]                      PureCLIP merge distnace (default: 8)
 
@@ -67,6 +66,8 @@ def helpMessage() {
       --awscli [str]                  Path to the AWS CLI tool
     """.stripIndent()
 }
+
+    //   --iv [str]                      PureCLIP genomic chromosomes to learn HMM parameters, (default: 'chr1;chr2;chr3')
 
 // Show help message
 if (params.help) {
@@ -403,7 +404,7 @@ if (params.fasta) {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-            .into { ch_fasta, ch_fasta_fai, ch_fasta_dreme_icount, ch_fasta_dreme_paraclu, ch_fasta_pureclip, ch_fasta_dreme_pureclip }
+            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip }
     }
 }
 
@@ -995,18 +996,22 @@ if (params.peakcaller && pureclip_check) {
 
         script:
 
-        iv = params.iv
+        // iv = params.iv
         bc = params.bc
         dm = params.dm
 
         """
-        pureclip -i $bam -bai $bai -g $fasta \
+        pureclip \
+        -i $bam \
+        -bai $bai \
+        -g $fasta \
         -nt $task.cpus \
-        -iv '$iv' \
-        -bc $bc
+        -bc $bc \
         -dm $dm \
-        -o "${name}.sigxl.bed.gz" \
-        -or "${name}.${dm}nt.peaks.bed.gz"
+        -o "${name}.sigxl.bed" \
+        -or "${name}.${dm}nt.peaks.bed"
+
+        pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
         """
 
     }
