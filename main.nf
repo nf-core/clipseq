@@ -163,7 +163,7 @@ if (!params.gtf && icount_check) {
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-// Check compatability of gtf file with iCount if both supplied
+// Check compatibility of gtf file with iCount if both supplied
 if (params.gtf && icount_check) {
     def gtf_check = false
     File gtf_file = new File(params.gtf)
@@ -175,6 +175,20 @@ if (params.gtf && icount_check) {
     if (!gtf_check) {
         icount_check = false
         log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
+    }
+}
+
+// Check version of STAR index for compatibility
+if (params.star_index) {
+    File star_log_file = new File(params.star_index + "Log.out")
+    def data= star_log_file.eachLine { line ->
+        if (line.contains('STAR version=')) {
+            star_version = line.findAll( /\d+/ )*.toInteger()
+            print "${star_version[0]}"
+            if(star_version[0] != 2 || (star_version[1] != 6 && star_version[1] != 5)) {
+                exit 1, "The version of STAR used to create the STAR index is incompatible. Please use version 2.5 or 2.6."
+            }
+        }
     }
 }
 
