@@ -1056,7 +1056,7 @@ if (params.peakcaller && piranha_check) {
         tuple val(name), path(xlinks) from ch_xlinks_piranha
 
         output:
-        tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_piranha
+        tuple val(name), path("${name}.${bin_size_both}nt_${cluster_dist}.nt.peaks.bed.gz") into ch_peaks_piranha
 
         script:
 
@@ -1073,9 +1073,9 @@ if (params.peakcaller && piranha_check) {
         expanded.bed \
         -b $bin_size_both
         -u $cluster_dist \
-        -o ${name}.sigxl.bed
+        -o ${name}.${bin_size_both}nt_${cluster_dist}.nt.peaks.bed
 
-        pigz ${name}.${dm}nt.peaks.bed
+        pigz ${name}.${bin_size_both}nt_${cluster_dist}.nt.peaks.bed
         """
 
     }
