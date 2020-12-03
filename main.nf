@@ -96,16 +96,13 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 // Option for user supplied fasta and gtf and pipeline supplied smRNA
 def smrna_list = ['human', 'mouse', 'rat']
 if (!params.genome && params.smrna_species) {
-    log.info "helloooo"
     if (params.smrna_species in smrna_list) {
         params.smrna_fasta = params.smrna[ params.smrna_species ].smrna_fasta
-        log.info "got here"
     } else {
         log.warn "There is no smRNA available for species '${params.smrna_species}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat. Alternative you can supply your own smRNA fasta using --smrna_fasta"
     }
 } else {
     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
-    log.info "got here yo"
 }
 
 // Auto-load genome files from genome config
@@ -128,7 +125,7 @@ if(!params.smrna_fasta) {
     if(params.genome) {
         log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
     } else {
-        log.warn "There is no smRNA fasta file suppled for genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
+        log.warn "There is no smRNA fasta file suppled for genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta or --smrna_species"
     }
 }
 
