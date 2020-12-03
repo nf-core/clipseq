@@ -1101,7 +1101,7 @@ if (params.peakcaller && piranha_check) {
         path(fai) from ch_fai_piranha_motif.collect()
 
         output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_piranha
 
         script:
 
