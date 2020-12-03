@@ -52,6 +52,8 @@ def helpMessage() {
       --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
       --bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
       --dm [str]                      PureCLIP merge distnace (default: 8)
+      --bin_size_both [int]           Piranha bin size (default: 3)
+      --cluster_dist [int]            Piranha cluster distance (default: 3)
 
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -137,6 +139,8 @@ if(!params.smrna_fasta) {
 def paraclu_check = false
 def icount_check = false
 def pureclip_check = false
+def piranha_check = false
+
 if (params.peakcaller){
 
     def peak_list = params.peakcaller.split(',').collect()
@@ -151,6 +155,8 @@ if (params.peakcaller){
             icount_check = true
         } else if ( it == 'pureclip' && !pureclip_check ) {
             pureclip_check = true
+        } else if ( it == 'piranha' && !piranha_check ) {
+            piranha_check = true
         } else {
             exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip'"
         }
@@ -393,7 +399,7 @@ if (params.fasta) {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip }
+            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip; ch_fasta_dreme_piranha }
     }
 }
 
@@ -409,7 +415,7 @@ if (params.fasta) {
             path(fasta_gz) from ch_fasta_gz
 
             output:
-            path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme_icount, ch_fasta_dreme_paraclu, ch_fasta_pureclip, ch_fasta_dreme_pureclip)
+            path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme_icount, ch_fasta_dreme_paraclu, ch_fasta_pureclip, ch_fasta_dreme_pureclip, ch_fasta_dreme_piranha)
 
             script:
 
@@ -433,7 +439,7 @@ if (!params.fai) {
             path(fasta) from ch_fasta_fai
 
             output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_size)
+            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
 
             script:
 
@@ -814,7 +820,7 @@ process get_crosslinks {
     path(fai) from ch_fai_crosslinks.collect()
 
     output:
-    tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu
+    tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu, ch_xlinks_piranha
     tuple val(name), path("${name}.xl.bedgraph.gz") into ch_xlinks_bedgraphs
 
     script:
@@ -964,7 +970,7 @@ if (params.peakcaller && paraclu_check) {
 }
 
 /*
- * STEP 7b - Peak-call (PureCLIP)
+ * STEP 7c - Peak-call (PureCLIP)
  */
 
 if (params.peakcaller && pureclip_check) {
@@ -1015,6 +1021,75 @@ if (params.peakcaller && pureclip_check) {
         tuple val(name), path(peaks) from ch_peaks_pureclip
         path(fasta) from ch_fasta_dreme_pureclip.collect()
         path(fai) from ch_fai_pureclip_motif.collect()
+
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
+
+        script:
+
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """
+
+    }
+
+}
+
+/*
+ * STEP 7d - Peak-call (Piranha)
+ */
+
+if (params.peakcaller && piranha_check) {
+
+    process piranha_peak_call {
+
+        tag "$name"
+        label 'process_high'
+        publishDir "${params.outdir}/piranha", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(xlinks) from ch_xlinks_piranha
+
+        output:
+        tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_piranha
+
+        script:
+
+        bin_size_both = params.bin_size_both
+        cluster_dist = params.cluster_dist
+
+        """
+
+        pigz -d -c $peaks | \
+        awk '{OFS="\t"}{for(i=0;i<$5;i++) print }' \
+        > expanded.bed
+
+        Piranha \
+        expanded.bed \
+        -b $bin_size_both
+        -u $cluster_dist \
+        -o ${name}.sigxl.bed
+
+        pigz ${name}.${dm}nt.peaks.bed
+        """
+
+    }
+
+    process pureclip_motif_dreme {
+
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/piranha_motif", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(peaks) from ch_peaks_piranha
+        path(fasta) from ch_fasta_dreme_piranha.collect()
+        path(fai) from ch_fai_piranha_motif.collect()
 
         output:
         tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
