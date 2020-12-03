@@ -1071,6 +1071,7 @@ if (params.peakcaller && piranha_check) {
 
         Piranha \
         expanded.bed \
+        -s \
         -b $bin_size_both
         -u $cluster_dist \
         -o ${name}.${bin_size_both}nt_${cluster_dist}.nt.peaks.bed
