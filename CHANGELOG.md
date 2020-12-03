@@ -9,6 +9,8 @@ Initial release of nf-core/clipseq, created with the [nf-core](https://nf-co.re/
 
 ### `Added`
 
+smrna_species parameter
+
 ### `Fixed`
 
 ### `Dependencies`
