@@ -185,18 +185,18 @@ if (params.gtf && icount_check) {
 }
 
 // Check version of STAR index for compatibility
-if (params.star_index) {
-    File star_log_file = new File(params.star_index + "Log.out")
-    def data= star_log_file.eachLine { line ->
-        if (line.contains('STAR version=')) {
-            star_version = line.findAll( /\d+/ )*.toInteger()
-            print "${star_version[0]}"
-            if(star_version[0] != 2 || (star_version[1] != 6 && star_version[1] != 5)) {
-                exit 1, "The version of STAR used to create the STAR index is incompatible. Please use version 2.5 or 2.6."
-            }
-        }
-    }
-}
+// if (params.star_index) {
+//     File star_log_file = new File(params.star_index + "Log.out")
+//     def data= star_log_file.eachLine { line ->
+//         if (line.contains('STAR version=')) {
+//             star_version = line.findAll( /\d+/ )*.toInteger()
+//             print "${star_version[0]}"
+//             if(star_version[0] != 2 || (star_version[1] != 6 && star_version[1] != 5)) {
+//                 exit 1, "The version of STAR used to create the STAR index is incompatible. Please use version 2.5 or 2.6."
+//             }
+//         }
+//     }
+// }
 
 //
 // NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
