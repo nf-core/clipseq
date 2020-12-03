@@ -50,6 +50,8 @@ def helpMessage() {
       --min_value [int]               Paraclu minimum cluster count/value (default: 10)
       --min_density_increase [int]    Paraclu minimum density increase (default: 2)
       --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
+      --bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
+      --dm [str]                      PureCLIP merge distnace (default: 8)
 
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -65,6 +67,8 @@ def helpMessage() {
       --awscli [str]                  Path to the AWS CLI tool
     """.stripIndent()
 }
+
+    //   --iv [str]                      PureCLIP genomic chromosomes to learn HMM parameters, (default: 'chr1;chr2;chr3')
 
 // Show help message
 if (params.help) {
@@ -132,6 +136,7 @@ if(!params.smrna_fasta) {
 // Set up peak caller logic
 def paraclu_check = false
 def icount_check = false
+def pureclip_check = false
 if (params.peakcaller){
 
     def peak_list = params.peakcaller.split(',').collect()
@@ -144,8 +149,10 @@ if (params.peakcaller){
             paraclu_check = true
         } else if ( it == 'icount' && !icount_check ) {
             icount_check = true
+        } else if ( it == 'pureclip' && !pureclip_check ) {
+            pureclip_check = true
         } else {
-            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu'"
+            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip'"
         }
     }
 }
@@ -386,7 +393,7 @@ if (params.fasta) {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu }
+            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip }
     }
 }
 
@@ -401,8 +408,8 @@ if (params.fasta) {
             input:
             path(fasta_gz) from ch_fasta_gz
 
-                output:
-                path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme, ch_fasta_dreme_paraclu )
+            output:
+            path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme_icount, ch_fasta_dreme_paraclu, ch_fasta_pureclip, ch_fasta_dreme_pureclip)
 
             script:
 
@@ -426,7 +433,7 @@ if (!params.fai) {
             path(fasta) from ch_fasta_fai
 
             output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_size)
+            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_size)
 
             script:
 
@@ -773,7 +780,7 @@ if (params.deduplicate) {
         tuple val(name), path(bam), path(bai) from ch_aligned
 
         output:
-        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup
+        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup, ch_dedup_pureclip
         path "*.log" into ch_dedup_mqc
 
         script:
@@ -841,7 +848,7 @@ if (params.peakcaller && icount_check) {
         path(segment) from ch_segment.collect()
 
         output:
-        tuple val(name), path("${name}.${half_window}nt.sigxl.bed.gz") into ch_sigxlinks
+        tuple val(name), path("${name}.${half_window}nt.sigxl.bed.gz") into ch_sigxls_icount
         tuple val(name), path("${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
 
         script:
@@ -940,6 +947,77 @@ if (params.peakcaller && paraclu_check) {
 
         output:
         tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
+
+        script:
+
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """
+
+    }
+
+}
+
+/*
+ * STEP 7b - Peak-call (PureCLIP)
+ */
+
+if (params.peakcaller && pureclip_check) {
+
+    process pureclip_peak_call {
+
+        tag "$name"
+        label 'process_high'
+        publishDir "${params.outdir}/pureclip", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(bam), path(bai) from ch_dedup_pureclip
+        path(fasta) from ch_fasta_pureclip.collect()
+
+        output:
+        tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
+        tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
+
+        script:
+
+        // iv = params.iv
+        bc = params.bc
+        dm = params.dm
+
+        """
+        pureclip \
+        -i $bam \
+        -bai $bai \
+        -g $fasta \
+        -nt $task.cpus \
+        -bc $bc \
+        -dm $dm \
+        -o "${name}.sigxl.bed" \
+        -or "${name}.${dm}nt.peaks.bed"
+
+        pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
+        """
+
+    }
+
+    process pureclip_motif_dreme {
+
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(peaks) from ch_peaks_pureclip
+        path(fasta) from ch_fasta_dreme_pureclip.collect()
+        path(fai) from ch_fai_pureclip_motif.collect()
+
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
 
         script:
 
