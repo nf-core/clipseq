@@ -1080,7 +1080,7 @@ if (params.peakcaller && piranha_check) {
 
     }
 
-    process pureclip_motif_dreme {
+    process piranha_motif_dreme {
 
         tag "$name"
         label 'process_low'
