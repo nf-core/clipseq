@@ -151,6 +151,15 @@
                     "type": "integer",
                     "default": 200,
                     "description": "Paraclu maximum cluster length"
+                },
+                "bc": {
+                    "type": "integer",
+                    "description": "PureCLIP binding characteristics"
+                },
+                "dm": {
+                    "type": "integer",
+                    "default": 8,
+                    "description": "PureCLIP merging distance"
                 }
             }
         },
