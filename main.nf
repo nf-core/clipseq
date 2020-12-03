@@ -157,27 +157,19 @@ if (!params.gtf && icount_check) {
 }
 
 // Check compatability of gtf file with iCount if both supplied
-// if ( icount_check &&  params.gtf ) {
-//     process gtf_check_genes {
-//         tag "$gtf"
-
-//         input:
-//         path(gtf) from ch_check_gtf
-
-//         output:
-
-
-//         script:
-
-//         """
-
-//         """
-//     }
-//     if (!genes_check) {
-//         log.warn " Genes are not included in the gtf annotation, which is needed for iCount. iCount peakcaller will be skipped "
-//         icount_check = false
-//     }
-// }
+if (params.gtf && icount_check) {
+    def gtf_check = false
+    File gtf_file = new File(params.gtf)
+    def data= gtf_file.eachLine { line ->
+        if (line.contains('ensembl') || line.contains('GENCODE')) {
+            gtf_check = true
+        }
+    }
+    if (!gtf_check) {
+        icount_check = false
+        log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
+    }
+}
 
 //
 // NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
