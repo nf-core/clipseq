@@ -1082,9 +1082,9 @@ if (params.peakcaller && piranha_check) {
         -s \
         -b $bin_size_both \
         -u $cluster_dist \
-        -o ${name}.${bin_size_both}nt_${cluster_dist}.nt.peaks.bed
+        -o ${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed
 
-        pigz ${name}.${bin_size_both}nt_${cluster_dist}.nt.peaks.bed
+        pigz ${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed
         """
 
     }
