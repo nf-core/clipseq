@@ -1156,6 +1156,44 @@ NF-CORE ON COMPLETE
 //         email_address = params.email_on_fail
 //     }
 
+// <<< FROM TEMPLATE 1.12.1 update
+
+    // Render the TXT template
+    // def engine = new groovy.text.GStringTemplateEngine()
+    // def tf = new File("$projectDir/assets/email_template.txt")
+    // def txt_template = engine.createTemplate(tf).make(email_fields)
+    // def email_txt = txt_template.toString()
+
+    // Render the HTML template
+    // def hf = new File("$projectDir/assets/email_template.html")
+    // def html_template = engine.createTemplate(hf).make(email_fields)
+    // def email_html = html_template.toString()
+
+    // Render the sendmail template
+    // def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
+    // def sf = new File("$projectDir/assets/sendmail_template.txt")
+    // def sendmail_template = engine.createTemplate(sf).make(smail_fields)
+    // def sendmail_html = sendmail_template.toString()
+
+    // Send the HTML e-mail
+    // if (email_address) {
+    //    try {
+    //        if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
+    //        // Try to send HTML e-mail using sendmail
+    //        [ 'sendmail', '-t' ].execute() << sendmail_html
+    //        log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (sendmail)"
+    //    } catch (all) {
+    //        // Catch failures and try with plaintext
+    //        def mail_cmd = [ 'mail', '-s', subject, '--content-type=text/html', email_address ]
+    //        if ( mqc_report.size() <= params.max_multiqc_email_size.toBytes() ) {
+    //          mail_cmd += [ '-A', mqc_report ]
+    //        }
+    //        mail_cmd.execute() << email_html
+    //        log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (mail)"
+    //    }
+
+// >>>
+
 //     // Render the TXT template
 //     def engine = new groovy.text.GStringTemplateEngine()
 //     def tf = new File("$baseDir/assets/email_template.txt")
