@@ -768,7 +768,7 @@ process align {
                 --outFilterScoreMin 10  \
                 --alignEndsType Extend5pOfRead1 \
                 --twopassMode Basic \
-                --outSAMtype BAM SortedByCoordinate"
+                --outSAMtype BAM Unsorted"
 
     """
     STAR --runThreadN $task.cpus --runMode alignReads --genomeDir $index \
