@@ -1177,20 +1177,20 @@ NF-CORE ON COMPLETE
 
     // Send the HTML e-mail
     // if (email_address) {
-        try {
-            if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
-            // Try to send HTML e-mail using sendmail
-            [ 'sendmail', '-t' ].execute() << sendmail_html
-            log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (sendmail)"
-        } catch (all) {
-            // Catch failures and try with plaintext
-            def mail_cmd = [ 'mail', '-s', subject, '--content-type=text/html', email_address ]
-            if ( mqc_report.size() <= params.max_multiqc_email_size.toBytes() ) {
-              mail_cmd += [ '-A', mqc_report ]
-            }
-            mail_cmd.execute() << email_html
-            log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (mail)"
-        }
+    //    try {
+    //        if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
+    //        // Try to send HTML e-mail using sendmail
+    //        [ 'sendmail', '-t' ].execute() << sendmail_html
+    //        log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (sendmail)"
+    //    } catch (all) {
+    //        // Catch failures and try with plaintext
+    //        def mail_cmd = [ 'mail', '-s', subject, '--content-type=text/html', email_address ]
+    //        if ( mqc_report.size() <= params.max_multiqc_email_size.toBytes() ) {
+    //          mail_cmd += [ '-A', mqc_report ]
+    //        }
+    //        mail_cmd.execute() << email_html
+    //        log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (mail)"
+    //    }
 
 // >>>
 
