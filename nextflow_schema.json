@@ -20,12 +20,6 @@
                     "description": "Input FastQ files.",
                     "help_text": "Use this to specify the location of your input FastQ files. For example:\n\n```bash\n--input 'path/to/data/sample_*_{1,2}.fastq'\n```\n\nPlease note the following requirements:\n\n1. The path must be enclosed in quotes\n2. The path must have at least one `*` wildcard character\n3. When using the pipeline with paired end data, the path must use `{1,2}` notation to specify read pairs.\n\nIf left unspecified, a default pattern is used: `data/*{1,2}.fastq.gz`"
                 },
-                "single_end": {
-                    "type": "boolean",
-                    "description": "Specifies that the input is single-end reads.",
-                    "fa_icon": "fas fa-align-center",
-                    "help_text": "By default, the pipeline expects paired-end data. If you have single-end data, you need to specify `--single_end` on the command line when you launch the pipeline. A normal glob pattern, enclosed in quotation marks, can then be used for `--input`. For example:\n\n```bash\n--single_end --input '*.fastq'\n```\n\nIt is not possible to run a mixture of single-end and paired-end files in one run."
-                },
                 "outdir": {
                     "type": "string",
                     "description": "The output directory where the results will be saved.",
@@ -53,11 +47,31 @@
                     "fa_icon": "fas fa-book",
                     "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`.\n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
                 },
+                "smrna_species": {
+                    "type": "string",
+                    "description": "Name of small RNA organism"
+                },
+                "smrna_fasta": {
+                    "type": "string",
+                    "description": "Path to small RNA FASTA file"
+                },
                 "fasta": {
                     "type": "string",
                     "fa_icon": "fas fa-font",
-                    "description": "Path to FASTA genome file.",
+                    "description": "Path to genome FASTA file.",
                     "help_text": "If you have no genome reference available, the pipeline can build one using a FASTA file. This requires additional time and resources, so it's better to use a pre-build index if possible."
+                },
+                "fai": {
+                    "type": "string",
+                    "description": "Path to genome FASTA index file"
+                },
+                "gtf": {
+                    "type": "string",
+                    "description": "Path to GTF annotation file"
+                },
+                "star_index": {
+                    "type": "string",
+                    "description": "Path to genome STAR index"
                 },
                 "igenomes_base": {
                     "type": "string",
@@ -72,6 +86,80 @@
                     "fa_icon": "fas fa-ban",
                     "hidden": true,
                     "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
+                }
+            }
+        },
+        "adapter_and_umi_options": {
+            "title": "Adapter and UMI options",
+            "type": "object",
+            "description": "Define sequencing adapters and UMI options",
+            "default": "",
+            "properties": {
+                "adapter": {
+                    "type": "string",
+                    "description": "Sequencing adapter for trimming",
+                    "default": "AGATCGGAAGAGC"
+                },
+                "deduplicate": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Deduplicate using UMIs"
+                },
+                "umi_separator": {
+                    "type": "string",
+                    "default": ":",
+                    "description": "UMI separator in the FASTA read name"
+                }
+            }
+        },
+        "peak_calling_options": {
+            "title": "Peak calling options",
+            "type": "object",
+            "description": "Define peak callers and peak calling options",
+            "default": "",
+            "properties": {
+                "peakcaller": {
+                    "type": "string",
+                    "description": "Which peakcaller(s) to use",
+                    "default": "None"
+                },
+                "segment": {
+                    "type": "string",
+                    "description": "Path to iCount segment file"
+                },
+                "half_window": {
+                    "type": "integer",
+                    "default": 3,
+                    "description": "iCount half-window setting"
+                },
+                "merge_window": {
+                    "type": "integer",
+                    "default": 3,
+                    "description": "iCount merge-window setting"
+                },
+                "min_value": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Paraclu minimum cluster count"
+                },
+                "min_density_increase": {
+                    "type": "integer",
+                    "default": 2,
+                    "description": "Paraclu minimum density increase"
+                },
+                "max_cluster_length": {
+                    "type": "integer",
+                    "default": 200,
+                    "description": "Paraclu maximum cluster length"
+                },
+                "bc": {
+                    "type": "integer",
+                    "description": "PureCLIP binding characteristics"
+                },
+                "dm": {
+                    "type": "integer",
+                    "default": 8,
+                    "description": "PureCLIP merging distance"
                 }
             }
         },
@@ -245,6 +333,12 @@
         },
         {
             "$ref": "#/definitions/reference_genome_options"
+        },
+        {
+            "$ref": "#/definitions/adapter_and_umi_options"
+        },
+        {
+            "$ref": "#/definitions/peak_calling_options"
         },
         {
             "$ref": "#/definitions/generic_options"
