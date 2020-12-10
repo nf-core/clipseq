@@ -160,6 +160,16 @@
                     "type": "integer",
                     "default": 8,
                     "description": "PureCLIP merging distance"
+                },
+                "bin_size_both": {
+                    "type": "integer",
+                    "default": 3,
+                    "description": "Piranha bin size"
+                },
+                "cluster_dist": {
+                    "type": "integer",
+                    "default": 3,
+                    "description": "Piranha clustering distance"
                 }
             }
         },
