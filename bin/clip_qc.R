@@ -170,7 +170,7 @@ p.xlink_ratio <- ggplot(xlinks.metrics.dt, aes(x = exp, y = xlink_ratio)) +
 
 xlinks.patch <- p.total_xlinks + p.total_xlinksites + p.xlink_ratio + plot_annotation(title = "CLIP crosslink metrics")
 
-ggsave(xlinks.patch, "crosslink_metrics.pdf", width = 297, height = 210, units = "mm")
+ggsave(xlinks.patch, filename = "crosslink_metrics.pdf", width = 297, height = 210, units = "mm")
 
 # ==========
 # Peaks
@@ -232,7 +232,7 @@ p.xlinksites_in_peaks <- ggplot(metrics.dt, aes(x = exp, y = xlinksites_in_peaks
 peaks1.patch <- p.total_peaks + p.xlinks_in_peaks + p.xlinksites_in_peaks +
   plot_layout(guides = "collect") + plot_annotation(title = "CLIP peak metrics")
 
-ggsave(peaks1.patch, "peak_metrics_1.pdf", width = 297, height = 210, units = "mm")
+ggsave(peaks1.patch, filename = "peak_metrics_1.pdf", width = 297, height = 210, units = "mm")
 
 p.peaks_xlinksite_coverage <- ggplot(metrics.dt, aes(x = exp, y = peaks_xlinksite_coverage_percent, fill = peakcaller)) +
   geom_col(position = "dodge") +
@@ -248,7 +248,7 @@ p.peaks_xlinksite_coverage <- ggplot(metrics.dt, aes(x = exp, y = peaks_xlinksit
 peaks2.patch <- p.total_peaks + p.xlinks_in_peaks + p.xlinksites_in_peaks +
   plot_layout(guides = "collect") + plot_annotation(title = "CLIP peak metrics")
 
-ggsave(peaks2.patch, "peak_metrics_2.pdf", width = 297, height = 210, units = "mm")
+ggsave(peaks2.patch, filename = "peak_metrics_2.pdf", width = 297, height = 210, units = "mm")
 
 # Peak widths
 
@@ -279,7 +279,7 @@ p.mean_peak_width <- ggplot(metrics.dt, aes(x = exp, y = mean_peak_width, fill =
 peakwidths.patch <- p.median_peak_width + p.mean_peak_width + 
   plot_layout(guides = "collect") + plot_annotation(title = "CLIP peak widths")
 
-ggsave(peakwidths.patch, "peak_metrics_3.pdf", width = 297, height = 210, units = "mm")
+ggsave(peakwidths.patch, filename = "peak_metrics_3.pdf", width = 297, height = 210, units = "mm")
 
 # # peak widths
 # icount.peaks.width.dt <- data.table(exp = rep(names(icount.list), elementNROWS(icount.list)),
