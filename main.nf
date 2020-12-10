@@ -353,12 +353,25 @@ process get_software_versions {
     file "software_versions.csv"
 
     script:
-    // TODO nf-core: Get all tools to print their version number here
+
     """
     echo $workflow.manifest.version > v_pipeline.txt
     echo $workflow.nextflow.version > v_nextflow.txt
     fastqc --version > v_fastqc.txt
     multiqc --version > v_multiqc.txt
+    cutadapt --version > v_cutadapt.txt
+    bowtie2 --version > v_bowtie2.txt
+    STAR --version > v_star.txt
+    samtools --version > v_samtools.txt
+    umi_tools --version > v_umi_tools.txt
+    bedtools --version > v_bedtools.txt
+    iCount --version > v_icount.txt
+    pureclip --version > v_pureclip.txt
+    Piranha -about > v_piranha.txt
+    echo "9" > v_paraclu.txt
+    meme -version > v_meme.txt
+    echo \$(R --version 2>&1) > v_R.txt
+    python --version > v_python.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
