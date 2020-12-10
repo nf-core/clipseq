@@ -9,6 +9,8 @@
 ----------------------------------------------------------------------------------------
 */
 
+import java.util.zip.GZIPInputStream
+
 def helpMessage() {
     // TODO nf-core: Add to this help message with new command line parameters
     log.info nfcoreHeader()
@@ -163,20 +165,37 @@ if (!params.gtf && icount_check) {
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-// // Check compatibility of gtf file with iCount if both supplied
-// if (params.gtf && icount_check) {
-//     def gtf_check = false
-//     File gtf_file = new File(params.gtf)
-//     def data= gtf_file.eachLine { line ->
-//         if (line.contains('ensembl') || line.contains('GENCODE')) {
-//             gtf_check = true
-//         }
-//     }
-//     if (!gtf_check) {
-//         icount_check = false
-//         log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
-//     }
-// }
+// Check compatibility of gtf file with iCount if both supplied
+if (hasExtension(params.gtf, 'gz')) {
+    def inflaterStream = new GZIPInputStream(new ByteArrayInputStream(params.gtf))
+    def uncompressed_gtf = inflaterStream.getText('UTF-8')
+    def data= gtf_file.eachLine { line ->
+        if (line.contains('ensembl') || line.contains('GENCODE')) {
+                gtf_check = true
+                log.info "got here2a"
+        }
+    }
+    if (!gtf_check) {
+        icount_check = false
+        log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped a"
+    }
+} else {
+    if (params.gtf && icount_check) {
+        log.info "got here1"
+        def gtf_check = false
+        File gtf_file = new File(params.gtf)
+        def data= gtf_file.eachLine { line ->
+            if (line.contains('ensembl') || line.contains('GENCODE')) {
+                gtf_check = true
+                log.info "got here2"
+            }
+        }
+        if (!gtf_check) {
+            icount_check = false
+            log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
+        }
+    }
+}
 
 // // Check version of STAR index for compatibility
 // if (params.star_index) {
