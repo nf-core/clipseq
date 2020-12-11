@@ -1097,9 +1097,10 @@ if (params.peakcaller && piranha_check) {
         -s \
         -b $bin_size_both \
         -u $cluster_dist \
-        -o ${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed
+        -o paraclu.bed
 
-        pigz ${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed
+        awk '{OFS="\t"}{print \$1, \$2, \$3, ".", \$5, \$6}' paraclu.bed | \
+        pigz > ${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz
         """
 
     }
