@@ -367,7 +367,7 @@ process get_software_versions {
     bedtools --version > v_bedtools.txt
     iCount --version > v_icount.txt
     pureclip --version > v_pureclip.txt
-    Piranha -about > v_piranha.txt
+    Piranha -about 2> v_piranha.txt
     echo "9" > v_paraclu.txt
     meme -version > v_meme.txt
     echo \$(R --version 2>&1) > v_R.txt

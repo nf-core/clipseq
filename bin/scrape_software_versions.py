@@ -9,6 +9,19 @@ regexes = {
     "Nextflow": ["v_nextflow.txt", r"(\S+)"],
     "FastQC": ["v_fastqc.txt", r"FastQC v(\S+)"],
     "MultiQC": ["v_multiqc.txt", r"multiqc, version (\S+)"],
+    "Cutadapt": ["v_cutadapt.txt", r"(\S+)"],
+    "Bowtie2": ["v_bowtie2.txt", r"version (\S+)"],
+    "STAR": ["v_star.txt", r"STAR_(\S+)"],
+    "Samtools": ["v_samtools.txt", r"samtools (\S+)"],
+    "umi_tools": ["v_umi_tools.txt", r"version: (\S+)"],
+    "bedtools": ["v_bedtools.txt", r"bedtools v(\S+)"],
+    "iCount": ["v_icount.txt", r"(\S+)"],
+    "PureCLIP": ["v_pureclip.txt", r"pureclip version: (\S+)"],
+    "Piranha": ["v_piranha.txt", r"Piranha Version (\S+)"],
+    "Paraclu": ["v_paraclu.txt", r"(\S+)"],
+    "Meme": ["v_meme.txt", r"(\S+)"],
+    "R": ["v_R.txt", r"R version (\S+)"],
+    "Python": ["v_python.txt", r"Python (\S+)"]
 }
 results = OrderedDict()
 results["nf-core/clipseq"] = '<span style="color:#999999;">N/A</span>'
