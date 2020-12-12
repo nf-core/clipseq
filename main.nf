@@ -338,30 +338,43 @@ log.info "-\033[2m--------------------------------------------------\033[0m-"
 //     """.stripIndent() }
 //     .set { ch_workflow_summary }
 
-// /*
-//  * Parse software version numbers
-//  */
-// process get_software_versions {
-//     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
-//         saveAs: { filename ->
-//                       if (filename.indexOf(".csv") > 0) filename
-//                       else null
-//                 }
+/*
+ * Parse software version numbers
+ */
+process get_software_versions {
+    publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
+        saveAs: { filename ->
+                      if (filename.indexOf(".csv") > 0) filename
+                      else null
+                }
 
-//     output:
-//     file 'software_versions_mqc.yaml' into ch_software_versions_yaml
-//     file "software_versions.csv"
+    output:
+    file 'software_versions_mqc.yaml' into ch_software_versions_yaml
+    file "software_versions.csv"
 
-//     script:
-//     // TODO nf-core: Get all tools to print their version number here
-//     """
-//     echo $workflow.manifest.version > v_pipeline.txt
-//     echo $workflow.nextflow.version > v_nextflow.txt
-//     fastqc --version > v_fastqc.txt
-//     multiqc --version > v_multiqc.txt
-//     scrape_software_versions.py &> software_versions_mqc.yaml
-//     """
-// }
+    script:
+
+    """
+    echo $workflow.manifest.version > v_pipeline.txt
+    echo $workflow.nextflow.version > v_nextflow.txt
+    fastqc --version > v_fastqc.txt
+    multiqc --version > v_multiqc.txt
+    cutadapt --version > v_cutadapt.txt
+    bowtie2 --version > v_bowtie2.txt
+    STAR --version > v_star.txt
+    samtools --version > v_samtools.txt
+    umi_tools --version > v_umi_tools.txt
+    bedtools --version > v_bedtools.txt
+    iCount --version > v_icount.txt
+    pureclip --version > v_pureclip.txt
+    Piranha -about 2> v_piranha.txt
+    echo "9" > v_paraclu.txt # Paraclu does not output a version
+    meme -version > v_meme.txt
+    echo \$(R --version 2>&1) > v_R.txt
+    python --version > v_python.txt
+    scrape_software_versions.py &> software_versions_mqc.yaml
+    """
+}
 
 /*
 ================================================================================
