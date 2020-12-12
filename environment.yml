@@ -5,6 +5,7 @@ channels:
   - conda-forge
   - bioconda
   - defaults
+  - pkgs/r
 dependencies:
   # conda-forge packages
   - conda-forge::python=3.7.3
@@ -31,18 +32,3 @@ dependencies:
 
   # motif calling packages
   - bioconda::meme=5.1.1
-
-  # R packages for QC
-  - r-base=3.2.2
-  - r-reshape2=1.4.1
-  - bioconda::bioconductor-rtracklayer=1.30.1
-  # These don't work if Piranha included - so have to use channels and versions as above
-  # - conda-forge::r-base=4.0.2
-  # - conda-forge::r-optparse=1.6.6
-  # - conda-forge::r-data.table=1.13.4
-  # - conda-forge::r-ggplot2=3.3.2
-  # - conda-forge::r-scales=1.1.1
-  # - conda-forge::r-ggthemes=4.2.0
-  # - conda-forge::r-cowplot=1.1.0
-  # - conda-forge::r-patchwork=1.1.0
-  # - bioconda::bioconductor-rtracklayer=1.30.1
