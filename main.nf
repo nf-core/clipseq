@@ -368,7 +368,7 @@ process get_software_versions {
     iCount --version > v_icount.txt
     pureclip --version > v_pureclip.txt
     Piranha -about 2> v_piranha.txt
-    echo "9" > v_paraclu.txt
+    echo "9" > v_paraclu.txt # Paraclu does not output a version
     meme -version > v_meme.txt
     echo \$(R --version 2>&1) > v_R.txt
     python --version > v_python.txt
