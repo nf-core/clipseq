@@ -832,6 +832,7 @@ process get_crosslinks {
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu, ch_xlinks_piranha
     tuple val(name), path("${name}.xl.bedgraph.gz") into ch_xlinks_bedgraphs
+    path "*.xl.bed.gz" into ch_xlinks_mqc
 
     script:
 
@@ -866,6 +867,7 @@ if (params.peakcaller && icount_check) {
         output:
         tuple val(name), path("${name}.${half_window}nt.sigxl.bed.gz") into ch_sigxls_icount
         tuple val(name), path("${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
+        path "*.peaks.bed.gz" into ch_icount_mqc
 
         script:
 
@@ -929,6 +931,7 @@ if (params.peakcaller && paraclu_check) {
 
         output:
         tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
+        path "*.peaks.bed.gz" into ch_paraclu_mqc
 
         script:
 
@@ -998,6 +1001,7 @@ if (params.peakcaller && pureclip_check) {
         output:
         tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
         tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
+        path "*.peaks.bed.gz" into ch_pureclip_mqc
 
         script:
 
@@ -1067,6 +1071,7 @@ if (params.peakcaller && piranha_check) {
 
         output:
         tuple val(name), path("${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz") into ch_peaks_piranha
+        path "*.peaks.bed.gz" into ch_piranha_mqc
 
         script:
 
@@ -1122,7 +1127,58 @@ if (params.peakcaller && piranha_check) {
 }
 
 /*
- * STEP 8 - MultiQC
+ * STEP 8 - QC plots
+ */
+
+process clipqc_plots {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/clip_qc", mode: params.publish_dir_mode 
+
+    input:
+    file ('xlinks/*') from ch_xlinks_mqc.collect().ifEmpty([])
+    file ('icount/*') from ch_icount_mqc.collect().ifEmpty([])
+    file ('paraclu/*') from ch_paraclu_mqc.collect().ifEmpty([])
+    file ('pureclip/*') from ch_pureclip_mqc.collect().ifEmpty([])
+    file ('piranha/*') from ch_piranha_mqc.collect().ifEmpty([])
+
+    output:
+    file ('xlinks_metrics.tsv')
+    file ('xlinks_ratio.tsv')
+    file ('total_peaks.tsv')
+    file ('xlinks_in_peaks.tsv')
+    file ('xlinksites_in_peaks.tsv')
+    file ('peaks_xlinksite_coverage.tsv')
+    
+    script:
+
+    clip_qc_args = ''
+
+    if (icount_check) {
+        clip_qc_args += ' icount '
+    }
+
+    if (paraclu_check) {
+        clip_qc_args += ' paraclu '
+    }
+
+    if (pureclip_check) {
+        clip_qc_args += ' pureclip '
+    }
+
+    if (piranha_check) {
+        clip_qc_args += ' piranha '
+    }
+
+    """
+    clip_qc.R $clip_qc_args
+    """
+
+}
+
+/*
+ * STEP 9 - MultiQC
  */
 process multiqc {
 
@@ -1151,7 +1207,6 @@ process multiqc {
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
-    // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
     """
     multiqc . -f $rtitle $rfilename $custom_config_file \\
         -m fastqc -m cutadapt -m bowtie2 -m star
