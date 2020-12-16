@@ -54,6 +54,8 @@ def helpMessage() {
       --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
       --bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
       --dm [str]                      PureCLIP merge distnace (default: 8)
+      --bin_size_both [int]           Piranha bin size (default: 3)
+      --cluster_dist [int]            Piranha cluster distance (default: 3)
 
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -139,6 +141,8 @@ if(!params.smrna_fasta) {
 def paraclu_check = false
 def icount_check = false
 def pureclip_check = false
+def piranha_check = false
+
 if (params.peakcaller){
 
     def peak_list = params.peakcaller.split(',').collect()
@@ -147,14 +151,18 @@ if (params.peakcaller){
         if ( it == 'all') {
             paraclu_check = true
             icount_check = true
+            pureclip_check = true
+            piranha_check = true
         } else if ( it == 'paraclu' && !paraclu_check ) {
             paraclu_check = true
         } else if ( it == 'icount' && !icount_check ) {
             icount_check = true
         } else if ( it == 'pureclip' && !pureclip_check ) {
             pureclip_check = true
+        } else if ( it == 'piranha' && !piranha_check ) {
+            piranha_check = true
         } else {
-            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip'"
+            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip', 'piranha'"
         }
     }
 }
@@ -349,30 +357,43 @@ log.info "-\033[2m--------------------------------------------------\033[0m-"
 //     """.stripIndent() }
 //     .set { ch_workflow_summary }
 
-// /*
-//  * Parse software version numbers
-//  */
-// process get_software_versions {
-//     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
-//         saveAs: { filename ->
-//                       if (filename.indexOf(".csv") > 0) filename
-//                       else null
-//                 }
+/*
+ * Parse software version numbers
+ */
+process get_software_versions {
+    publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
+        saveAs: { filename ->
+                      if (filename.indexOf(".csv") > 0) filename
+                      else null
+                }
 
-//     output:
-//     file 'software_versions_mqc.yaml' into ch_software_versions_yaml
-//     file "software_versions.csv"
+    output:
+    file 'software_versions_mqc.yaml' into ch_software_versions_yaml
+    file "software_versions.csv"
 
-//     script:
-//     // TODO nf-core: Get all tools to print their version number here
-//     """
-//     echo $workflow.manifest.version > v_pipeline.txt
-//     echo $workflow.nextflow.version > v_nextflow.txt
-//     fastqc --version > v_fastqc.txt
-//     multiqc --version > v_multiqc.txt
-//     scrape_software_versions.py &> software_versions_mqc.yaml
-//     """
-// }
+    script:
+
+    """
+    echo $workflow.manifest.version > v_pipeline.txt
+    echo $workflow.nextflow.version > v_nextflow.txt
+    fastqc --version > v_fastqc.txt
+    multiqc --version > v_multiqc.txt
+    cutadapt --version > v_cutadapt.txt
+    bowtie2 --version > v_bowtie2.txt
+    STAR --version > v_star.txt
+    samtools --version > v_samtools.txt
+    umi_tools --version > v_umi_tools.txt
+    bedtools --version > v_bedtools.txt
+    iCount --version > v_icount.txt
+    pureclip --version > v_pureclip.txt
+    Piranha -about 2> v_piranha.txt
+    echo "9" > v_paraclu.txt # Paraclu does not output a version
+    meme -version > v_meme.txt
+    echo \$(R --version 2>&1) > v_R.txt
+    python --version > v_python.txt
+    scrape_software_versions.py &> software_versions_mqc.yaml
+    """
+}
 
 /*
 ================================================================================
@@ -418,7 +439,7 @@ if (params.fasta) {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
-            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip }
+            .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip; ch_fasta_dreme_piranha }
     }
 }
 
@@ -434,7 +455,7 @@ if (params.fasta) {
             path(fasta_gz) from ch_fasta_gz
 
             output:
-            path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme_icount, ch_fasta_dreme_paraclu, ch_fasta_pureclip, ch_fasta_dreme_pureclip)
+            path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme_icount, ch_fasta_dreme_paraclu, ch_fasta_pureclip, ch_fasta_dreme_pureclip, ch_fasta_dreme_piranha)
 
             script:
 
@@ -458,7 +479,7 @@ if (!params.fai) {
             path(fasta) from ch_fasta_fai
 
             output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_size)
+            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
 
             script:
 
@@ -779,12 +800,14 @@ process align {
                 --outFilterScoreMin 10  \
                 --alignEndsType Extend5pOfRead1 \
                 --twopassMode Basic \
-                --outSAMtype BAM SortedByCoordinate"
+                --outSAMtype BAM Unsorted"
 
     """
     STAR --runThreadN $task.cpus --runMode alignReads --genomeDir $index \
     --readFilesIn $reads --readFilesCommand gunzip -c \
-    --outFileNamePrefix ${name}. $clip_args && \
+    --outFileNamePrefix ${name}. $clip_args
+
+    samtools sort -@ $task.cpus -o ${name}.Aligned.sortedByCoord.out.bam ${name}.Aligned.out.bam
     samtools index -@ $task.cpus ${name}.Aligned.sortedByCoord.out.bam
     """
 
@@ -839,7 +862,7 @@ process get_crosslinks {
     path(fai) from ch_fai_crosslinks.collect()
 
     output:
-    tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu
+    tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu, ch_xlinks_piranha
     tuple val(name), path("${name}.xl.bedgraph.gz") into ch_xlinks_bedgraphs
 
     script:
@@ -989,7 +1012,7 @@ if (params.peakcaller && paraclu_check) {
 }
 
 /*
- * STEP 7b - Peak-call (PureCLIP)
+ * STEP 7c - Peak-call (PureCLIP)
  */
 
 if (params.peakcaller && pureclip_check) {
@@ -1043,6 +1066,77 @@ if (params.peakcaller && pureclip_check) {
 
         output:
         tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
+
+        script:
+
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """
+
+    }
+
+}
+
+/*
+ * STEP 7d - Peak-call (Piranha)
+ */
+
+if (params.peakcaller && piranha_check) {
+
+    process piranha_peak_call {
+
+        tag "$name"
+        label 'process_high'
+        publishDir "${params.outdir}/piranha", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(xlinks) from ch_xlinks_piranha
+
+        output:
+        tuple val(name), path("${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz") into ch_peaks_piranha
+
+        script:
+
+        bin_size_both = params.bin_size_both
+        cluster_dist = params.cluster_dist
+
+        """
+
+        pigz -d -c $xlinks | \
+        awk '{OFS="\t"}{for(i=0;i<\$5;i++) print }' \
+        > expanded.bed
+
+        Piranha \
+        expanded.bed \
+        -s \
+        -b $bin_size_both \
+        -u $cluster_dist \
+        -o paraclu.bed
+
+        awk '{OFS="\t"}{print \$1, \$2, \$3, ".", \$5, \$6}' paraclu.bed | \
+        pigz > ${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz
+        """
+
+    }
+
+    process piranha_motif_dreme {
+
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/piranha_motif", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(peaks) from ch_peaks_piranha
+        path(fasta) from ch_fasta_dreme_piranha.collect()
+        path(fai) from ch_fai_piranha_motif.collect()
+
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_piranha
 
         script:
 
