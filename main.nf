@@ -253,6 +253,11 @@ if (params.fai) ch_fai_icount_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
+// MultiQC empty channels from peakcaller checks
+if (!paraclu_check) ch_paraclu_mqc = Channel.empty()
+if (!icount_check) ch_icount_mqc = Channel.empty()
+if (!piranha_check) ch_piranha_mqc = Channel.empty()
+if (!pureclip_check) ch_pureclip_mqc = Channel.empty()
 
 // if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
 //     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
