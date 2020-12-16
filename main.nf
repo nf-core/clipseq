@@ -173,37 +173,83 @@ if (!params.gtf && icount_check) {
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-// Check compatibility of gtf file with iCount if both supplied
-if (hasExtension(params.gtf, 'gz')) {
-    def inflaterStream = new GZIPInputStream(new ByteArrayInputStream(params.gtf))
-    def uncompressed_gtf = inflaterStream.getText('UTF-8')
-    def data= gtf_file.eachLine { line ->
-        if (line.contains('ensembl') || line.contains('GENCODE')) {
-                gtf_check = true
-                log.info "got here2a"
-        }
-    }
-    if (!gtf_check) {
-        icount_check = false
-        log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped a"
-    }
-} else {
-    if (params.gtf && icount_check) {
-        log.info "got here1"
-        def gtf_check = false
-        File gtf_file = new File(params.gtf)
-        def data= gtf_file.eachLine { line ->
+// check compatibility of gtf with icount
+if (params.gtf && icount_check) {
+    def gtf_check = false
+    if (hasExtension(params.gtf, 'gz')) {
+        String gtf_file = "./work/tmp_gtf.txt"
+        decompressGzipFile(params.gtf, gtf_file)
+        log.info "here1"
+        print(gtf_file)
+        gtf_file.eachLine { line ->
             if (line.contains('ensembl') || line.contains('GENCODE')) {
                 gtf_check = true
-                log.info "got here2"
             }
         }
-        if (!gtf_check) {
+        boolean fileSuccessfullyDeleted =  new File("./work/tmp_gtf.txt").delete()
+    } else {
+        File gtf_file = new File(params.gtf)
+        log.info "here2"
+        print(gtf_file)
+        gtf_file.eachLine { line ->
+            if (line.contains('ensembl') || line.contains('GENCODE')) {
+                gtf_check = true
+            }
+        }
+        if (!gtf_check){
             icount_check = false
             log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
         }
     }
 }
+// def inflaterStream = new GZIPInputStream(new ByteArrayInputStream(gtf_file))
+// def uncompressed_gtf = inflaterStream.getText('UTF-8')
+// def gtf_check = false
+// uncompressed_gtf.eachLine { line ->
+//     if (line.contains('ensembl') || line.contains('GENCODE')) {
+//         gtf_check = true
+//         log.info "got here2a"
+//     }
+// }
+
+// if (!gtf_check){
+//     icount_check = false
+//     log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
+//     log.info "got here3"
+// }
+
+// // Check compatibility of gtf file with iCount if both supplied
+// if (hasExtension(params.gtf, 'gz')) {
+//     def inflaterStream = new GZIPInputStream(new ByteArrayInputStream(params.gtf))
+//     def uncompressed_gtf = inflaterStream.getText('UTF-8')
+//     def data= gtf_file.eachLine { line ->
+//         if (line.contains('ensembl') || line.contains('GENCODE')) {
+//                 gtf_check = true
+//                 log.info "got here2a"
+//         }
+//     }
+
+//     if (!gtf_check) {
+//         icount_check = false
+//         log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped a"
+//     }
+// } else {
+//     if (params.gtf && icount_check) {
+//         log.info "got here1"
+//         def gtf_check = false
+//         File gtf_file = new File(params.gtf)
+//         def data= gtf_file.eachLine { line ->
+//             if (line.contains('ensembl') || line.contains('GENCODE')) {
+//                 gtf_check = true
+//                 log.info "got here2"
+//             }
+//         }
+//         if (!gtf_check) {
+//             icount_check = false
+//             log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
+//         }
+//     }
+// }
 
 // // Check version of STAR index for compatibility
 // if (params.star_index) {
@@ -1371,6 +1417,25 @@ NF-CORE ON COMPLETE
 // Check file extension - from nf-core/rnaseq
 def hasExtension(it, extension) {
     it.toString().toLowerCase().endsWith(extension.toLowerCase())
+}
+
+// Decompress file
+def decompressGzipFile(String gzipFile, String newFile) {
+    try {
+        FileInputStream fis = new FileInputStream(gzipFile);
+        GZIPInputStream gis = new GZIPInputStream(fis);
+        FileOutputStream fos = new FileOutputStream(newFile);
+        byte[] buffer = new byte[1024];
+        int len;
+        while((len = gis.read(buffer)) != -1){
+            fos.write(buffer, 0, len);
+        }
+        //close resources
+        fos.close();
+        gis.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
 }
 
 
