@@ -12,6 +12,7 @@ run_modules:
     - bowtie2
     - star
     - preseq
+    - rseqc
 
 exclude_modules:
     - 'general_stats'
@@ -184,13 +185,14 @@ sp:
 
 module_order:
     - mapping
-    - preseq
     - dedup
     - crosslinks
+    - rseqc
     - fastqc
     - cutadapt
     - bowtie2
     - star
+    - preseq
 
 report_section_order:
     software_versions:
