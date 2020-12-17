@@ -771,7 +771,7 @@ process align {
     path(index) from ch_star_index.collect()
 
     output:
-    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned
+    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned, ch_aligned_preseq
     path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
@@ -796,6 +796,37 @@ process align {
 
     samtools sort -@ $task.cpus -o ${name}.Aligned.sortedByCoord.out.bam ${name}.Aligned.out.bam
     samtools index -@ $task.cpus ${name}.Aligned.sortedByCoord.out.bam
+    """
+
+}
+
+/*
+ * STEP 5 - Aligning QC
+ */
+
+process preseq {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/preseq", mode: params.publish_dir_mode
+
+    input:
+    tuple val(name), path(bam), path(bai) from ch_aligned_preseq
+
+    output:
+    path '*.ccurve.txt' into ch_preseq_mqc
+    path '*.log'
+
+    script:
+
+    """
+    preseq lc_extrap \
+        -output ${name}.ccurve.txt \
+        -verbose \
+        -bam \
+        -seed 42 \
+        $bam
+    cp .command.err ${name}.command.log
     """
 
 }
