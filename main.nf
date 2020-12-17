@@ -871,33 +871,40 @@ if (params.deduplicate) {
  * STEP 6a - RSeQC
  */
 
-if (params.gtf) ch_gtf_rseqc = Channel.value(params.gtf)
+if (params.gtf) {
+    
+    ch_gtf_rseqc = Channel.value(params.gtf)
 
-process rseqc {
+    process rseqc {
 
-    tag "$name"
-    label 'process_low'
-    publishDir "${params.outdir}/rseqc", mode: params.publish_dir_mode
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/rseqc", mode: params.publish_dir_mode
 
-    input:
-    tuple val(name), path(bam), path(bai) from ch_dedup_rseqc
-    path(gtf) from ch_gtf_rseqc
+        input:
+        tuple val(name), path(bam), path(bai) from ch_dedup_rseqc
+        path(gtf) from ch_gtf_rseqc
 
-    output:
-    path '*.read_distribution.txt' into ch_rseqc_mqc
+        output:
+        path '*.read_distribution.txt' into ch_rseqc_mqc
 
-    script:
+        script:
 
-    """
-    gtf2bed $gtf > gene.bed
-    read_distribution.py \
-        -i $bam \
-        -r gene.bed \
-        > ${name}.read_distribution.txt
-    """
+        """
+        gtf2bed $gtf > gene.bed
+        read_distribution.py \
+            -i $bam \
+            -r gene.bed \
+            > ${name}.read_distribution.txt
+        """
 
+    }
+
+} else {
+
+    ch_rseqc_mqc = Channel.empty()
+    
 }
-
 /*
  * STEP 6 - Identify crosslinks
  */
