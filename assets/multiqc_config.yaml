@@ -12,6 +12,7 @@ run_modules:
     - bowtie2
     - star
     - preseq
+    - rseqc
 
 exclude_modules:
     - 'general_stats'
@@ -169,7 +170,7 @@ sp:
         fn: 'dedup_ratio.tsv'
     dedup_mean_umis:
         fn: 'dedup_mean_umis.tsv'
-    crosslinks:
+    crosslinks_counts:
         fn: 'xlinks_counts.tsv'
     crosslinks_ratio:
         fn: 'xlinks_ratio.tsv'
@@ -184,13 +185,14 @@ sp:
 
 module_order:
     - mapping
-    - preseq
     - dedup
     - crosslinks
     - fastqc
     - cutadapt
     - bowtie2
     - star
+    - preseq
+    - rseqc
 
 report_section_order:
     software_versions:
