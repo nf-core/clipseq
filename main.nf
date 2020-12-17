@@ -173,35 +173,99 @@ if (!params.gtf && icount_check) {
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-// check compatibility of gtf with icount
+def gtf_check = false
+String gtf_file_str = ""
+String gtf_col_3 = ""
 if (params.gtf && icount_check) {
-    def gtf_check = false
     if (hasExtension(params.gtf, 'gz')) {
-        String gtf_file = "./work/tmp_gtf.txt"
-        decompressGzipFile(params.gtf, gtf_file)
-        log.info "here1"
-        print(gtf_file)
-        gtf_file.eachLine { line ->
-            if (line.contains('ensembl') || line.contains('GENCODE')) {
-                gtf_check = true
-            }
-        }
-        boolean fileSuccessfullyDeleted =  new File("./work/tmp_gtf.txt").delete()
+        gtf_file_str = "$baseDir/work/tmp_gtf.txt"
+        decompressGzipFile(params.gtf, gtf_file_str)
     } else {
-        File gtf_file = new File(params.gtf)
-        log.info "here2"
-        print(gtf_file)
-        gtf_file.eachLine { line ->
-            if (line.contains('ensembl') || line.contains('GENCODE')) {
-                gtf_check = true
-            }
-        }
-        if (!gtf_check){
-            icount_check = false
-            log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
-        }
+        gtf_file_str = params.gtf
+    }
+    File gtf_file = new File(gtf_file_str)
+    boolean compatibility = check_gtf_by_line( gtf_file, 30 )
+    if (hasExtension(params.gtf, 'gz')) {
+        boolean fileSuccessfullyDeleted =  new File("./work/tmp_gtf.txt").delete()
+    }
+    if (compatibility) {
+        gtf_check = true
+    }
+    print (compatibility)
+    if (!gtf_check) {
+        icount_check = false
+        log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
     }
 }
+
+// def gtf_check = false
+// String gtf_file_str = ""
+// if (params.gtf && icount_check) {
+//    if (hasExtension(params.gtf, 'gz')) {
+//        gtf_file_str = "./work/tmp_gtf.txt"
+//        decompressGzipFile(params.gtf, gtf_file_str)
+//        log.info "here1"
+//    } else {
+//        gtf_file_str = params.gtf
+//        log.info "here2"
+//    }
+//    File gtf_file = new File(gtf_file_str)
+//    String line1 = readLine( gtf_file, 10 )
+//    log.info "here yoooo"
+//    print(line1)
+//    if (line1 =~ /\bgene\b/) {
+//        log.info "here3"
+//        def result = gtf_file.contains('ensembl' || 'GENCODE')
+//        if(result){
+//            gtf_check = true
+//            log.info "here4"
+//        } else {
+//            log.info "didn't work"
+//        }
+//    }
+//    if (!gtf_check) {
+//         icount_check = false
+//         log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"       
+//    }
+// }
+// print(icount_check)
+
+// // check compatibility of gtf with icount
+// if (params.gtf && icount_check) {
+//     def gtf_check = false
+//     if (hasExtension(params.gtf, 'gz')) {
+//         String gtf_file = "./work/tmp_gtf.txt"
+//         decompressGzipFile(params.gtf, gtf_file)
+//         log.info "here1"
+//         print(gtf_file)
+//         gtf_file.eachLine { line ->
+//             if (line.contains('ensembl') || line.contains('GENCODE')) {
+//                 gtf_check = true
+//             }
+//         }
+//         File gtf_file_really = new File("./work/tmp_gtf.txt")
+//         String line1 = readLine( gtf_file_really, 1 )
+//         if (line1 =~ /\bgene\b/) {
+//             log.info "hello"
+//         } else {
+//             log.info "bye"
+//         }
+//         boolean fileSuccessfullyDeleted =  new File("./work/tmp_gtf.txt").delete()
+//     } else {
+//         File gtf_file = new File(params.gtf)
+//         log.info "here2"
+//         print(gtf_file)
+//         gtf_file.eachLine { line ->
+//             if (line.contains('ensembl') || line.contains('GENCODE')) {
+//                 gtf_check = true
+//             }
+//         }
+//         if (!gtf_check){
+//             icount_check = false
+//             log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
+//         }
+//     }
+// }
 // def inflaterStream = new GZIPInputStream(new ByteArrayInputStream(gtf_file))
 // def uncompressed_gtf = inflaterStream.getText('UTF-8')
 // def gtf_check = false
@@ -1438,6 +1502,38 @@ def decompressGzipFile(String gzipFile, String newFile) {
     }
 }
 
+def boolean check_gtf_by_line( File f, int n ) {
+  boolean compatible = false
+  int count = 0
+  boolean gene = false
+  boolean ensembl = false
+  boolean gencode = false
+  f.withReader { r ->
+    while( count<n && ( !gene && ( !ensembl || !gencode ) ) ) {
+        line = r.readLine();
+        count = count + 1;
+        if (!gene) {
+            if (line =~ /\bgene\b/) {
+                gene = true
+            }
+        };
+        if (gene && !ensembl) {
+            if(line.contains('ensembl')) {
+                ensembl = true
+            }
+        };
+        if (gene && !gencode) {
+            if(line.contains('GENCODE')){
+                gencode = true
+            }
+        };
+        if (gene && ( ensembl || gencode )) {
+            compatible = true
+        };
+    }
+  }
+  compatible
+}
 
 def nfcoreHeader() {
     // Log colors ANSI codes
