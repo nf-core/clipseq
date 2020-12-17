@@ -1176,7 +1176,7 @@ process clipqc {
     }
 
     """
-    clip_qc.R $clip_qc_args
+    clip_qc.py $clip_qc_args
     """
 
 }
