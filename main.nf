@@ -1243,6 +1243,7 @@ process multiqc {
     file ('cutadapt/*') from ch_cutadapt_mqc.collect().ifEmpty([])
     file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
     file ('mapped/*') from ch_align_mqc.collect().ifEmpty([])
+    path ('preseq/*') from ch_preseq_mqc.collect().ifEmpty([])
     file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
     //file ('dedup/*') from ch_dedup_mqc
     //file ('software_versions/*') from ch_software_versions_yaml.collect()
