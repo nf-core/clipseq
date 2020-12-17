@@ -150,6 +150,9 @@ xlinks_metrics_df.loc[:, ['exp', 'ratio']].to_csv('xlinks_ratio.tsv', sep = '\t'
 
 peakcallers = sys.argv[1:]
 
+if not peakcallers:
+    sys.exit()
+
 pc_check = all(pc in ['icount', 'paraclu', 'pureclip', 'piranha'] for pc in peakcallers)
 if pc_check == False:
     sys.exit('ERROR: peakcallers should be any of: icount, paraclu, pureclip, piranha')
