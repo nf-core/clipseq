@@ -187,12 +187,12 @@ module_order:
     - mapping
     - dedup
     - crosslinks
-    - rseqc
     - fastqc
     - cutadapt
     - bowtie2
     - star
     - preseq
+    - rseqc
 
 report_section_order:
     software_versions:
