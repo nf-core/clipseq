@@ -13,6 +13,7 @@ dependencies:
   - conda-forge::pymdown-extensions=6.0
   - conda-forge::pygments=2.5.2
   - conda-forge::pigz=2.3.4
+  - conda-forge::perl=5.26.2
 
   # bioconda packages
   - bioconda::fastqc=0.11.9
