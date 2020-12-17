@@ -170,7 +170,7 @@ sp:
         fn: 'dedup_ratio.tsv'
     dedup_mean_umis:
         fn: 'dedup_mean_umis.tsv'
-    crosslinks:
+    crosslinks_counts:
         fn: 'xlinks_counts.tsv'
     crosslinks_ratio:
         fn: 'xlinks_ratio.tsv'
