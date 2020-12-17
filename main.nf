@@ -846,7 +846,7 @@ if (params.deduplicate) {
         tuple val(name), path(bam), path(bai) from ch_aligned
 
         output:
-        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup, ch_dedup_pureclip
+        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup, ch_dedup_pureclip, ch_dedup_rseqc
         path "*.log" into ch_dedup_mqc, ch_dedup_qc
 
         script:
@@ -863,6 +863,38 @@ if (params.deduplicate) {
     ch_dedup = ch_aligned
     ch_dedup_mqc = Channel.empty()
     ch_dedup_qc = Channel.empty()
+    ch_dedup_rseqc = ch_aligned
+
+}
+
+/*
+ * STEP 6a - RSeQC
+ */
+
+if (params.gtf) ch_gtf_rseqc = Channel.value(params.gtf)
+
+process rseqc {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/rseqc", mode: params.publish_dir_mode
+
+    input:
+    tuple val(name), path(bam), path(bai) from ch_dedup_rseqc
+    path(gtf) from ch_gtf_rseqc
+
+    output:
+    path '*.read_distribution.txt' into ch_rseqc_mqc
+
+    script:
+
+    """
+    gtf2bed $gtf > gene.bed
+    read_distribution.py \
+        -i $bam \
+        -r gene.bed \
+        > ${name}.read_distribution.txt
+    """
 
 }
 
@@ -1244,6 +1276,7 @@ process multiqc {
     file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
     file ('mapped/*') from ch_align_mqc.collect().ifEmpty([])
     path ('preseq/*') from ch_preseq_mqc.collect().ifEmpty([])
+    path ('rseqc/*') from ch_rseqc_mqc.collect().ifEmpty([])
     file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
     //file ('dedup/*') from ch_dedup_mqc
     //file ('software_versions/*') from ch_software_versions_yaml.collect()
