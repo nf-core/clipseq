@@ -264,6 +264,11 @@ if (params.fai) ch_fai_icount_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
+// MultiQC empty channels from peakcaller checks
+if (!paraclu_check) ch_paraclu_qc = Channel.empty()
+if (!icount_check) ch_icount_qc = Channel.empty()
+if (!piranha_check) ch_piranha_qc = Channel.empty()
+if (!pureclip_check) ch_pureclip_qc = Channel.empty()
 
 // if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
 //     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
@@ -716,7 +721,8 @@ process cutadapt {
     script:
 
     """
-    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz $reads > ${name}_cutadapt.log
+    ln -s $reads ${name}.fastq.gz
+    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz ${name}.fastq.gz > ${name}_cutadapt.log
     """
 
 }
@@ -743,7 +749,7 @@ if (params.smrna_fasta) {
         output:
         tuple val(name), path("${name}.unmapped.fastq.gz") into ch_unmapped
         tuple val(name), path("${name}.premapped.bam"), path("${name}.premapped.bam.bai")
-        path "*.log" into ch_premap_mqc
+        path "*.log" into ch_premap_mqc, ch_premap_qc
 
         script:
 
@@ -776,8 +782,8 @@ process align {
     path(index) from ch_star_index.collect()
 
     output:
-    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned
-    path "*.Log.final.out" into ch_align_mqc
+    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned, ch_aligned_preseq
+    path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
 
@@ -806,6 +812,37 @@ process align {
 }
 
 /*
+ * STEP 5 - Aligning QC
+ */
+
+process preseq {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/preseq", mode: params.publish_dir_mode
+
+    input:
+    tuple val(name), path(bam), path(bai) from ch_aligned_preseq
+
+    output:
+    path '*.ccurve.txt' into ch_preseq_mqc
+    path '*.log'
+
+    script:
+
+    """
+    preseq lc_extrap \
+        -output ${name}.ccurve.txt \
+        -verbose \
+        -bam \
+        -seed 42 \
+        $bam
+    cp .command.err ${name}.command.log
+    """
+
+}
+
+/*
  * STEP 6 - Deduplicate
  */
 if (params.deduplicate) {
@@ -820,8 +857,8 @@ if (params.deduplicate) {
         tuple val(name), path(bam), path(bai) from ch_aligned
 
         output:
-        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup, ch_dedup_pureclip
-        path "*.log" into ch_dedup_mqc
+        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup, ch_dedup_pureclip, ch_dedup_rseqc
+        path "*.log" into ch_dedup_mqc, ch_dedup_qc
 
         script:
 
@@ -836,9 +873,49 @@ if (params.deduplicate) {
 
     ch_dedup = ch_aligned
     ch_dedup_mqc = Channel.empty()
+    ch_dedup_qc = Channel.empty()
+    ch_dedup_rseqc = ch_aligned
 
 }
 
+/*
+ * STEP 6a - RSeQC
+ */
+
+if (params.gtf) {
+    
+    ch_gtf_rseqc = Channel.value(params.gtf)
+
+    process rseqc {
+
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/rseqc", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(bam), path(bai) from ch_dedup_rseqc
+        path(gtf) from ch_gtf_rseqc
+
+        output:
+        path '*.read_distribution.txt' into ch_rseqc_mqc
+
+        script:
+
+        """
+        gtf2bed $gtf > gene.bed
+        read_distribution.py \
+            -i $bam \
+            -r gene.bed \
+            > ${name}.read_distribution.txt
+        """
+
+    }
+
+} else {
+
+    ch_rseqc_mqc = Channel.empty()
+    
+}
 /*
  * STEP 6 - Identify crosslinks
  */
@@ -856,6 +933,7 @@ process get_crosslinks {
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu, ch_xlinks_piranha
     tuple val(name), path("${name}.xl.bedgraph.gz") into ch_xlinks_bedgraphs
+    path "*.xl.bed.gz" into ch_xlinks_qc
 
     script:
 
@@ -890,6 +968,7 @@ if (params.peakcaller && icount_check) {
         output:
         tuple val(name), path("${name}.${half_window}nt.sigxl.bed.gz") into ch_sigxls_icount
         tuple val(name), path("${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
+        path "*.peaks.bed.gz" into ch_icount_qc
 
         script:
 
@@ -953,6 +1032,7 @@ if (params.peakcaller && paraclu_check) {
 
         output:
         tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
+        path "*.peaks.bed.gz" into ch_paraclu_qc
 
         script:
 
@@ -1022,6 +1102,7 @@ if (params.peakcaller && pureclip_check) {
         output:
         tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
         tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
+        path "*.peaks.bed.gz" into ch_pureclip_qc
 
         script:
 
@@ -1091,6 +1172,7 @@ if (params.peakcaller && piranha_check) {
 
         output:
         tuple val(name), path("${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz") into ch_peaks_piranha
+        path "*.peaks.bed.gz" into ch_piranha_qc
 
         script:
 
@@ -1146,7 +1228,56 @@ if (params.peakcaller && piranha_check) {
 }
 
 /*
- * STEP 8 - MultiQC
+ * STEP 8 - QC plots
+ */
+
+process clipqc {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/clipqc", mode: params.publish_dir_mode 
+
+    input:
+    file ('premap/*') from ch_premap_qc.collect().ifEmpty([])
+    file ('mapped/*') from ch_align_qc.collect().ifEmpty([])
+    file ('dedup/*') from ch_dedup_qc.collect().ifEmpty([])
+    file ('xlinks/*') from ch_xlinks_qc.collect().ifEmpty([])
+    file ('icount/*') from ch_icount_qc.collect().ifEmpty([])
+    file ('paraclu/*') from ch_paraclu_qc.collect().ifEmpty([])
+    file ('pureclip/*') from ch_pureclip_qc.collect().ifEmpty([])
+    file ('piranha/*') from ch_piranha_qc.collect().ifEmpty([])
+
+    output:
+    path "*.tsv" into ch_clipqc_mqc
+    
+    script:
+
+    clip_qc_args = ''
+
+    if (icount_check) {
+        clip_qc_args += ' icount '
+    }
+
+    if (paraclu_check) {
+        clip_qc_args += ' paraclu '
+    }
+
+    if (pureclip_check) {
+        clip_qc_args += ' pureclip '
+    }
+
+    if (piranha_check) {
+        clip_qc_args += ' piranha '
+    }
+
+    """
+    clip_qc.py $clip_qc_args
+    """
+
+}
+
+/*
+ * STEP 9 - MultiQC
  */
 process multiqc {
 
@@ -1162,6 +1293,9 @@ process multiqc {
     file ('cutadapt/*') from ch_cutadapt_mqc.collect().ifEmpty([])
     file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
     file ('mapped/*') from ch_align_mqc.collect().ifEmpty([])
+    path ('preseq/*') from ch_preseq_mqc.collect().ifEmpty([])
+    path ('rseqc/*') from ch_rseqc_mqc.collect().ifEmpty([])
+    file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
     //file ('dedup/*') from ch_dedup_mqc
     //file ('software_versions/*') from ch_software_versions_yaml.collect()
     //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
@@ -1175,10 +1309,8 @@ process multiqc {
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
-    // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
     """
-    multiqc . -f $rtitle $rfilename $custom_config_file \\
-        -m fastqc -m cutadapt -m bowtie2 -m star
+    multiqc . -f $rtitle $rfilename $custom_config_file
     """
 }
 
