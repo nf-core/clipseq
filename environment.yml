@@ -5,7 +5,7 @@ channels:
   - conda-forge
   - bioconda
   - defaults
-  
+
 dependencies:
   # conda-forge packages
   - conda-forge::python=3.7.3
@@ -25,6 +25,7 @@ dependencies:
   - bioconda::bedtools=2.29.2
   - bioconda::subread=2.0.1
   - bioconda::preseq=2.0.3
+  - bioconda::rseqc=4.0.0
 
   # peak calling packages - may need to switch to pip for latest versions
   - bioconda::icount=2.0.0
