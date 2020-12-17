@@ -5,6 +5,7 @@ channels:
   - conda-forge
   - bioconda
   - defaults
+  - pkgs/r
 dependencies:
   # conda-forge packages
   - conda-forge::python=3.7.3
