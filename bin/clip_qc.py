@@ -170,7 +170,7 @@ def get_peaks_metrics(peakcaller):
         elif peakcaller == 'paraclu':
             exp = re.sub('.[0-9]*_[0-9]*nt_[0-9]*.peaks.bed.gz', '', os.path.basename(peak_file))
         elif peakcaller == 'pureclip':
-            exp = re.sub('.[0-9]*nt.peaks.bed.g', '', os.path.basename(peak_file))
+            exp = re.sub('.[0-9]*nt.peaks.bed.gz', '', os.path.basename(peak_file))
         elif peakcaller == 'piranha':
             exp = re.sub('.[0-9]*nt_[0-9]*nt.peaks.bed.gz', '', os.path.basename(peak_file))
 
