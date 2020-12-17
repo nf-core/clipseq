@@ -178,7 +178,7 @@ String gtf_file_str = ""
 String gtf_col_3 = ""
 if (params.gtf && icount_check) {
     if (hasExtension(params.gtf, 'gz')) {
-        gtf_file_str = "$baseDir/work/tmp_gtf.txt"
+        gtf_file_str = "${workflow.workDir}/tmp_gtf.txt"
         decompressGzipFile(params.gtf, gtf_file_str)
     } else {
         gtf_file_str = params.gtf
@@ -186,7 +186,7 @@ if (params.gtf && icount_check) {
     File gtf_file = new File(gtf_file_str)
     boolean compatibility = check_gtf_by_line( gtf_file, 30 )
     if (hasExtension(params.gtf, 'gz')) {
-        boolean fileSuccessfullyDeleted =  new File("./work/tmp_gtf.txt").delete()
+        boolean fileSuccessfullyDeleted =  new File("${workflow.workDir}/tmp_gtf.txt").delete()
     }
     if (compatibility) {
         gtf_check = true
