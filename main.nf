@@ -254,10 +254,10 @@ if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
 // MultiQC empty channels from peakcaller checks
-if (!paraclu_check) ch_paraclu_mqc = Channel.empty()
-if (!icount_check) ch_icount_mqc = Channel.empty()
-if (!piranha_check) ch_piranha_mqc = Channel.empty()
-if (!pureclip_check) ch_pureclip_mqc = Channel.empty()
+if (!paraclu_check) ch_paraclu_qc = Channel.empty()
+if (!icount_check) ch_icount_qc = Channel.empty()
+if (!piranha_check) ch_piranha_qc = Channel.empty()
+if (!pureclip_check) ch_pureclip_qc = Channel.empty()
 
 // if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
 //     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
@@ -724,7 +724,7 @@ if (params.smrna_fasta) {
         output:
         tuple val(name), path("${name}.unmapped.fastq.gz") into ch_unmapped
         tuple val(name), path("${name}.premapped.bam"), path("${name}.premapped.bam.bai")
-        path "*.log" into ch_premap_mqc
+        path "*.log" into ch_premap_mqc, ch_premap_qc
 
         script:
 
@@ -758,7 +758,7 @@ process align {
 
     output:
     tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned
-    path "*.Log.final.out" into ch_align_mqc
+    path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
 
@@ -802,7 +802,7 @@ if (params.deduplicate) {
 
         output:
         tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup, ch_dedup_pureclip
-        path "*.log" into ch_dedup_mqc
+        path "*.log" into ch_dedup_mqc, ch_dedup_qc
 
         script:
 
@@ -817,6 +817,7 @@ if (params.deduplicate) {
 
     ch_dedup = ch_aligned
     ch_dedup_mqc = Channel.empty()
+    ch_dedup_qc = Channel.empty()
 
 }
 
@@ -837,7 +838,7 @@ process get_crosslinks {
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu, ch_xlinks_piranha
     tuple val(name), path("${name}.xl.bedgraph.gz") into ch_xlinks_bedgraphs
-    path "*.xl.bed.gz" into ch_xlinks_mqc
+    path "*.xl.bed.gz" into ch_xlinks_qc
 
     script:
 
@@ -872,7 +873,7 @@ if (params.peakcaller && icount_check) {
         output:
         tuple val(name), path("${name}.${half_window}nt.sigxl.bed.gz") into ch_sigxls_icount
         tuple val(name), path("${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
-        path "*.peaks.bed.gz" into ch_icount_mqc
+        path "*.peaks.bed.gz" into ch_icount_qc
 
         script:
 
@@ -936,7 +937,7 @@ if (params.peakcaller && paraclu_check) {
 
         output:
         tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
-        path "*.peaks.bed.gz" into ch_paraclu_mqc
+        path "*.peaks.bed.gz" into ch_paraclu_qc
 
         script:
 
@@ -1006,7 +1007,7 @@ if (params.peakcaller && pureclip_check) {
         output:
         tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
         tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
-        path "*.peaks.bed.gz" into ch_pureclip_mqc
+        path "*.peaks.bed.gz" into ch_pureclip_qc
 
         script:
 
@@ -1076,7 +1077,7 @@ if (params.peakcaller && piranha_check) {
 
         output:
         tuple val(name), path("${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz") into ch_peaks_piranha
-        path "*.peaks.bed.gz" into ch_piranha_mqc
+        path "*.peaks.bed.gz" into ch_piranha_qc
 
         script:
 
@@ -1135,26 +1136,24 @@ if (params.peakcaller && piranha_check) {
  * STEP 8 - QC plots
  */
 
-process clipqc_plots {
+process clipqc {
 
     tag "$name"
     label 'process_low'
-    publishDir "${params.outdir}/clip_qc", mode: params.publish_dir_mode 
+    publishDir "${params.outdir}/clipqc", mode: params.publish_dir_mode 
 
     input:
-    file ('xlinks/*') from ch_xlinks_mqc.collect().ifEmpty([])
-    file ('icount/*') from ch_icount_mqc.collect().ifEmpty([])
-    file ('paraclu/*') from ch_paraclu_mqc.collect().ifEmpty([])
-    file ('pureclip/*') from ch_pureclip_mqc.collect().ifEmpty([])
-    file ('piranha/*') from ch_piranha_mqc.collect().ifEmpty([])
+    file ('premap/*') from ch_premap_qc.collect.ifEmpty([])
+    file ('mapped/*') from ch_align_qc.collect.ifEmpty([])
+    file ('dedup/*') from ch_dedup_qc.collect.ifEmpty([])
+    file ('xlinks/*') from ch_xlinks_qc.collect().ifEmpty([])
+    file ('icount/*') from ch_icount_qc.collect().ifEmpty([])
+    file ('paraclu/*') from ch_paraclu_qc.collect().ifEmpty([])
+    file ('pureclip/*') from ch_pureclip_qc.collect().ifEmpty([])
+    file ('piranha/*') from ch_piranha_qc.collect().ifEmpty([])
 
     output:
-    file ('xlinks_metrics.tsv')
-    file ('xlinks_ratio.tsv')
-    file ('total_peaks.tsv')
-    file ('xlinks_in_peaks.tsv')
-    file ('xlinksites_in_peaks.tsv')
-    file ('peaks_xlinksite_coverage.tsv')
+    path "*.tsv" into ch_clipqc_mqc
     
     script:
 
@@ -1199,6 +1198,7 @@ process multiqc {
     file ('cutadapt/*') from ch_cutadapt_mqc.collect().ifEmpty([])
     file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
     file ('mapped/*') from ch_align_mqc.collect().ifEmpty([])
+    file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
     //file ('dedup/*') from ch_dedup_mqc
     //file ('software_versions/*') from ch_software_versions_yaml.collect()
     //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
@@ -1213,8 +1213,7 @@ process multiqc {
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
     """
-    multiqc . -f $rtitle $rfilename $custom_config_file \\
-        -m fastqc -m cutadapt -m bowtie2 -m star
+    multiqc . -f $rtitle $rfilename $custom_config_file
     """
 }
 
