@@ -5,8 +5,11 @@
 # 16th December 2020
 
 import os
+import sys
 import re
+import pybedtools
 import pandas as pd
+import numpy as np
 
 # ==========
 # Mapping
@@ -106,3 +109,38 @@ dedup_df.to_csv('dedup_metrics.csv', sep = '\t', index = False)
 dedup_df.loc[:, ['exp', 'input_reads', 'output_reads']].to_csv('dedup_reads.tsv', sep = '\t', index = False)
 dedup_df.loc[:, ['exp', 'mean_umis']].to_csv('dedup_mean_umis.tsv', sep = '\t', index = False)
 dedup_df.loc[:, ['exp', 'ratio']].to_csv('dedup_ratio.tsv', sep = '\t', index = False)
+
+# ==========
+# Crosslinks
+# ==========
+
+def read_bed(filename):
+    df = pd.read_table(filename, header = None, names = ['chr', 'start', 'end', 'name', 'score', 'strand'], dtype = {'chr':str, 'start':int, 'end':int, 'name':str, 'score':int, 'strand':str})
+    return df
+
+# First get xlink bed files
+xlinks_files = sorted(['xlinks/' + f for f in os.listdir('xlinks') if f.endswith('.xl.bed.gz')])
+
+xlinks = dict((key, []) for key in ['exp', 'total_xlinks', 'total_xlinksites', 'ratio'])
+
+for xlinks_file in xlinks_files:
+
+    xlinks_df = read_bed(xlinks_file)
+
+    exp = re.sub('.xl.bed.gz', '', os.path.basename(xlinks_file))
+    total_xlinks = xlinks_df['score'].sum()
+    total_xlinksites = xlinks_df.shape[0]
+    ratio = total_xlinks/total_xlinksites
+
+    xlinks['exp'].append(exp)
+    xlinks['total_xlinks'].append(total_xlinks)
+    xlinks['total_xlinksites'].append(total_xlinksites)
+    xlinks['ratio'].append(round(total_xlinks/total_xlinksites, 2))
+
+xlinks_metrics_df = pd.DataFrame(xlinks)
+xlinks_metrics_df.to_csv('xlinks_metrics.csv', sep = '\t', index = False)
+
+# Subset for MultiQC plots
+xlinks_metrics_df.loc[:, ['exp', 'total_xlinks', 'total_xlinksites']].to_csv('xlinks_counts.tsv', sep = '\t', index = False)
+xlinks_metrics_df.loc[:, ['exp', 'ratio']].to_csv('xlinks_ratio.tsv', sep = '\t', index = False)
+# xlinks_metrics_df.loc[:, ['exp', 'ratio']].to_csv('dedup_ratio.tsv', sep = '\t', index = False)
