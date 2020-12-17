@@ -103,7 +103,7 @@ for dedup_log in dedup_logs:
         dedup['ratio'].append(round(input_reads/output_reads, 2))
 
 dedup_df = pd.DataFrame(dedup)
-dedup_df.to_csv('dedup_metrics.csv', sep = '\t', index = False)
+dedup_df.to_csv('dedup_metrics.tsv', sep = '\t', index = False)
 
 # Subset for MultiQC plots
 dedup_df.loc[:, ['exp', 'input_reads', 'output_reads']].to_csv('dedup_reads.tsv', sep = '\t', index = False)
@@ -115,7 +115,7 @@ dedup_df.loc[:, ['exp', 'ratio']].to_csv('dedup_ratio.tsv', sep = '\t', index = 
 # ==========
 
 def read_bed(filename):
-    df = pd.read_table(filename, header = None, names = ['chr', 'start', 'end', 'name', 'score', 'strand'], dtype = {'chr':str, 'start':int, 'end':int, 'name':str, 'score':int, 'strand':str})
+    df = pd.read_table(filename, header = None, names = ['chr', 'start', 'end', 'name', 'score', 'strand'], dtype = {'chr':str, 'start':int, 'end':int, 'name':str, 'score':float, 'strand':str})
     return df
 
 # First get xlink bed files
@@ -138,9 +138,84 @@ for xlinks_file in xlinks_files:
     xlinks['ratio'].append(round(total_xlinks/total_xlinksites, 2))
 
 xlinks_metrics_df = pd.DataFrame(xlinks)
-xlinks_metrics_df.to_csv('xlinks_metrics.csv', sep = '\t', index = False)
+xlinks_metrics_df.to_csv('xlinks_metrics.tsv', sep = '\t', index = False)
 
 # Subset for MultiQC plots
 xlinks_metrics_df.loc[:, ['exp', 'total_xlinks', 'total_xlinksites']].to_csv('xlinks_counts.tsv', sep = '\t', index = False)
 xlinks_metrics_df.loc[:, ['exp', 'ratio']].to_csv('xlinks_ratio.tsv', sep = '\t', index = False)
-# xlinks_metrics_df.loc[:, ['exp', 'ratio']].to_csv('dedup_ratio.tsv', sep = '\t', index = False)
+
+# ==========
+# Peaks
+# ==========
+
+peakcallers = sys.argv[1:]
+
+pc_check = all(pc in ['icount', 'paraclu', 'pureclip', 'piranha'] for pc in peakcallers)
+if pc_check == False:
+    sys.exit('ERROR: peakcallers should be any of: icount, paraclu, pureclip, piranha')
+
+
+def get_peaks_metrics(peakcaller):
+
+    peak_files = sorted([peakcaller + '/' + f for f in os.listdir(peakcaller) if f.endswith('.peaks.bed.gz')])
+
+    peaks = dict((key, []) for key in ['exp', 'peakcaller', 'total_xlinks', 'total_xlinksites', 'total_peaks', 'median_peak_width', 'mean_peak_width', 'xlinks_in_peaks', 'xlinks_in_peaks_percent', 'xlinksites_in_peaks', 'xlinksites_in_peaks_percent', 'peaks_xlinksite_coverage_percent'])
+
+    for peak_file in peak_files:
+
+        peaks_df = read_bed(peak_file)
+
+        if peakcaller == 'icount':
+            exp = re.sub('.[0-9]*nt_[0-9]*nt.peaks.bed.gz', '', os.path.basename(peak_file))
+        elif peakcaller == 'paraclu':
+            exp = re.sub('.[0-9]*_[0-9]*nt_[0-9]*.peaks.bed.gz', '', os.path.basename(peak_file))
+        elif peakcaller == 'pureclip':
+            exp = re.sub('.[0-9]*nt.peaks.bed.g', '', os.path.basename(peak_file))
+        elif peakcaller == 'piranha':
+            exp = re.sub('.[0-9]*nt_[0-9]*nt.peaks.bed.gz', '', os.path.basename(peak_file))
+
+
+        xlinks_df = read_bed('xlinks/' + exp + '.xl.bed.gz')
+        expanded_xlinks_df = xlinks_df.loc[xlinks_df.index.repeat(xlinks_df.score)].reset_index(drop = True)
+
+        # Get metrics
+        total_xlinks = xlinks_df['score'].sum()
+        total_xlinksites = xlinks_df.shape[0]
+        total_peaks = peaks_df.shape[0]
+
+        total_peak_width = sum((peaks_df['end'] - peaks_df['start']).tolist())
+        mean_peak_width = round(np.mean((peaks_df['end'] - peaks_df['start']).tolist()), 2)
+        median_peak_width = np.median((peaks_df['end'] - peaks_df['start']).tolist())
+
+        xlinks_bed = pybedtools.BedTool.from_dataframe(xlinks_df)
+        expanded_xlinks_bed = pybedtools.BedTool.from_dataframe(expanded_xlinks_df)
+        peaks_bed = pybedtools.BedTool.from_dataframe(peaks_df)
+
+        xlinks_in_peaks = peaks_bed.intersect(expanded_xlinks_bed, s = True, c = True)
+        xlinks_in_peaks = sum([int(c[-1]) for c in xlinks_in_peaks])
+
+        xlinksites_in_peaks = peaks_bed.intersect(xlinks_bed, s = True, c = True)
+        xlinksites_in_peaks = sum([int(c[-1]) for c in xlinksites_in_peaks])
+
+        peaks_xlinksite_coverage_percent = round((xlinksites_in_peaks/total_peak_width) * 100, 2)
+
+        # Write out
+        peaks['exp'].append(exp)
+        peaks['peakcaller'].append(peakcaller)
+        peaks['total_xlinks'].append(total_xlinks)
+        peaks['total_xlinksites'].append(total_xlinksites)
+        peaks['total_peaks'].append(total_peaks)
+        peaks['median_peak_width'].append(median_peak_width)
+        peaks['mean_peak_width'].append(mean_peak_width)
+        peaks['xlinks_in_peaks'].append(xlinks_in_peaks)
+        peaks['xlinks_in_peaks_percent'].append(round(xlinks_in_peaks/total_xlinks * 100, 2))
+        peaks['xlinksites_in_peaks'].append(xlinksites_in_peaks)
+        peaks['xlinksites_in_peaks_percent'].append(round(xlinksites_in_peaks/total_xlinksites * 100, 2))
+        peaks['peaks_xlinksite_coverage_percent'].append(peaks_xlinksite_coverage_percent)
+    
+    peaks_metrics_df = pd.DataFrame(peaks)
+    return(peaks_metrics_df)
+
+peaks_metrics = [get_peaks_metrics(pc) for pc in peakcallers]
+peaks_metrics_df = pd.concat(peaks_metrics)
+peaks_metrics_df.to_csv('peaks_metrics.tsv', sep = '\t', index = False)
