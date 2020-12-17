@@ -11,6 +11,7 @@ run_modules:
     - cutadapt
     - bowtie2
     - star
+    - preseq
 
 exclude_modules:
     - 'general_stats'
@@ -183,6 +184,7 @@ sp:
 
 module_order:
     - mapping
+    - preseq
     - dedup
     - crosslinks
     - fastqc
