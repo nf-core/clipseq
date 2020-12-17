@@ -697,7 +697,8 @@ process cutadapt {
     script:
 
     """
-    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz $reads > ${name}_cutadapt.log
+    ln -s $reads ${name}.fastq.gz
+    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz ${name}.fastq.gz > ${name}_cutadapt.log
     """
 
 }
