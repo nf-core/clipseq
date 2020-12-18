@@ -9,6 +9,8 @@
 ----------------------------------------------------------------------------------------
 */
 
+import java.util.zip.GZIPInputStream
+
 def helpMessage() {
     // TODO nf-core: Add to this help message with new command line parameters
     log.info nfcoreHeader()
@@ -171,20 +173,29 @@ if (!params.gtf && icount_check) {
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-// // Check compatibility of gtf file with iCount if both supplied
-// if (params.gtf && icount_check) {
-//     def gtf_check = false
-//     File gtf_file = new File(params.gtf)
-//     def data= gtf_file.eachLine { line ->
-//         if (line.contains('ensembl') || line.contains('GENCODE')) {
-//             gtf_check = true
-//         }
-//     }
-//     if (!gtf_check) {
-//         icount_check = false
-//         log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
-//     }
-// }
+def gtf_check = false
+String gtf_file_str = ""
+String gtf_col_3 = ""
+if (params.gtf && icount_check) {
+    if (hasExtension(params.gtf, 'gz')) {
+        gtf_file_str = "${workflow.workDir}/tmp_gtf.txt"
+        decompressGzipFile(params.gtf, gtf_file_str)
+    } else {
+        gtf_file_str = params.gtf
+    }
+    File gtf_file = new File(gtf_file_str)
+    boolean compatibility = check_gtf_by_line( gtf_file, 30 )
+    if (hasExtension(params.gtf, 'gz')) {
+        boolean fileSuccessfullyDeleted =  new File("${workflow.workDir}/tmp_gtf.txt").delete()
+    }
+    if (compatibility) {
+        gtf_check = true
+    }
+    if (!gtf_check) {
+        icount_check = false
+        log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
+    }
+}
 
 // // Check version of STAR index for compatibility
 // if (params.star_index) {
@@ -1486,6 +1497,57 @@ def hasExtension(it, extension) {
     it.toString().toLowerCase().endsWith(extension.toLowerCase())
 }
 
+// Decompress file
+def decompressGzipFile(String gzipFile, String newFile) {
+    try {
+        FileInputStream fis = new FileInputStream(gzipFile);
+        GZIPInputStream gis = new GZIPInputStream(fis);
+        FileOutputStream fos = new FileOutputStream(newFile);
+        byte[] buffer = new byte[1024];
+        int len;
+        while((len = gis.read(buffer)) != -1){
+            fos.write(buffer, 0, len);
+        }
+        //close resources
+        fos.close();
+        gis.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+def boolean check_gtf_by_line( File f, int n ) {
+  boolean compatible = false
+  int count = 0
+  boolean gene = false
+  boolean ensembl = false
+  boolean gencode = false
+  f.withReader { r ->
+    while( count<n && ( !gene && ( !ensembl || !gencode ) ) ) {
+        line = r.readLine();
+        count = count + 1;
+        if (!gene) {
+            if (line =~ /\bgene\b/) {
+                gene = true
+            }
+        };
+        if (gene && !ensembl) {
+            if(line.contains('ensembl')) {
+                ensembl = true
+            }
+        };
+        if (gene && !gencode) {
+            if(line.contains('GENCODE')){
+                gencode = true
+            }
+        };
+        if (gene && ( ensembl || gencode )) {
+            compatible = true
+        };
+    }
+  }
+  compatible
+}
 
 def nfcoreHeader() {
     // Log colors ANSI codes
