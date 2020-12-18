@@ -231,7 +231,7 @@ xlinks_in_peaks_percent_df = peaks_metrics_df.pivot_table(index = 'exp', columns
 xlinks_in_peaks_percent_df.to_csv('xlinks_in_peaks.tsv', sep = '\t', index = True)
 
 xlinksites_in_peaks_percent_df = peaks_metrics_df.pivot_table(index = 'exp', columns = 'peakcaller', values = 'xlinksites_in_peaks_percent')
-xlinks_in_peaks_percent_df.to_csv('xlinksites_in_peaks.tsv', sep = '\t', index = True)
+xlinksites_in_peaks_percent_df.to_csv('xlinksites_in_peaks.tsv', sep = '\t', index = True)
 
 peaks_xlinksite_coverage_percent_df = peaks_metrics_df.pivot_table(index = 'exp', columns = 'peakcaller', values = 'peaks_xlinksite_coverage_percent')
-xlinks_in_peaks_percent_df.to_csv('peaks_xlinksite_coverage.tsv', sep = '\t', index = True)
+peaks_xlinksite_coverage_percent_df.to_csv('peaks_xlinksite_coverage.tsv', sep = '\t', index = True)
