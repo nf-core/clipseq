@@ -114,7 +114,15 @@ exp2_rep2,clip0002_02.fastq.gz
 
 ### `--fasta`
 
+Full path to fasta file containing reference genome (mandatory if --genome is not specified). If you don't have a STAR index available this will be generated for you automatically. Alternatively, it can be set using `--star_index`.
+
+```bash
+--fasta '[path to FASTA reference]'
+```
+
 ### `--genome` (using iGenomes)
+
+
 
 ### `--smrna_org
 
