@@ -29,7 +29,7 @@ def helpMessage() {
 
     Options:
       --genome [str]                  Name of iGenomes reference
-      --smrna_org [str]               Organism for small RNA reference. Available: human, mouse, rat
+      --smrna_org [str]               Organism for small RNA reference. Available: human, mouse, rat, zebrafish, fruitfly, yeast
 
     References:                       If not specified in the configuration file or you wish to overwrite any of the references
       --fasta [file]                  Path to genome fasta reference
@@ -102,7 +102,7 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 // }
 
 // Option for user supplied fasta and gtf and pipeline supplied smRNA
-def smrna_list = ['human', 'mouse', 'rat']
+def smrna_list = ['human', 'mouse', 'rat', 'zebrafish', 'fruitfly', 'yeast']
 if (!params.genome && params.smrna_org) {
     if (params.smrna_org in smrna_list) {
         params.smrna_fasta = params.smrna[ params.smrna_org ].smrna_fasta
