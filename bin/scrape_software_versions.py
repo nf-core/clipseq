@@ -15,6 +15,7 @@ regexes = {
     "Samtools": ["v_samtools.txt", r"samtools (\S+)"],
     "umi_tools": ["v_umi_tools.txt", r"version: (\S+)"],
     "bedtools": ["v_bedtools.txt", r"bedtools v(\S+)"],
+    "preseq": ["v_preseq.txt", r"Version: (\S+)"],
     "iCount": ["v_icount.txt", r"(\S+)"],
     "PureCLIP": ["v_pureclip.txt", r"pureclip version: (\S+)"],
     "Piranha": ["v_piranha.txt", r"Piranha Version (\S+)"],
