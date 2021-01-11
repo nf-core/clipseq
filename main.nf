@@ -9,6 +9,8 @@
 ----------------------------------------------------------------------------------------
 */
 
+import java.util.zip.GZIPInputStream
+
 def helpMessage() {
     // TODO nf-core: Add to this help message with new command line parameters
     log.info nfcoreHeader()
@@ -27,7 +29,7 @@ def helpMessage() {
 
     Options:
       --genome [str]                  Name of iGenomes reference
-      --smrna_species                 Species for small RNA reference. Available: human, mouse, rat
+      --smrna_org [str]               Organism for small RNA reference. Available: human, mouse, rat, zebrafish, fruitfly, yeast
 
     References:                       If not specified in the configuration file or you wish to overwrite any of the references
       --fasta [file]                  Path to genome fasta reference
@@ -100,12 +102,12 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 // }
 
 // Option for user supplied fasta and gtf and pipeline supplied smRNA
-def smrna_list = ['human', 'mouse', 'rat']
-if (!params.genome && params.smrna_species) {
-    if (params.smrna_species in smrna_list) {
-        params.smrna_fasta = params.smrna[ params.smrna_species ].smrna_fasta
+def smrna_list = ['human', 'mouse', 'rat', 'zebrafish', 'fruitfly', 'yeast']
+if (!params.genome && params.smrna_org) {
+    if (params.smrna_org in smrna_list) {
+        params.smrna_fasta = params.smrna[ params.smrna_org ].smrna_fasta
     } else {
-        log.warn "There is no smRNA available for species '${params.smrna_species}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat. Alternative you can supply your own smRNA fasta using --smrna_fasta"
+        log.warn "There is no smRNA available for species '${params.smrna_org}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat. Alternative you can supply your own smRNA fasta using --smrna_fasta"
     }
 } else {
     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
@@ -131,7 +133,7 @@ if(!params.smrna_fasta) {
     if(params.genome) {
         log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
     } else {
-        log.warn "There is no smRNA fasta file suppled for genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta or --smrna_species"
+        log.warn "There is no smRNA fasta file suppled for genome specified; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta or --smrna_org"
     }
 }
 
@@ -171,20 +173,29 @@ if (!params.gtf && icount_check) {
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-// // Check compatibility of gtf file with iCount if both supplied
-// if (params.gtf && icount_check) {
-//     def gtf_check = false
-//     File gtf_file = new File(params.gtf)
-//     def data= gtf_file.eachLine { line ->
-//         if (line.contains('ensembl') || line.contains('GENCODE')) {
-//             gtf_check = true
-//         }
-//     }
-//     if (!gtf_check) {
-//         icount_check = false
-//         log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
-//     }
-// }
+def gtf_check = false
+String gtf_file_str = ""
+String gtf_col_3 = ""
+if (params.gtf && icount_check) {
+    if (hasExtension(params.gtf, 'gz')) {
+        gtf_file_str = "${workflow.workDir}/tmp_gtf.txt"
+        decompressGzipFile(params.gtf, gtf_file_str)
+    } else {
+        gtf_file_str = params.gtf
+    }
+    File gtf_file = new File(gtf_file_str)
+    boolean compatibility = check_gtf_by_line( gtf_file, 30 )
+    if (hasExtension(params.gtf, 'gz')) {
+        boolean fileSuccessfullyDeleted =  new File("${workflow.workDir}/tmp_gtf.txt").delete()
+    }
+    if (compatibility) {
+        gtf_check = true
+    }
+    if (!gtf_check) {
+        icount_check = false
+        log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
+    }
+}
 
 // // Check version of STAR index for compatibility
 // if (params.star_index) {
@@ -253,6 +264,11 @@ if (params.fai) ch_fai_icount_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
+// MultiQC empty channels from peakcaller checks
+if (!paraclu_check) ch_paraclu_qc = Channel.empty()
+if (!icount_check) ch_icount_qc = Channel.empty()
+if (!piranha_check) ch_piranha_qc = Channel.empty()
+if (!pureclip_check) ch_pureclip_qc = Channel.empty()
 
 // if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
 //     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
@@ -368,7 +384,7 @@ process get_software_versions {
     iCount --version > v_icount.txt
     pureclip --version > v_pureclip.txt
     Piranha -about 2> v_piranha.txt
-    echo "9" > v_paraclu.txt
+    echo "9" > v_paraclu.txt # Paraclu does not output a version
     meme -version > v_meme.txt
     echo \$(R --version 2>&1) > v_R.txt
     python --version > v_python.txt
@@ -705,7 +721,8 @@ process cutadapt {
     script:
 
     """
-    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz $reads > ${name}_cutadapt.log
+    ln -s $reads ${name}.fastq.gz
+    cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz ${name}.fastq.gz > ${name}_cutadapt.log
     """
 
 }
@@ -732,7 +749,7 @@ if (params.smrna_fasta) {
         output:
         tuple val(name), path("${name}.unmapped.fastq.gz") into ch_unmapped
         tuple val(name), path("${name}.premapped.bam"), path("${name}.premapped.bam.bai")
-        path "*.log" into ch_premap_mqc
+        path "*.log" into ch_premap_mqc, ch_premap_qc
 
         script:
 
@@ -765,8 +782,8 @@ process align {
     path(index) from ch_star_index.collect()
 
     output:
-    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned
-    path "*.Log.final.out" into ch_align_mqc
+    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned, ch_aligned_preseq
+    path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
 
@@ -795,6 +812,37 @@ process align {
 }
 
 /*
+ * STEP 5 - Aligning QC
+ */
+
+process preseq {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/preseq", mode: params.publish_dir_mode
+
+    input:
+    tuple val(name), path(bam), path(bai) from ch_aligned_preseq
+
+    output:
+    path '*.ccurve.txt' into ch_preseq_mqc
+    path '*.log'
+
+    script:
+
+    """
+    preseq lc_extrap \
+        -output ${name}.ccurve.txt \
+        -verbose \
+        -bam \
+        -seed 42 \
+        $bam
+    cp .command.err ${name}.command.log
+    """
+
+}
+
+/*
  * STEP 6 - Deduplicate
  */
 if (params.deduplicate) {
@@ -809,8 +857,8 @@ if (params.deduplicate) {
         tuple val(name), path(bam), path(bai) from ch_aligned
 
         output:
-        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup, ch_dedup_pureclip
-        path "*.log" into ch_dedup_mqc
+        tuple val(name), path("${name}.dedup.bam"), path("${name}.dedup.bam.bai") into ch_dedup, ch_dedup_pureclip, ch_dedup_rseqc
+        path "*.log" into ch_dedup_mqc, ch_dedup_qc
 
         script:
 
@@ -825,9 +873,49 @@ if (params.deduplicate) {
 
     ch_dedup = ch_aligned
     ch_dedup_mqc = Channel.empty()
+    ch_dedup_qc = Channel.empty()
+    ch_dedup_rseqc = ch_aligned
 
 }
 
+/*
+ * STEP 6a - RSeQC
+ */
+
+if (params.gtf) {
+    
+    ch_gtf_rseqc = Channel.value(params.gtf)
+
+    process rseqc {
+
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/rseqc", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(bam), path(bai) from ch_dedup_rseqc
+        path(gtf) from ch_gtf_rseqc
+
+        output:
+        path '*.read_distribution.txt' into ch_rseqc_mqc
+
+        script:
+
+        """
+        gtf2bed $gtf > gene.bed
+        read_distribution.py \
+            -i $bam \
+            -r gene.bed \
+            > ${name}.read_distribution.txt
+        """
+
+    }
+
+} else {
+
+    ch_rseqc_mqc = Channel.empty()
+    
+}
 /*
  * STEP 6 - Identify crosslinks
  */
@@ -845,6 +933,7 @@ process get_crosslinks {
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu, ch_xlinks_piranha
     tuple val(name), path("${name}.xl.bedgraph.gz") into ch_xlinks_bedgraphs
+    path "*.xl.bed.gz" into ch_xlinks_qc
 
     script:
 
@@ -879,6 +968,7 @@ if (params.peakcaller && icount_check) {
         output:
         tuple val(name), path("${name}.${half_window}nt.sigxl.bed.gz") into ch_sigxls_icount
         tuple val(name), path("${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz") into ch_peaks_icount
+        path "*.peaks.bed.gz" into ch_icount_qc
 
         script:
 
@@ -942,6 +1032,7 @@ if (params.peakcaller && paraclu_check) {
 
         output:
         tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
+        path "*.peaks.bed.gz" into ch_paraclu_qc
 
         script:
 
@@ -1011,6 +1102,7 @@ if (params.peakcaller && pureclip_check) {
         output:
         tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
         tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
+        path "*.peaks.bed.gz" into ch_pureclip_qc
 
         script:
 
@@ -1080,6 +1172,7 @@ if (params.peakcaller && piranha_check) {
 
         output:
         tuple val(name), path("${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz") into ch_peaks_piranha
+        path "*.peaks.bed.gz" into ch_piranha_qc
 
         script:
 
@@ -1135,7 +1228,56 @@ if (params.peakcaller && piranha_check) {
 }
 
 /*
- * STEP 8 - MultiQC
+ * STEP 8 - QC plots
+ */
+
+process clipqc {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/clipqc", mode: params.publish_dir_mode 
+
+    input:
+    file ('premap/*') from ch_premap_qc.collect().ifEmpty([])
+    file ('mapped/*') from ch_align_qc.collect().ifEmpty([])
+    file ('dedup/*') from ch_dedup_qc.collect().ifEmpty([])
+    file ('xlinks/*') from ch_xlinks_qc.collect().ifEmpty([])
+    file ('icount/*') from ch_icount_qc.collect().ifEmpty([])
+    file ('paraclu/*') from ch_paraclu_qc.collect().ifEmpty([])
+    file ('pureclip/*') from ch_pureclip_qc.collect().ifEmpty([])
+    file ('piranha/*') from ch_piranha_qc.collect().ifEmpty([])
+
+    output:
+    path "*.tsv" into ch_clipqc_mqc
+    
+    script:
+
+    clip_qc_args = ''
+
+    if (icount_check) {
+        clip_qc_args += ' icount '
+    }
+
+    if (paraclu_check) {
+        clip_qc_args += ' paraclu '
+    }
+
+    if (pureclip_check) {
+        clip_qc_args += ' pureclip '
+    }
+
+    if (piranha_check) {
+        clip_qc_args += ' piranha '
+    }
+
+    """
+    clip_qc.py $clip_qc_args
+    """
+
+}
+
+/*
+ * STEP 9 - MultiQC
  */
 process multiqc {
 
@@ -1151,6 +1293,9 @@ process multiqc {
     file ('cutadapt/*') from ch_cutadapt_mqc.collect().ifEmpty([])
     file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
     file ('mapped/*') from ch_align_mqc.collect().ifEmpty([])
+    path ('preseq/*') from ch_preseq_mqc.collect().ifEmpty([])
+    path ('rseqc/*') from ch_rseqc_mqc.collect().ifEmpty([])
+    file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
     //file ('dedup/*') from ch_dedup_mqc
     //file ('software_versions/*') from ch_software_versions_yaml.collect()
     //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
@@ -1164,10 +1309,8 @@ process multiqc {
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
-    // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
     """
-    multiqc . -f $rtitle $rfilename $custom_config_file \\
-        -m fastqc -m cutadapt -m bowtie2 -m star
+    multiqc . -f $rtitle $rfilename $custom_config_file
     """
 }
 
@@ -1199,161 +1342,179 @@ NF-CORE ON COMPLETE
 /*
  * Completion e-mail notification
  */
-// workflow.onComplete {
+workflow.onComplete {
 
-//     // Set up the e-mail variables
-//     def subject = "[nf-core/clipseq] Successful: $workflow.runName"
-//     if (!workflow.success) {
-//         subject = "[nf-core/clipseq] FAILED: $workflow.runName"
-//     }
-//     def email_fields = [:]
-//     email_fields['version'] = workflow.manifest.version
-//     email_fields['runName'] = custom_runName ?: workflow.runName
-//     email_fields['success'] = workflow.success
-//     email_fields['dateComplete'] = workflow.complete
-//     email_fields['duration'] = workflow.duration
-//     email_fields['exitStatus'] = workflow.exitStatus
-//     email_fields['errorMessage'] = (workflow.errorMessage ?: 'None')
-//     email_fields['errorReport'] = (workflow.errorReport ?: 'None')
-//     email_fields['commandLine'] = workflow.commandLine
-//     email_fields['projectDir'] = workflow.projectDir
-//     email_fields['summary'] = summary
-//     email_fields['summary']['Date Started'] = workflow.start
-//     email_fields['summary']['Date Completed'] = workflow.complete
-//     email_fields['summary']['Pipeline script file path'] = workflow.scriptFile
-//     email_fields['summary']['Pipeline script hash ID'] = workflow.scriptId
-//     if (workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
-//     if (workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
-//     if (workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
-//     email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
-//     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
-//     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
+    // Set up the e-mail variables
+    def subject = "[nf-core/clipseq] Successful: $workflow.runName"
+    if (!workflow.success) {
+        subject = "[nf-core/clipseq] FAILED: $workflow.runName"
+    }
+    def email_fields = [:]
+    email_fields['version'] = workflow.manifest.version
+    email_fields['runName'] = custom_runName ?: workflow.runName
+    email_fields['success'] = workflow.success
+    email_fields['dateComplete'] = workflow.complete
+    email_fields['duration'] = workflow.duration
+    email_fields['exitStatus'] = workflow.exitStatus
+    email_fields['errorMessage'] = (workflow.errorMessage ?: 'None')
+    email_fields['errorReport'] = (workflow.errorReport ?: 'None')
+    email_fields['commandLine'] = workflow.commandLine
+    email_fields['projectDir'] = workflow.projectDir
+    email_fields['summary'] = summary
+    email_fields['summary']['Date Started'] = workflow.start
+    email_fields['summary']['Date Completed'] = workflow.complete
+    email_fields['summary']['Pipeline script file path'] = workflow.scriptFile
+    email_fields['summary']['Pipeline script hash ID'] = workflow.scriptId
+    if (workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
+    if (workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
+    if (workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
+    email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
+    email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
+    email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 
-//     // TODO nf-core: If not using MultiQC, strip out this code (including params.max_multiqc_email_size)
-//     // On success try attach the multiqc report
-//     def mqc_report = null
-//     try {
-//         if (workflow.success) {
-//             mqc_report = ch_multiqc_report.getVal()
-//             if (mqc_report.getClass() == ArrayList) {
-//                 log.warn "[nf-core/clipseq] Found multiple reports from process 'multiqc', will use only one"
-//                 mqc_report = mqc_report[0]
-//             }
-//         }
-//     } catch (all) {
-//         log.warn "[nf-core/clipseq] Could not attach MultiQC report to summary email"
-//     }
+    // TODO nf-core: If not using MultiQC, strip out this code (including params.max_multiqc_email_size)
+    // On success try attach the multiqc report
+    def mqc_report = null
+    try {
+        if (workflow.success) {
+            mqc_report = ch_multiqc_report.getVal()
+            if (mqc_report.getClass() == ArrayList) {
+                log.warn "[nf-core/clipseq] Found multiple reports from process 'multiqc', will use only one"
+                mqc_report = mqc_report[0]
+            }
+        }
+    } catch (all) {
+        log.warn "[nf-core/clipseq] Could not attach MultiQC report to summary email"
+    }
 
-//     // Check if we are only sending emails on failure
-//     email_address = params.email
-//     if (!params.email && params.email_on_fail && !workflow.success) {
-//         email_address = params.email_on_fail
-//     }
-
-// <<< FROM TEMPLATE 1.12.1 update
+    // Check if we are only sending emails on failure
+    email_address = params.email
+    if (!params.email && params.email_on_fail && !workflow.success) {
+        email_address = params.email_on_fail
+    }
 
     // Render the TXT template
-    // def engine = new groovy.text.GStringTemplateEngine()
-    // def tf = new File("$projectDir/assets/email_template.txt")
-    // def txt_template = engine.createTemplate(tf).make(email_fields)
-    // def email_txt = txt_template.toString()
+    def engine = new groovy.text.GStringTemplateEngine()
+    def tf = new File("$projectDir/assets/email_template.txt")
+    def txt_template = engine.createTemplate(tf).make(email_fields)
+    def email_txt = txt_template.toString()
 
     // Render the HTML template
-    // def hf = new File("$projectDir/assets/email_template.html")
-    // def html_template = engine.createTemplate(hf).make(email_fields)
-    // def email_html = html_template.toString()
+    def hf = new File("$projectDir/assets/email_template.html")
+    def html_template = engine.createTemplate(hf).make(email_fields)
+    def email_html = html_template.toString()
 
     // Render the sendmail template
-    // def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
-    // def sf = new File("$projectDir/assets/sendmail_template.txt")
-    // def sendmail_template = engine.createTemplate(sf).make(smail_fields)
-    // def sendmail_html = sendmail_template.toString()
+    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
+    def sf = new File("$projectDir/assets/sendmail_template.txt")
+    def sendmail_template = engine.createTemplate(sf).make(smail_fields)
+    def sendmail_html = sendmail_template.toString()
 
     // Send the HTML e-mail
-    // if (email_address) {
-    //    try {
-    //        if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
-    //        // Try to send HTML e-mail using sendmail
-    //        [ 'sendmail', '-t' ].execute() << sendmail_html
-    //        log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (sendmail)"
-    //    } catch (all) {
-    //        // Catch failures and try with plaintext
-    //        def mail_cmd = [ 'mail', '-s', subject, '--content-type=text/html', email_address ]
-    //        if ( mqc_report.size() <= params.max_multiqc_email_size.toBytes() ) {
-    //          mail_cmd += [ '-A', mqc_report ]
-    //        }
-    //        mail_cmd.execute() << email_html
-    //        log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (mail)"
-    //    }
+    if (email_address) {
+       try {
+           if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
+           // Try to send HTML e-mail using sendmail
+           [ 'sendmail', '-t' ].execute() << sendmail_html
+           log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (sendmail)"
+       } catch (all) {
+           // Catch failures and try with plaintext
+           def mail_cmd = [ 'mail', '-s', subject, '--content-type=text/html', email_address ]
+           if ( mqc_report.size() <= params.max_multiqc_email_size.toBytes() ) {
+             mail_cmd += [ '-A', mqc_report ]
+           }
+           mail_cmd.execute() << email_html
+           log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (mail)"
+       }
+    }
 
-// >>>
+    // Write summary e-mail HTML to a file
+    def output_d = new File("${params.outdir}/pipeline_info/")
+    if (!output_d.exists()) {
+        output_d.mkdirs()
+    }
+    def output_hf = new File(output_d, "pipeline_report.html")
+    output_hf.withWriter { w -> w << email_html }
+    def output_tf = new File(output_d, "pipeline_report.txt")
+    output_tf.withWriter { w -> w << email_txt }
 
-//     // Render the TXT template
-//     def engine = new groovy.text.GStringTemplateEngine()
-//     def tf = new File("$baseDir/assets/email_template.txt")
-//     def txt_template = engine.createTemplate(tf).make(email_fields)
-//     def email_txt = txt_template.toString()
+    c_green = params.monochrome_logs ? '' : "\033[0;32m";
+    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
+    c_red = params.monochrome_logs ? '' : "\033[0;31m";
+    c_reset = params.monochrome_logs ? '' : "\033[0m";
 
-//     // Render the HTML template
-//     def hf = new File("$baseDir/assets/email_template.html")
-//     def html_template = engine.createTemplate(hf).make(email_fields)
-//     def email_html = html_template.toString()
+    if (workflow.stats.ignoredCount > 0 && workflow.success) {
+        log.info "-${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}-"
+        log.info "-${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCount} ${c_reset}-"
+        log.info "-${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}-"
+    }
 
-//     // Render the sendmail template
-//     def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
-//     def sf = new File("$baseDir/assets/sendmail_template.txt")
-//     def sendmail_template = engine.createTemplate(sf).make(smail_fields)
-//     def sendmail_html = sendmail_template.toString()
+    if (workflow.success) {
+        log.info "-${c_purple}[nf-core/clipseq]${c_green} Pipeline completed successfully${c_reset}-"
+    } else {
+        checkHostname()
+        log.info "-${c_purple}[nf-core/clipseq]${c_red} Pipeline completed with errors${c_reset}-"
+    }
 
-//     // Send the HTML e-mail
-//     if (email_address) {
-//         try {
-//             if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
-//             // Try to send HTML e-mail using sendmail
-//             [ 'sendmail', '-t' ].execute() << sendmail_html
-//             log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (sendmail)"
-//         } catch (all) {
-//             // Catch failures and try with plaintext
-//             [ 'mail', '-s', subject, email_address ].execute() << email_txt
-//             log.info "[nf-core/clipseq] Sent summary e-mail to $email_address (mail)"
-//         }
-//     }
+}
 
-//     // Write summary e-mail HTML to a file
-//     def output_d = new File("${params.outdir}/pipeline_info/")
-//     if (!output_d.exists()) {
-//         output_d.mkdirs()
-//     }
-//     def output_hf = new File(output_d, "pipeline_report.html")
-//     output_hf.withWriter { w -> w << email_html }
-//     def output_tf = new File(output_d, "pipeline_report.txt")
-//     output_tf.withWriter { w -> w << email_txt }
-
-//     c_green = params.monochrome_logs ? '' : "\033[0;32m";
-//     c_purple = params.monochrome_logs ? '' : "\033[0;35m";
-//     c_red = params.monochrome_logs ? '' : "\033[0;31m";
-//     c_reset = params.monochrome_logs ? '' : "\033[0m";
-
-//     if (workflow.stats.ignoredCount > 0 && workflow.success) {
-//         log.info "-${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}-"
-//         log.info "-${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCount} ${c_reset}-"
-//         log.info "-${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}-"
-//     }
-
-//     if (workflow.success) {
-//         log.info "-${c_purple}[nf-core/clipseq]${c_green} Pipeline completed successfully${c_reset}-"
-//     } else {
-//         checkHostname()
-//         log.info "-${c_purple}[nf-core/clipseq]${c_red} Pipeline completed with errors${c_reset}-"
-//     }
-
-// }
 
 // Check file extension - from nf-core/rnaseq
 def hasExtension(it, extension) {
     it.toString().toLowerCase().endsWith(extension.toLowerCase())
 }
 
+// Decompress file
+def decompressGzipFile(String gzipFile, String newFile) {
+    try {
+        FileInputStream fis = new FileInputStream(gzipFile);
+        GZIPInputStream gis = new GZIPInputStream(fis);
+        FileOutputStream fos = new FileOutputStream(newFile);
+        byte[] buffer = new byte[1024];
+        int len;
+        while((len = gis.read(buffer)) != -1){
+            fos.write(buffer, 0, len);
+        }
+        //close resources
+        fos.close();
+        gis.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+def boolean check_gtf_by_line( File f, int n ) {
+  boolean compatible = false
+  int count = 0
+  boolean gene = false
+  boolean ensembl = false
+  boolean gencode = false
+  f.withReader { r ->
+    while( count<n && ( !gene && ( !ensembl || !gencode ) ) ) {
+        line = r.readLine();
+        count = count + 1;
+        if (!gene) {
+            if (line =~ /\bgene\b/) {
+                gene = true
+            }
+        };
+        if (gene && !ensembl) {
+            if(line.contains('ensembl')) {
+                ensembl = true
+            }
+        };
+        if (gene && !gencode) {
+            if(line.contains('GENCODE')){
+                gencode = true
+            }
+        };
+        if (gene && ( ensembl || gencode )) {
+            compatible = true
+        };
+    }
+  }
+  compatible
+}
 
 def nfcoreHeader() {
     // Log colors ANSI codes
