@@ -149,8 +149,13 @@ params {
   }
 }
 ```
+SmallRNA premapping will be automatically triggered if there is a smallRNA reference available for the iGenomes reference chosen. See [smallRNA config file](../conf/smRNA.config) for availibility. Alternatively, this can be set by `--smrna_org` or `--smrna_fasta` as shown below.
 
-### `--smrna_org
+### `--smrna_org`
+
+
+
+### `--smrna_fasta`
 
 #### Custom resource requests
 
