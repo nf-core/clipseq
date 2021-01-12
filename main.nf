@@ -12,7 +12,6 @@
 import java.util.zip.GZIPInputStream
 
 def helpMessage() {
-    // TODO nf-core: Add to this help message with new command line parameters
     log.info nfcoreHeader()
     log.info"""
 
@@ -89,17 +88,7 @@ SET UP CONFIGURATION VARIABLES
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
-// Link to smRNA if available
-// } else if ( params.genomes && params.genome && params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
-//     //params.smrna_genome = params.genome
-//     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
-// // Show warning of no pre-mapping if smRNA fasta is unavailable and not specified.
 }
-
-// else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
-//     log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
-// //
-// }
 
 // Option for user supplied fasta and gtf and pipeline supplied smRNA
 def smrna_list = ['human', 'mouse', 'rat', 'zebrafish', 'fruitfly', 'yeast']
@@ -146,7 +135,6 @@ def piranha_check = false
 if (params.peakcaller){
 
     def peak_list = params.peakcaller.split(',').collect()
-    //print peak_list
     peak_list.each {
         if ( it == 'all') {
             paraclu_check = true
@@ -196,29 +184,6 @@ if (params.gtf && icount_check) {
         log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
     }
 }
-
-// // Check version of STAR index for compatibility
-// if (params.star_index) {
-//     File star_log_file = new File(params.star_index + "Log.out")
-//     def data= star_log_file.eachLine { line ->
-//         if (line.contains('STAR version=')) {
-//             star_version = line.findAll( /\d+/ )*.toInteger()
-//             print "${star_version[0]}"
-//             if(star_version[0] != 2 || (star_version[1] != 6 && star_version[1] != 5)) {
-//                 exit 1, "The version of STAR used to create the STAR index is incompatible. Please use version 2.5 or 2.6."
-//             }
-//         }
-//     }
-// }
-
-//
-// NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
-// If you want to use the channel below in a process, define the following:
-//   input:
-//   file fasta from ch_fasta
-//
-// params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-// if (params.fasta) { ch_fasta = file(params.fasta, checkIfExists: true) }
 
 // Has the run name been specified by the user?
 // this has the bonus effect of catching both -name and --name
@@ -270,10 +235,6 @@ if (!icount_check) ch_icount_qc = Channel.empty()
 if (!piranha_check) ch_piranha_qc = Channel.empty()
 if (!pureclip_check) ch_pureclip_qc = Channel.empty()
 
-// if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
-//     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
-// }
-
 if (params.input) {
     Channel
         .fromPath(params.input, checkIfExists: true)
@@ -283,7 +244,6 @@ if (params.input) {
 } else {
     exit 1, "Samples comma-separated input file not specified"
 }
-
 
 /*
 ================================================================================
