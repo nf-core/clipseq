@@ -254,43 +254,49 @@ HEADER LOG
 // Header log info
 log.info nfcoreHeader()
 def summary = [:]
-if (workflow.revision) summary['Pipeline Release'] = workflow.revision
-summary['Run Name']         = custom_runName ?: workflow.runName
-// TODO nf-core: Report custom parameters here
-summary['Input']            = params.input
-if (params.fasta) summary['Fasta ref']        = params.fasta
-if (params.gtf) summary['GTF ref']            = params.gtf
-if (params.star_index) summary['STAR index'] = params.star_index
-if (params.deduplicate) summary['Deduplicate'] = params.deduplicate
-if (params.deduplicate && params.umi_separator) summary['UMI separator'] = params.umi_separator
-if (params.peakcaller) summary['Peak caller']            = params.peakcaller
-if (params.segment) summary['iCount segment']            = params.segment
-if (icount_check) summary['Half window']            = params.half_window
-if (icount_check) summary['Merge window']            = params.merge_window
-if (paraclu_check) summary['Min value']            = params.min_value
-if (paraclu_check) summary['Max density increase']            = params.min_density_increase
-if (paraclu_check) summary['Max cluster length']            = params.max_cluster_length
-summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
-if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
-summary['Output dir']       = params.outdir
-summary['Launch dir']       = workflow.launchDir
-summary['Working dir']      = workflow.workDir
-summary['Script dir']       = workflow.projectDir
-summary['User']             = workflow.userName
+if (workflow.revision)                           summary['Pipeline Release'] = workflow.revision
+summary['Run Name']                              = custom_runName ?: workflow.runName
+summary['Input']                                 = params.input
+if (params.fasta)                                summary['Fasta ref'] = params.fasta
+if (params.gtf)                                  summary['GTF ref'] = params.gtf
+if (params.star_index)                           summary['STAR index'] = params.star_index
+if (params.save_index)                           summary['Save STAR index?'] = params.save_index
+if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
+if (params.smrna_fasta)                          summary['SmalRNA ref'] = [params.smrna_fasta]
+if (params.deduplicate)                          summary['Deduplicate'] = params.deduplicate
+if (params.deduplicate && params.umi_separator)  summary['UMI separator'] = params.umi_separator
+if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
+if (params.segment)                              summary['iCount segment'] = params.segment
+if (icount_check)                                summary['Half window'] = params.half_window
+if (icount_check)                                summary['Merge window'] = params.merge_window
+if (paraclu_check)                               summary['Min value'] = params.min_value
+if (paraclu_check)                               summary['Max density increase'] = params.min_density_increase
+if (paraclu_check)                               summary['Max cluster length'] = params.max_cluster_length
+if (pureclip_check)                              summary['Protein binding parameter'] = params.bc
+if (pureclip_check)                              summary['Crosslink merge distance'] = params.dm
+if (piranha_check)                               summary['Bin size'] = params.bin_size_both
+if (piranha_check)                               summary['Cluster distance'] = params.cluster_dist
+summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
+if (workflow.containerEngine)                    summary['Container'] = "$workflow.containerEngine - $workflow.container"
+summary['Output dir']                            = params.outdir
+summary['Launch dir']                            = workflow.launchDir
+summary['Working dir']                           = workflow.workDir
+summary['Script dir']                            = workflow.projectDir
+summary['User']                                  = workflow.userName
 if (workflow.profile.contains('awsbatch')) {
-    summary['AWS Region']   = params.awsregion
-    summary['AWS Queue']    = params.awsqueue
-    summary['AWS CLI']      = params.awscli
+    summary['AWS Region']                        = params.awsregion
+    summary['AWS Queue']                         = params.awsqueue
+    summary['AWS CLI']                           = params.awscli
 }
-summary['Config Profile'] = workflow.profile
-if (params.config_profile_description) summary['Config Profile Description'] = params.config_profile_description
-if (params.config_profile_contact)     summary['Config Profile Contact']     = params.config_profile_contact
-if (params.config_profile_url)         summary['Config Profile URL']         = params.config_profile_url
-summary['Config Files'] = workflow.configFiles.join(', ')
+summary['Config Profile']                        = workflow.profile
+if (params.config_profile_description)           summary['Config Profile Description'] = params.config_profile_description
+if (params.config_profile_contact)               summary['Config Profile Contact'] = params.config_profile_contact
+if (params.config_profile_url)                   summary['Config Profile URL'] = params.config_profile_url
+summary['Config Files']                          = workflow.configFiles.join(', ')
 if (params.email || params.email_on_fail) {
-    summary['E-mail Address']    = params.email
-    summary['E-mail on failure'] = params.email_on_fail
-    summary['MultiQC maxsize']   = params.max_multiqc_email_size
+    summary['E-mail Address']                    = params.email
+    summary['E-mail on failure']                 = params.email_on_fail
+    summary['MultiQC maxsize']                   = params.max_multiqc_email_size
 }
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "-\033[2m--------------------------------------------------\033[0m-"
