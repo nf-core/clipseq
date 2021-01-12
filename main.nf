@@ -392,6 +392,7 @@ process get_software_versions {
     echo \$(R --version 2>&1) > v_R.txt
     python --version > v_python.txt
     pygmentize -V > v_pygments.txt
+    pigz --version > v_pigz.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }

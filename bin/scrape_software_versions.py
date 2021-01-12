@@ -25,7 +25,10 @@ regexes = {
     "Meme": ["v_meme.txt", r"(\S+)"],
     "R": ["v_R.txt", r"R version (\S+)"],
     "Python": ["v_python.txt", r"Python (\S+)"],
-    "Pygments": ["v_pygments.txt", r"Pygments version (\S+)"]
+    "Pygments": ["v_pygments.txt", r"Pygments version (\S+)"],
+    "pigz": ["v_pigz.txt", r"pigz (\S+)"],
+    
+
 }
 results = OrderedDict()
 results["nf-core/clipseq"] = '<span style="color:#999999;">N/A</span>'
