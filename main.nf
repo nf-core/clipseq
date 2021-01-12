@@ -382,6 +382,7 @@ process get_software_versions {
     umi_tools --version > v_umi_tools.txt
     bedtools --version > v_bedtools.txt
     preseq 2> v_preseq.txt
+    subread-align -v 2> v_subread.txt
     iCount --version > v_icount.txt
     pureclip --version > v_pureclip.txt
     Piranha -about 2> v_piranha.txt
