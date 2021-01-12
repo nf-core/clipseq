@@ -386,7 +386,7 @@ if (params.smrna_fasta) {
 /*
  * Decompression
  */
-// Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
+// Recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
         ch_fasta_gz = Channel
@@ -576,7 +576,6 @@ if (!params.star_index) {
  */
 
 // iCount GTF input autodetects gz
-
 if (params.peakcaller && icount_check) {
 
     if(!params.segment) {
@@ -654,11 +653,6 @@ process fastqc {
     mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
 
     """
-    // rm *${read_name}*
-
-    // fastqc --quiet --threads $task.cpus $reads
-    // mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
-    // mv ${reads.simpleName}*.zip ${name}_pre_fastqc.zip
 }
 
 /*
