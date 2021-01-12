@@ -393,6 +393,7 @@ process get_software_versions {
     python --version > v_python.txt
     pygmentize -V > v_pygments.txt
     pigz --version > v_pigz.txt
+    perl -v > v_perl.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
