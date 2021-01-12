@@ -13,7 +13,7 @@
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/clipseq --input '[path to design file]' --fasta '[path to genome fasta]' -profile docker
+nextflow run nf-core/clipseq --input '[path to design file]' --fasta '[path to genome FASTA]' -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
