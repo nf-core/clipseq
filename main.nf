@@ -542,6 +542,8 @@ if (!params.star_index) {
 
                 tag "$gtf_gz"
                 label 'process_low'
+                publishDir path: { params.save_index ? "${params.outdir}/STAR_index" : params.outdir },
+                    saveAs: { params.save_index ? it : null }, mode: params.publish_dir_mode
 
                 input:
                 path(gtf_gz) from ch_gtf_gz_star
@@ -564,6 +566,8 @@ if (!params.star_index) {
 
             tag "$fasta"
             label 'process_high'
+            publishDir path: { params.save_index ? "${params.outdir}/STAR_index" : params.outdir },
+                saveAs: { params.save_index ? it : null }, mode: params.publish_dir_mode
 
             input:
             path(fasta) from ch_fasta
