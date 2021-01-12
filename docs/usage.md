@@ -153,9 +153,28 @@ SmallRNA premapping will be automatically triggered if there is a smallRNA refer
 
 ### `--smrna_org`
 
+The pipeline comes equipped with some smallRNA FASTA reference for premapping. These are available for the following organisms:
 
+* Human
+    * `--smrna_org human`
+* Mouse
+    * `--smrna_org mouse`
+* Rat
+    * `--smrna_org rat`
+* Zebrafish
+    * `--smrna_org zebrafish`
+* Fruitfly/_Drosophila_
+    * `--smrna_org fruitfly`
+* Yeast/_S. cerevisiae_
+    * `--smrna_org yest`
 
 ### `--smrna_fasta`
+
+Alternatively, the smallRNA premapping reference can be supplied by the user by giving the path to the reference FASTA:
+
+```bash
+--smrna_fasta '[path to smallRNA FASTA reference]'
+```
 
 #### Custom resource requests
 
