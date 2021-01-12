@@ -122,7 +122,7 @@ Full path to fasta file containing reference genome (mandatory if --genome is no
 
 ### `--genome` (using iGenomes)
 
-There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag. You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
+There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag. If you have the iGenomes references locally available you can set `--igenome_base`, otherwise they will be automatically obtained from AWS-iGenomes. You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
 
 * Human
     * `--genome GRCh37`
