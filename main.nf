@@ -295,24 +295,24 @@ if (params.email || params.email_on_fail) {
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "-\033[2m--------------------------------------------------\033[0m-"
 
-// // Check the hostnames against configured profiles
-// checkHostname()
+// Check the hostnames against configured profiles
+checkHostname()
 
-// Channel.from(summary.collect{ [it.key, it.value] })
-//     .map { k,v -> "<dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }
-//     .reduce { a, b -> return [a, b].join("\n            ") }
-//     .map { x -> """
-//     id: 'nf-core-clipseq-summary'
-//     description: " - this information is collected when the pipeline is started."
-//     section_name: 'nf-core/clipseq Workflow Summary'
-//     section_href: 'https://github.com/nf-core/clipseq'
-//     plot_type: 'html'
-//     data: |
-//         <dl class=\"dl-horizontal\">
-//             $x
-//         </dl>
-//     """.stripIndent() }
-//     .set { ch_workflow_summary }
+Channel.from(summary.collect{ [it.key, it.value] })
+    .map { k,v -> "<dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }
+    .reduce { a, b -> return [a, b].join("\n            ") }
+    .map { x -> """
+    id: 'nf-core-clipseq-summary'
+    description: " - this information is collected when the pipeline is started."
+    section_name: 'nf-core/clipseq Workflow Summary'
+    section_href: 'https://github.com/nf-core/clipseq'
+    plot_type: 'html'
+    data: |
+        <dl class=\"dl-horizontal\">
+            $x
+        </dl>
+    """.stripIndent() }
+    .set { ch_workflow_summary }
 
 /*
  * Parse software version numbers
