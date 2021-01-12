@@ -122,7 +122,33 @@ Full path to fasta file containing reference genome (mandatory if --genome is no
 
 ### `--genome` (using iGenomes)
 
+There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag. You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
 
+* Human
+    * `--genome GRCh37`
+* Mouse
+    * `--genome GRCm38`
+* _Drosophila_
+    * `--genome BDGP6`
+* _S. cerevisiae_
+    * `--genome 'R64-1-1'`
+
+> There are numerous others - check the config file for more.
+
+Note that you can use the same configuration setup to save sets of reference files for your own use, even if they are not part of the iGenomes resource. See the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for instructions on where to save such a file.
+
+The syntax for this reference configuration is as follows:
+
+```nextflow
+params {
+  genomes {
+    'GRCh37' {
+      fasta   = '<path to the genome fasta file>' // Used if no star index given
+    }
+    // Any number of additional genomes, key is used with --genome
+  }
+}
+```
 
 ### `--smrna_org
 
