@@ -127,13 +127,13 @@ Full path to fasta file containing reference genome (mandatory if --genome is no
 There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag. If you have the iGenomes references locally available you can set `--igenome_base`, otherwise they will be automatically obtained from AWS-iGenomes. You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
 
 * Human
-    * `--genome GRCh37`
+  * `--genome GRCh37`
 * Mouse
-    * `--genome GRCm38`
+  * `--genome GRCm38`
 * _Drosophila_
-    * `--genome BDGP6`
+  * `--genome BDGP6`
 * _S. cerevisiae_
-    * `--genome 'R64-1-1'`
+  * `--genome 'R64-1-1'`
 
 > There are numerous others - check the config file for more.
 
@@ -159,17 +159,17 @@ SmallRNA premapping will be automatically triggered if there is a smallRNA refer
 The pipeline comes equipped with some smallRNA FASTA reference for premapping. These are available for the following organisms:
 
 * Human
-    * `--smrna_org human`
+  * `--smrna_org human`
 * Mouse
-    * `--smrna_org mouse`
+  * `--smrna_org mouse`
 * Rat
-    * `--smrna_org rat`
+  * `--smrna_org rat`
 * Zebrafish
-    * `--smrna_org zebrafish`
+  * `--smrna_org zebrafish`
 * Fruitfly/_Drosophila_
-    * `--smrna_org fruitfly`
+  * `--smrna_org fruitfly`
 * Yeast/_S. cerevisiae_
-    * `--smrna_org yest`
+  * `--smrna_org yest`
 
 ### `--smrna_fasta`
 
