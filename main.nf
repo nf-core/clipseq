@@ -12,7 +12,6 @@
 import java.util.zip.GZIPInputStream
 
 def helpMessage() {
-    // TODO nf-core: Add to this help message with new command line parameters
     log.info nfcoreHeader()
     log.info"""
 
@@ -90,17 +89,7 @@ SET UP CONFIGURATION VARIABLES
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
-// Link to smRNA if available
-// } else if ( params.genomes && params.genome && params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
-//     //params.smrna_genome = params.genome
-//     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
-// // Show warning of no pre-mapping if smRNA fasta is unavailable and not specified.
 }
-
-// else if ( params.genomes && params.genome && !params.smrna.containsKey(params.genome) && !params.smrna_fasta) {
-//     log.warn "There is no available smRNA fasta file associated with the provided genome '${params.genome}'; pre-mapping will be skipped. A smRNA fasta file can be specified on the command line with --smrna_fasta"
-// //
-// }
 
 // Option for user supplied fasta and gtf and pipeline supplied smRNA
 def smrna_list = ['human', 'mouse', 'rat', 'zebrafish', 'fruitfly', 'yeast']
@@ -147,7 +136,6 @@ def piranha_check = false
 if (params.peakcaller){
 
     def peak_list = params.peakcaller.split(',').collect()
-    //print peak_list
     peak_list.each {
         if ( it == 'all') {
             paraclu_check = true
@@ -197,29 +185,6 @@ if (params.gtf && icount_check) {
         log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
     }
 }
-
-// // Check version of STAR index for compatibility
-// if (params.star_index) {
-//     File star_log_file = new File(params.star_index + "Log.out")
-//     def data= star_log_file.eachLine { line ->
-//         if (line.contains('STAR version=')) {
-//             star_version = line.findAll( /\d+/ )*.toInteger()
-//             print "${star_version[0]}"
-//             if(star_version[0] != 2 || (star_version[1] != 6 && star_version[1] != 5)) {
-//                 exit 1, "The version of STAR used to create the STAR index is incompatible. Please use version 2.5 or 2.6."
-//             }
-//         }
-//     }
-// }
-
-//
-// NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
-// If you want to use the channel below in a process, define the following:
-//   input:
-//   file fasta from ch_fasta
-//
-// params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-// if (params.fasta) { ch_fasta = file(params.fasta, checkIfExists: true) }
 
 // Has the run name been specified by the user?
 // this has the bonus effect of catching both -name and --name
@@ -271,10 +236,6 @@ if (!icount_check) ch_icount_qc = Channel.empty()
 if (!piranha_check) ch_piranha_qc = Channel.empty()
 if (!pureclip_check) ch_pureclip_qc = Channel.empty()
 
-// if (params.peakcaller && params.peakcaller != 'icount' && params.peakcaller != "paraclu") {
-//     exit 1, "Invalid peak caller option: ${params.peakcaller}. Valid options: 'icount', 'paraclu'"
-// }
-
 if (params.input) {
     Channel
         .fromPath(params.input, checkIfExists: true)
@@ -285,7 +246,6 @@ if (params.input) {
     exit 1, "Samples comma-separated input file not specified"
 }
 
-
 /*
 ================================================================================
 HEADER LOG
@@ -295,65 +255,71 @@ HEADER LOG
 // Header log info
 log.info nfcoreHeader()
 def summary = [:]
-if (workflow.revision) summary['Pipeline Release'] = workflow.revision
-summary['Run Name']         = custom_runName ?: workflow.runName
-// TODO nf-core: Report custom parameters here
-summary['Input']            = params.input
-if (params.fasta) summary['Fasta ref']        = params.fasta
-if (params.gtf) summary['GTF ref']            = params.gtf
-if (params.star_index) summary['STAR index'] = params.star_index
-if (params.deduplicate) summary['Deduplicate'] = params.deduplicate
-if (params.deduplicate && params.umi_separator) summary['UMI separator'] = params.umi_separator
-if (params.peakcaller) summary['Peak caller']            = params.peakcaller
-if (params.segment) summary['iCount segment']            = params.segment
-if (icount_check) summary['Half window']            = params.half_window
-if (icount_check) summary['Merge window']            = params.merge_window
-if (paraclu_check) summary['Min value']            = params.min_value
-if (paraclu_check) summary['Max density increase']            = params.min_density_increase
-if (paraclu_check) summary['Max cluster length']            = params.max_cluster_length
-summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
-if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
-summary['Output dir']       = params.outdir
-summary['Launch dir']       = workflow.launchDir
-summary['Working dir']      = workflow.workDir
-summary['Script dir']       = workflow.projectDir
-summary['User']             = workflow.userName
+if (workflow.revision)                           summary['Pipeline Release'] = workflow.revision
+summary['Run Name']                              = custom_runName ?: workflow.runName
+summary['Input']                                 = params.input
+if (params.fasta)                                summary['Fasta ref'] = params.fasta
+if (params.gtf)                                  summary['GTF ref'] = params.gtf
+if (params.star_index)                           summary['STAR index'] = params.star_index
+if (params.save_index)                           summary['Save STAR index?'] = params.save_index
+if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
+if (params.smrna_fasta)                          summary['SmalRNA ref'] = [params.smrna_fasta]
+if (params.deduplicate)                          summary['Deduplicate'] = params.deduplicate
+if (params.deduplicate && params.umi_separator)  summary['UMI separator'] = params.umi_separator
+if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
+if (params.segment)                              summary['iCount segment'] = params.segment
+if (icount_check)                                summary['Half window'] = params.half_window
+if (icount_check)                                summary['Merge window'] = params.merge_window
+if (paraclu_check)                               summary['Min value'] = params.min_value
+if (paraclu_check)                               summary['Max density increase'] = params.min_density_increase
+if (paraclu_check)                               summary['Max cluster length'] = params.max_cluster_length
+if (pureclip_check)                              summary['Protein binding parameter'] = params.bc
+if (pureclip_check)                              summary['Crosslink merge distance'] = params.dm
+if (piranha_check)                               summary['Bin size'] = params.bin_size_both
+if (piranha_check)                               summary['Cluster distance'] = params.cluster_dist
+summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
+if (workflow.containerEngine)                    summary['Container'] = "$workflow.containerEngine - $workflow.container"
+summary['Output dir']                            = params.outdir
+summary['Launch dir']                            = workflow.launchDir
+summary['Working dir']                           = workflow.workDir
+summary['Script dir']                            = workflow.projectDir
+summary['User']                                  = workflow.userName
 if (workflow.profile.contains('awsbatch')) {
-    summary['AWS Region']   = params.awsregion
-    summary['AWS Queue']    = params.awsqueue
-    summary['AWS CLI']      = params.awscli
+    summary['AWS Region']                        = params.awsregion
+    summary['AWS Queue']                         = params.awsqueue
+    summary['AWS CLI']                           = params.awscli
 }
-summary['Config Profile'] = workflow.profile
-if (params.config_profile_description) summary['Config Profile Description'] = params.config_profile_description
-if (params.config_profile_contact)     summary['Config Profile Contact']     = params.config_profile_contact
-if (params.config_profile_url)         summary['Config Profile URL']         = params.config_profile_url
-summary['Config Files'] = workflow.configFiles.join(', ')
+summary['Config Profile']                        = workflow.profile
+if (params.config_profile_description)           summary['Config Profile Description'] = params.config_profile_description
+if (params.config_profile_contact)               summary['Config Profile Contact'] = params.config_profile_contact
+if (params.config_profile_url)                   summary['Config Profile URL'] = params.config_profile_url
+summary['Config Files']                          = workflow.configFiles.join(', ')
 if (params.email || params.email_on_fail) {
-    summary['E-mail Address']    = params.email
-    summary['E-mail on failure'] = params.email_on_fail
-    summary['MultiQC maxsize']   = params.max_multiqc_email_size
+    summary['E-mail Address']                    = params.email
+    summary['E-mail on failure']                 = params.email_on_fail
+    summary['MultiQC maxsize']                   = params.max_multiqc_email_size
 }
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "-\033[2m--------------------------------------------------\033[0m-"
 
-// // Check the hostnames against configured profiles
-// checkHostname()
+// Check the hostnames against configured profiles
+checkHostname()
 
-// Channel.from(summary.collect{ [it.key, it.value] })
-//     .map { k,v -> "<dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }
-//     .reduce { a, b -> return [a, b].join("\n            ") }
-//     .map { x -> """
-//     id: 'nf-core-clipseq-summary'
-//     description: " - this information is collected when the pipeline is started."
-//     section_name: 'nf-core/clipseq Workflow Summary'
-//     section_href: 'https://github.com/nf-core/clipseq'
-//     plot_type: 'html'
-//     data: |
-//         <dl class=\"dl-horizontal\">
-//             $x
-//         </dl>
-//     """.stripIndent() }
-//     .set { ch_workflow_summary }
+Channel.from(summary.collect{ [it.key, it.value] })
+    .map { k,v -> "<dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }
+    .reduce { a, b -> return [a, b].join("\n            ") }
+    .map { x -> """
+    id: 'nf-core-clipseq-summary'
+    description: " - this information is collected when the pipeline is started."
+    section_name: 'nf-core/clipseq Workflow Summary'
+    section_href: 'https://github.com/nf-core/clipseq'
+    plot_type: 'html'
+    data: |
+        <dl class=\"dl-horizontal\">
+            $x
+        </dl>
+    """.stripIndent() }
+    .set { ch_workflow_summary }
 
 /*
  * Parse software version numbers
@@ -427,7 +393,7 @@ if (params.smrna_fasta) {
 /*
  * Decompression
  */
-// Need logic to recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
+// Recognise if fasta and/or gtf are compressed and decompress if so for STAR index generation
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
         ch_fasta_gz = Channel
@@ -621,7 +587,6 @@ if (!params.star_index) {
  */
 
 // iCount GTF input autodetects gz
-
 if (params.peakcaller && icount_check) {
 
     if(!params.segment) {
@@ -699,11 +664,6 @@ process fastqc {
     mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
 
     """
-    // rm *${read_name}*
-
-    // fastqc --quiet --threads $task.cpus $reads
-    // mv ${reads.simpleName}*.html ${name}_pre_fastqc.html
-    // mv ${reads.simpleName}*.zip ${name}_pre_fastqc.zip
 }
 
 /*
@@ -1377,7 +1337,6 @@ workflow.onComplete {
     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 
-    // TODO nf-core: If not using MultiQC, strip out this code (including params.max_multiqc_email_size)
     // On success try attach the multiqc report
     def mqc_report = null
     try {
