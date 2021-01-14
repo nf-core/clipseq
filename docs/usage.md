@@ -11,11 +11,11 @@
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
- 
+
 ```bash
 nextflow run nf-core/clipseq --input '[path to design file]' --fasta '[path to genome FASTA]' -profile docker
 ```
- 
+
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
 
 Note that the pipeline will create the following files in your working directory:
@@ -89,9 +89,9 @@ You can also supply a run name to resume a specific run: `-resume [run-name]`. U
 
 Specify the path to a specific config file (this is a core Nextflow command). See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
 
-## Main arguments 
+## Main arguments
 
-### `--input` 
+### `--input`
 
 You will need to create a design file with information about the samples in your experiment before running the pipeline. Only single end reads are currently supported. Use this parameter to specify its location.
 
