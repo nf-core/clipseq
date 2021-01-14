@@ -152,7 +152,7 @@ params {
 }
 ```
 
-SmallRNA premapping will be automatically triggered if there is a smallRNA reference available for the iGenomes reference chosen. See [smallRNA config file](../conf/smRNA.config) for availibility. Alternatively, this can be set by `--smrna_org` or `--smrna_fasta` as shown below.
+Premapping to rRNA and tRNA will be automatically triggered if there is a reference available for the iGenomes reference chosen. See [smallRNA config file](../conf/smRNA.config) for availability. Alternatively, this can be set by `--smrna_org` or `--smrna_fasta` as shown below.
 
 ### `--smrna_org`
 
@@ -173,7 +173,7 @@ The pipeline comes equipped with some smallRNA FASTA reference for premapping. T
 
 ### `--smrna_fasta`
 
-Alternatively, the smallRNA premapping reference can be supplied by the user by giving the path to the reference FASTA:
+Alternatively, the RNA premapping reference can be supplied by the user by giving the path to the reference FASTA:
 
 ```bash
 --smrna_fasta '[path to smallRNA FASTA reference]'
