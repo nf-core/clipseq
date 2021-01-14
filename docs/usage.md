@@ -98,6 +98,7 @@ You will need to create a design file with information about the samples in your
 ```bash
 --input '[path to design file]'
 ```
+
 It has to be a comma-separated file with 2 columns, and a header row as shown in the examples below. The column headers must be `sample_id` and `data1`. By naming the `sample_id` rows uniquely, one can identify and simultaneously run multiple replicates and samples:
 
 ```bash
@@ -150,6 +151,7 @@ params {
   }
 }
 ```
+
 SmallRNA premapping will be automatically triggered if there is a smallRNA reference available for the iGenomes reference chosen. See [smallRNA config file](../conf/smRNA.config) for availibility. Alternatively, this can be set by `--smrna_org` or `--smrna_fasta` as shown below.
 
 ### `--smrna_org`
