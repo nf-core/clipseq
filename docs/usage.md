@@ -90,6 +90,7 @@ You can also supply a run name to resume a specific run: `-resume [run-name]`. U
 Specify the path to a specific config file (this is a core Nextflow command). See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
 
 ## Main arguments 
+
 ### `--input` 
 
 You will need to create a design file with information about the samples in your experiment before running the pipeline. Only single end reads are currently supported. Use this parameter to specify its location.
