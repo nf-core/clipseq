@@ -47,10 +47,6 @@
                     "fa_icon": "fas fa-book",
                     "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`.\n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
                 },
-                "smrna_species": {
-                    "type": "string",
-                    "description": "Name of small RNA organism"
-                },
                 "smrna_fasta": {
                     "type": "string",
                     "description": "Path to small RNA FASTA file"
@@ -359,5 +355,15 @@
         {
             "$ref": "#/definitions/institutional_config_options"
         }
-    ]
+    ],
+    "properties": {
+        "smrna_org": {
+            "type": "string",
+            "description": "Organism for small RNA reference."
+        },
+        "save_index": {
+            "type": "boolean",
+            "description": "Save STAR index if generated within pipeline."
+        }
+    }
 }
