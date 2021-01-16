@@ -44,7 +44,7 @@ def helpMessage() {
       --umi_separator [str]           UMI separator character in read header/name (default: :)
 
     Peak calling:
-      --peakcaller [str]              Peak caller. Can use multiple (comma separated), or specify 'all'. Available: icount, paraclu
+      --peakcaller [str]              Peak caller. Can use multiple (comma separated), or specify 'all'. Available: icount, paraclu, pureclip, paraclu
       --segment [file]                Path to iCount segment file
       --half_window [int]             iCount half-window size (default: 3)
       --merge_window [int]            iCount merge-window size (default: 3)
@@ -1467,7 +1467,7 @@ def boolean check_gtf_by_line( File f, int n ) {
                 ensembl = true
             }
         };
-        if (gene && !gencode) {
+        if (!gene && !gencode) {
             if(line.contains('GENCODE')){
                 gencode = true
             }
