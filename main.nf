@@ -849,7 +849,9 @@ if (params.deduplicate) {
 
 if (params.gtf) {
     
-    ch_gtf_rseqc = Channel.value(params.gtf)
+    ch_gtf_rseqc = Channel
+        .fromPath(params.gtf, checkIfExists: true)
+        .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
 
     process rseqc {
 
@@ -859,7 +861,7 @@ if (params.gtf) {
 
         input:
         tuple val(name), path(bam), path(bai) from ch_dedup_rseqc
-        path(gtf) from ch_gtf_rseqc
+        path(gtf) from ch_gtf_rseqc.collect()
 
         output:
         path '*.read_distribution.txt' into ch_rseqc_mqc
