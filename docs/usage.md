@@ -13,7 +13,7 @@
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/clipseq --input '*_R{1,2}.fastq.gz' -profile docker
+nextflow run nf-core/clipseq --input '[path to design file]' --fasta '[path to genome FASTA]' -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -88,6 +88,96 @@ You can also supply a run name to resume a specific run: `-resume [run-name]`. U
 ### `-c`
 
 Specify the path to a specific config file (this is a core Nextflow command). See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
+
+## Main arguments
+
+### `--input`
+
+You will need to create a design file with information about the samples in your experiment before running the pipeline. Only single end reads are currently supported. Use this parameter to specify its location.
+
+```bash
+--input '[path to design file]'
+```
+
+It has to be a comma-separated file with 2 columns, and a header row as shown in the examples below. The column headers must be `sample_id` and `data1`. By naming the `sample_id` rows uniquely, one can identify and simultaneously run multiple replicates and samples:
+
+```bash
+sample_id,data1
+exp1_rep1,clip0001_01.fastq.gz,
+exp1_rep2,clip0001_02.fastq.gz,
+exp2_rep1,clip0002_01.fastq.gz,
+exp2_rep2,clip0002_02.fastq.gz
+```
+
+| Column         | Description                                                                                                 |
+|----------------|-------------------------------------------------------------------------------------------------------------|
+| `sample_id`        | Unique identifier for read, which may include information about sample and replicate. |
+| `data1`    | Full path to FastQ file for read. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
+
+### `--fasta`
+
+Full path to fasta file containing reference genome (mandatory if --genome is not specified). If you don't have a STAR index available this will be generated for you automatically. Alternatively, it can be set using `--star_index`.
+
+```bash
+--fasta '[path to FASTA reference]'
+```
+
+### `--genome` (using iGenomes)
+
+There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag. If you have the iGenomes references locally available you can set `--igenome_base`, otherwise they will be automatically obtained from AWS-iGenomes. You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
+
+* Human
+  * `--genome GRCh37`
+* Mouse
+  * `--genome GRCm38`
+* _Drosophila_
+  * `--genome BDGP6`
+* _S. cerevisiae_
+  * `--genome 'R64-1-1'`
+
+> There are numerous others - check the config file for more.
+
+Note that you can use the same configuration setup to save sets of reference files for your own use, even if they are not part of the iGenomes resource. See the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for instructions on where to save such a file.
+
+The syntax for this reference configuration is as follows:
+
+```nextflow
+params {
+  genomes {
+    'GRCh37' {
+      fasta   = '<path to the genome fasta file>' // Used if no star index given
+    }
+    // Any number of additional genomes, key is used with --genome
+  }
+}
+```
+
+Premapping to rRNA and tRNA will be automatically triggered if there is a reference available for the iGenomes reference chosen. See [smallRNA config file](../conf/smRNA.config) for availability. Alternatively, this can be set by `--smrna_org` or `--smrna_fasta` as shown below.
+
+### `--smrna_org`
+
+The pipeline comes equipped with some smallRNA FASTA reference for premapping. These are available for the following organisms:
+
+* Human
+  * `--smrna_org human`
+* Mouse
+  * `--smrna_org mouse`
+* Rat
+  * `--smrna_org rat`
+* Zebrafish
+  * `--smrna_org zebrafish`
+* Fruitfly/_Drosophila_
+  * `--smrna_org fruitfly`
+* Yeast/_S. cerevisiae_
+  * `--smrna_org yest`
+
+### `--smrna_fasta`
+
+Alternatively, the RNA premapping reference can be supplied by the user by giving the path to the reference FASTA:
+
+```bash
+--smrna_fasta '[path to smallRNA FASTA reference]'
+```
 
 #### Custom resource requests
 
