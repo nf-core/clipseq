@@ -181,14 +181,14 @@ Alternatively, the RNA premapping reference can be supplied by the user by givin
 
 By default, peak calling on identified crosslinks is not performed unless specified using the `--peakcaller` argument. Currently the following peak callers are implemented:
 
-*  [iCount](https://icount.readthedocs.io/en/latest/)
-    * `--peakcaller icount`
-*  [Paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/)
-    * `--peakcaller paraclu`
-*  [PureCLIP](https://pureclip.readthedocs.io/en/latest/)
-    * `--peakcaller pureclip`
-*  [Piranha](https://github.com/smithlabcode/piranha)
-    * `--peakcaller piranha`
+* [iCount](https://icount.readthedocs.io/en/latest/)
+  * `--peakcaller icount`
+* [Paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/)
+  * `--peakcaller paraclu`
+* [PureCLIP](https://pureclip.readthedocs.io/en/latest/)
+  * `--peakcaller pureclip`
+* [Piranha](https://github.com/smithlabcode/piranha)
+  * `--peakcaller piranha`
 
 Multiple peak callers can specified separated using a comma, e.g. `--peakcaller icount,paraclu`. As a short-hand, all peak callers can be specified using `--peakcaller all`.
 

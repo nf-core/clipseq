@@ -22,8 +22,8 @@ For further reading and documentation see the [FastQC help pages](http://www.bio
 
 **Output directory:** `fastqc`
 
-  * `*_fastqc.html`: FastQC report containing quality metrics for your untrimmed raw fastq files.
-  * `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
+* `*_fastqc.html`: FastQC report containing quality metrics for your untrimmed raw fastq files.
+* `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
 
 > **NB:** The FastQC plots displayed in the MultiQC report shows _untrimmed_ reads. They may contain adapter sequence and potentially regions with low quality.
 
@@ -33,8 +33,8 @@ For further reading and documentation see the [FastQC help pages](http://www.bio
 
 **Output directory:** `cutadapt`
 
-  * `sample.trimmed.fastq.gz`: FASTQ file after trimming
-  * `sample.cutadapt.log`: Cutadapt log file
+* `sample.trimmed.fastq.gz`: FASTQ file after trimming
+* `sample.cutadapt.log`: Cutadapt log file
 
 ## Pre-mapping
 
@@ -42,10 +42,10 @@ For CLIP data analysis it is often important to pre-map to rRNA and tRNA sequenc
 
 **Output directory:** `premap`
 
-  * `sample.premapped.bam`: BAM file of reads mapped to the premapping index
-  * `sample.premapped.bam.bai`: BAI file for BAM
-  * `sample.premap.log`: Premapping (Bowtie 2) log file
-  * `sample.unmapped.fastq.gz`: FASTQ file of reads that do not map to the premapping index that is passed to the next step of the pipeline.
+* `sample.premapped.bam`: BAM file of reads mapped to the premapping index
+* `sample.premapped.bam.bai`: BAI file for BAM
+* `sample.premap.log`: Premapping (Bowtie 2) log file
+* `sample.unmapped.fastq.gz`: FASTQ file of reads that do not map to the premapping index that is passed to the next step of the pipeline.
 
 ## Genome alignment
 
@@ -53,9 +53,9 @@ For CLIP data analysis it is often important to pre-map to rRNA and tRNA sequenc
 
 **Output directory:** `mapped`
 
-  * `sample.Aligned.sortedByCoord.bam`: BAM file of reads mapped to the genome
-  * `sample.Aligned.sortedByCoord.bam.bai`: BAI file for BAM
-  * `sample.Log.final.out`: Alignment (STAR) log file
+* `sample.Aligned.sortedByCoord.bam`: BAM file of reads mapped to the genome
+* `sample.Aligned.sortedByCoord.bam.bai`: BAI file for BAM
+* `sample.Log.final.out`: Alignment (STAR) log file
 
 ## PCR deduplication
 
@@ -63,9 +63,9 @@ For CLIP data analysis it is often important to pre-map to rRNA and tRNA sequenc
 
 **Output directory:** `dedup`
 
-  * `sample.dedup.bam`: BAM file of deduplicated reads
-  * `sample.dedup.bam.bai`: BAI file for BAM
-  * `sample.log`: Deduplication (UMI-tools) log file
+* `sample.dedup.bam`: BAM file of deduplicated reads
+* `sample.dedup.bam.bai`: BAI file for BAM
+* `sample.log`: Deduplication (UMI-tools) log file
 
 ## Crosslink identification
 
@@ -73,37 +73,37 @@ For CLIP data analysis it is often important to pre-map to rRNA and tRNA sequenc
 
 **Output directory:** `xlinks`
 
-  * `sample.xl.bed.gz`: BED file of crosslinks
-  * `sample.xl.bedgraph.gz`: BEDGRAPH file of crosslinks
+* `sample.xl.bed.gz`: BED file of crosslinks
+* `sample.xl.bedgraph.gz`: BEDGRAPH file of crosslinks
 
 ## Peak calling
 
 The following peak callers are currently provided in the pipeline:
 
-  * [iCount](https://icount.readthedocs.io/en/latest/)
-  * [Paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/)
-  * [PureCLIP](https://pureclip.readthedocs.io/en/latest/)
-  * [Piranha](https://github.com/smithlabcode/piranha)
+* [iCount](https://icount.readthedocs.io/en/latest/)
+* [Paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/)
+* [PureCLIP](https://pureclip.readthedocs.io/en/latest/)
+* [Piranha](https://github.com/smithlabcode/piranha)
 
 The user can specify which one(s) are run. Filenames with the default run parameters are shown below, but are adjusted by the pipeline according to the parameters specified.
 
 **Output directory** `icount`
 
-  * `sample.3nt.sigxl.bed.gz`: BED file of significant crosslink positions using a 3 nt half-window setting
-  * `sample.3nt_3nt.peaks.bed.gz` BED file of peaks using a 3 nt half window and a 3 nt merge window
+* `sample.3nt.sigxl.bed.gz`: BED file of significant crosslink positions using a 3 nt half-window setting
+* `sample.3nt_3nt.peaks.bed.gz` BED file of peaks using a 3 nt half window and a 3 nt merge window
 
 **Output directory** `paraclu`
 
-  * `sample.10_200nt_2.peaks.bed.gz`: BED file of peaks using a minimum value/score of 10, a maximum cluster length of 200 and a minimum density increase of 2.
+* `sample.10_200nt_2.peaks.bed.gz`: BED file of peaks using a minimum value/score of 10, a maximum cluster length of 200 and a minimum density increase of 2.
 
 **Output directory** `pureclip`
 
-  * `sample.sigxl.bed.gz`: BED file of significant crosslink sites
-  * `sample.8nt.peaks.bed.gz`: BED file of peaks using a merge distance of 8 nt
+* `sample.sigxl.bed.gz`: BED file of significant crosslink sites
+* `sample.8nt.peaks.bed.gz`: BED file of peaks using a merge distance of 8 nt
 
 **Output directory** `piranha`
 
-  * `sample.3nt_3nt.peaks.bed.gz`: BED file of peaks using a bin size of 3 and a cluster distance of 3
+* `sample.3nt_3nt.peaks.bed.gz`: BED file of peaks using a bin size of 3 and a cluster distance of 3
 
 ## Motif identification
 
@@ -111,7 +111,7 @@ The user can specify which one(s) are run. Filenames with the default run parame
 
 **Output directories** `icount_motif`, `paraclu_motif`, `pureclip_motif`, `piranha_motif`
 
-  * `sample_dreme/`: Directory containing DREME output files: `dreme.html`, `dreme.txt`, `dreme.xml`
+* `sample_dreme/`: Directory containing DREME output files: `dreme.html`, `dreme.txt`, `dreme.xml`
 
 ## MultiQC
 
@@ -140,28 +140,28 @@ This section plots the counts/percentages of reads mapped to the premapping inde
 
 This section plots three measures from the UMI-based PCR deduplication.
 
-  1.  *Reads* shows the number of reads before and after deduplication.
-  2.  *Ratios* shows the PCR deduplication ratio.
-  3.  *Mean UMIs* shows the mean number of unique UMIs per position.
+  1. *Reads* shows the number of reads before and after deduplication.
+  2. *Ratios* shows the PCR deduplication ratio.
+  3. *Mean UMIs* shows the mean number of unique UMIs per position.
 
 ### Crosslinks
 
 This section plots two measures from crosslink identification.
 
-  1.  *Counts* shows the number of crosslinks and crosslink sites.
-  2.  *Ratios* shows the ratio of crosslinks to crosslink sites.
+  1. *Counts* shows the number of crosslinks and crosslink sites.
+  2. *Ratios* shows the ratio of crosslinks to crosslink sites.
 
 ### Peaks
 
 This sections plots three peak-calling metrics (if peak calling has been performed) to enable comparison of different tools and optimisation of specific peak-caller parameters.
 
-  1.  *Crosslinks in peaks* shows the total percentage of crosslinks within peaks.
-  2.  *Crosslink sites in peaks* shows the total percentage of crosslink sites within peaks.
-  3.  *Peak-crosslink coverage* shows the total percentage of nucleotides within peaks that are covered by a crosslink site.
+  1. *Crosslinks in peaks* shows the total percentage of crosslinks within peaks.
+  2. *Crosslink sites in peaks* shows the total percentage of crosslink sites within peaks.
+  3. *Peak-crosslink coverage* shows the total percentage of nucleotides within peaks that are covered by a crosslink site.
 
 **Output directory** `clipqc`
 
-  * `*.tsv`: TSV files containing derived metrics from the pipeline outputs used to produce the MultiQC CLIP summary metric plots.
+* `*.tsv`: TSV files containing derived metrics from the pipeline outputs used to produce the MultiQC CLIP summary metric plots.
 
 ## Other summary metrics
 
@@ -171,8 +171,8 @@ This sections plots three peak-calling metrics (if peak calling has been perform
 
 **Output directory** `preseq`
 
-  * `sample.ccurve.txt`: TXT file of complexity curve Preseq output.
-  * `sample.command.log`: Preseq log file
+* `sample.ccurve.txt`: TXT file of complexity curve Preseq output.
+* `sample.command.log`: Preseq log file
 
 ### Read distribution
 
@@ -180,7 +180,7 @@ This sections plots three peak-calling metrics (if peak calling has been perform
 
 **Output directory** `rseqc`
 
-  * `sample.read_distribution.txt`: TXT file of `read_distribution.py` output from RSeQC.
+* `sample.read_distribution.txt`: TXT file of `read_distribution.py` output from RSeQC.
 
 ## Pipeline information
 
