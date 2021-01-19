@@ -80,10 +80,10 @@ For CLIP data analysis it is often important to pre-map to rRNA and tRNA sequenc
 
 The following peak callers are currently provided in the pipeline:
 
-1.  [iCount](https://icount.readthedocs.io/en/latest/)
-2.  [Paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/)
-3.  [PureCLIP](https://pureclip.readthedocs.io/en/latest/)
-4.  [Piranha](https://github.com/smithlabcode/piranha)
+  * [iCount](https://icount.readthedocs.io/en/latest/)
+  * [Paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/)
+  * [PureCLIP](https://pureclip.readthedocs.io/en/latest/)
+  * [Piranha](https://github.com/smithlabcode/piranha)
 
 The user can specify which one(s) are run. Filenames with the default run parameters are shown below, but are adjusted by the pipeline according to the parameters specified.
 
