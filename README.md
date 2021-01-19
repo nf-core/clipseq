@@ -38,7 +38,6 @@ By default, the pipeline currently performs the following:
     - Regional distribution (`RSeQC`)
 10. Overall pipeline run and QC summaries and peak calling comparisons (`MultiQC`)
 
-
 ## Quick Start
 
 1. Install [`nextflow`](https://nf-co.re/usage/installation)
@@ -64,7 +63,6 @@ See [usage docs](https://nf-co.re/clipseq/usage) for all of the available option
 ## Documentation
 
 The nf-core/clipseq pipeline comes with documentation about the pipeline: [usage](https://nf-co.re/clipseq/usage) and [output](https://nf-co.re/clipseq/output).
-
 
 ## Credits
 
