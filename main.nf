@@ -349,7 +349,8 @@ process get_software_versions {
     umi_tools --version > v_umi_tools.txt
     bedtools --version > v_bedtools.txt
     preseq 2> v_preseq.txt
-    subread-align -v 2> v_subread.txt
+    # subread-align -v 2> v_subread.txt
+    bam2fq.py --version > v_rseqc.txt
     iCount --version > v_icount.txt
     pureclip --version > v_pureclip.txt
     Piranha -about 2> v_piranha.txt
@@ -360,6 +361,7 @@ process get_software_versions {
     pygmentize -V > v_pygments.txt
     pigz --version > v_pigz.txt
     perl -v > v_perl.txt
+
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }

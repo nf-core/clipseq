@@ -17,6 +17,7 @@ regexes = {
     "bedtools": ["v_bedtools.txt", r"bedtools v(\S+)"],
     "preseq": ["v_preseq.txt", r"Version: (\S+)"],
     "subread": ["v_subread.txt", r"Subread-align v(\S+)"],
+    "rseqc": ["v_rseqc.txt", r"bam2fq.py (\S+)"],
     "iCount": ["v_icount.txt", r"(\S+)"],
     "PureCLIP": ["v_pureclip.txt", r"pureclip version: (\S+)"],
     "Piranha": ["v_piranha.txt", r"Piranha Version (\S+)"],
