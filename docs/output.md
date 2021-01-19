@@ -6,35 +6,44 @@
 
 ## Introduction
 
-This document describes the output produced by the pipeline. Most of the plots are taken from the MultiQC report, which summarises results at the end of the pipeline.
+This document describes the output produced by the pipeline. The plots are taken from the MultiQC report, which summarises results at the end of the pipeline and also includes CLIP-specific summary metrics.
 
 The directories listed below will be created in the results directory after the pipeline has finished. All paths are relative to the top-level results directory.
 
-<!-- TODO nf-core: Write this documentation describing your workflow's output -->
-
 ## Pipeline overview
 
-The pipeline is built using [Nextflow](https://www.nextflow.io/)
-and processes data using the following steps:
+The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the steps described in the main [README.md](https://github.com/nf-core/clipseq/README.md):
 
-* [FastQC](#fastqc) - Read quality control
-* [MultiQC](#multiqc) - Aggregate report describing results from the whole pipeline
-* [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
+## CLIP summary metrics
 
-## FastQC
+The pipeline provides CLIP-specific summary metrics that are plotted in four sections at the begining of MultiQC report:
 
-[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your sequenced reads. It provides information about the quality score distribution across your reads, per base sequence content (%A/T/G/C), adapter contamination and overrepresented sequences.
+### Mapping
 
-For further reading and documentation see the [FastQC help pages](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
+This section plots the read counts/percentages mapped to the premapping index, to the genome and that remain unmapped.
 
-**Output files:**
+### Deduplication
 
-* `fastqc/`
-  * `*_fastqc.html`: FastQC report containing quality metrics for your untrimmed raw fastq files.
-* `fastqc/zips/`
-  * `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
+This section plots three measures from the UMI-based PCR deduplication.
 
-> **NB:** The FastQC plots displayed in the MultiQC report shows _untrimmed_ reads. They may contain adapter sequence and potentially regions with low quality.
+  1.  *Reads* shows the number of reads before and after deduplication.
+  2.  *Ratios* shows the PCR deduplication ratio.
+  3.  *Mean UMIs* shows the mean number of unique UMIs per position.
+
+### Crosslinks
+
+This section plots two measures from crosslink identification.
+
+  1.  *Counts* shows the number of crosslinks and crosslink sites.
+  2.  *Ratios* shows the ratio of crosslinks to crosslink sites.
+
+### Peaks
+
+This sections plots three peak-calling metrics (if peak calling has been performed) to enable comparison of different tools and optimisation of specific peak-caller parameters.
+
+  1.  *Crosslinks in peaks* shows the total percentage of crosslinks within peaks.
+  2.  *Crosslink sites in peaks* shows the total percentage of crosslink sites within peaks.
+  3.  *Peak-crosslink coverage* shows the total percentage of nucleotides within peaks that are covered by a crosslink site.
 
 ## MultiQC
 
@@ -50,6 +59,21 @@ For more information about how to use MultiQC reports, see [https://multiqc.info
   * `multiqc_report.html`: a standalone HTML file that can be viewed in your web browser.
   * `multiqc_data/`: directory containing parsed statistics from the different tools used in the pipeline.
   * `multiqc_plots/`: directory containing static images from the report in various formats.
+
+## FastQC
+
+[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your sequenced reads. It provides information about the quality score distribution across your reads, per base sequence content (%A/T/G/C), adapter contamination and overrepresented sequences.
+
+For further reading and documentation see the [FastQC help pages](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
+
+**Output files:**
+
+* `fastqc/`
+  * `*_fastqc.html`: FastQC report containing quality metrics for your untrimmed raw fastq files.
+* `fastqc/zips/`
+  * `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
+
+> **NB:** The FastQC plots displayed in the MultiQC report shows _untrimmed_ reads. They may contain adapter sequence and potentially regions with low quality.
 
 ## Pipeline information
 
