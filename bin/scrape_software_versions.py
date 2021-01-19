@@ -15,14 +15,21 @@ regexes = {
     "Samtools": ["v_samtools.txt", r"samtools (\S+)"],
     "umi_tools": ["v_umi_tools.txt", r"version: (\S+)"],
     "bedtools": ["v_bedtools.txt", r"bedtools v(\S+)"],
+    "preseq": ["v_preseq.txt", r"Version: (\S+)"],
+    "subread": ["v_subread.txt", r"Subread-align v(\S+)"],
+    "rseqc": ["v_rseqc.txt", r"bam2fq.py (\S+)"],
     "iCount": ["v_icount.txt", r"(\S+)"],
     "PureCLIP": ["v_pureclip.txt", r"pureclip version: (\S+)"],
     "Piranha": ["v_piranha.txt", r"Piranha Version (\S+)"],
     "Paraclu": ["v_paraclu.txt", r"(\S+)"],
     "Meme": ["v_meme.txt", r"(\S+)"],
     "R": ["v_R.txt", r"R version (\S+)"],
-    "Python": ["v_python.txt", r"Python (\S+)"]
+    "Python": ["v_python.txt", r"Python (\S+)"],
+    "Pygments": ["v_pygments.txt", r"Pygments version (\S+)"],
+    "pigz": ["v_pigz.txt", r"pigz (\S+)"],
+    "Perl": ["v_perl.txt", r"\(v(\S+)"]
 }
+
 results = OrderedDict()
 results["nf-core/clipseq"] = '<span style="color:#999999;">N/A</span>'
 results["Nextflow"] = '<span style="color:#999999;">N/A</span>'
