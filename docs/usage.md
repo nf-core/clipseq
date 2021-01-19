@@ -6,8 +6,6 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
-
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
@@ -126,11 +124,11 @@ Full path to fasta file containing reference genome (mandatory if --genome is no
 
 There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag. If you have the iGenomes references locally available you can set `--igenome_base`, otherwise they will be automatically obtained from AWS-iGenomes. You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
 
-* Human
+* _H. sapiens_
   * `--genome GRCh37`
-* Mouse
+* _M. musculus_
   * `--genome GRCm38`
-* _Drosophila_
+* _D. melanogaster_
   * `--genome BDGP6`
 * _S. cerevisiae_
   * `--genome 'R64-1-1'`
@@ -156,7 +154,7 @@ Premapping to rRNA and tRNA will be automatically triggered if there is a refere
 
 ### `--smrna_org`
 
-The pipeline comes equipped with some smallRNA FASTA reference for premapping. These are available for the following organisms:
+The pipeline comes equipped with some 'smallRNA' FASTA references for premapping. These are available for the following organisms:
 
 * Human
   * `--smrna_org human`
@@ -166,9 +164,9 @@ The pipeline comes equipped with some smallRNA FASTA reference for premapping. T
   * `--smrna_org rat`
 * Zebrafish
   * `--smrna_org zebrafish`
-* Fruitfly/_Drosophila_
+* Fruitfly
   * `--smrna_org fruitfly`
-* Yeast/_S. cerevisiae_
+* Yeast
   * `--smrna_org yest`
 
 ### `--smrna_fasta`
@@ -179,7 +177,22 @@ Alternatively, the RNA premapping reference can be supplied by the user by givin
 --smrna_fasta '[path to smallRNA FASTA reference]'
 ```
 
-#### Custom resource requests
+### `--peakcaller`
+
+By default, peak calling on identified crosslinks is not performed unless specified using the `--peakcaller` argument. Currently the following peak callers are implemented:
+
+* [iCount](https://icount.readthedocs.io/en/latest/)
+  * `--peakcaller icount`
+* [Paraclu](http://cbrc3.cbrc.jp/~martin/paraclu/)
+  * `--peakcaller paraclu`
+* [PureCLIP](https://pureclip.readthedocs.io/en/latest/)
+  * `--peakcaller pureclip`
+* [Piranha](https://github.com/smithlabcode/piranha)
+  * `--peakcaller piranha`
+
+Multiple peak callers can specified separated using a comma, e.g. `--peakcaller icount,paraclu`. As a short-hand, all peak callers can be specified using `--peakcaller all`.
+
+## Custom resource requests
 
 Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with an error code of `143` (exceeded requested resources) it will automatically resubmit with higher requests (2 x original, then 3 x original). If it still fails after three times then the pipeline is stopped.
 
@@ -199,7 +212,7 @@ If you are likely to be running `nf-core` pipelines regularly it may be a good i
 
 If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
 
-### Running in the background
+## Running in the background
 
 Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished.
 
@@ -208,7 +221,7 @@ The Nextflow `-bg` flag launches Nextflow in the background, detached from your 
 Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
 Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
 
-#### Nextflow memory requirements
+## Nextflow memory requirements
 
 In some cases, the Nextflow Java virtual machines can start to request a large amount of memory.
 We recommend adding the following line to your environment to limit this (typically in `~/.bashrc` or `~./bash_profile`):
