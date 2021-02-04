@@ -1262,7 +1262,6 @@ process multiqc {
     input:
     file (multiqc_config) from ch_multiqc_config
     file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-    // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from ch_fastqc_pretrim_mqc.collect().ifEmpty([])
     file ('cutadapt/*') from ch_cutadapt_mqc.collect().ifEmpty([])
     file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
