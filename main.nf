@@ -240,7 +240,7 @@ if (params.input) {
     Channel
         .fromPath(params.input, checkIfExists: true)
         .splitCsv(header:true)
-        .map{ row -> [ row.sample_id, file(row.data1, checkIfExists: true) ] }
+        .map{ row -> [ row.sample, file(row.fastq, checkIfExists: true) ] }
         .into{ ch_fastq; ch_fastq_fastqc_pretrim }
 } else {
     exit 1, "Samples comma-separated input file not specified"
