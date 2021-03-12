@@ -52,9 +52,11 @@ def helpMessage() {
       --min_density_increase [int]    Paraclu minimum density increase (default: 2)
       --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
       --bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
-      --dm [str]                      PureCLIP merge distnace (default: 8)
+      --dm [str]                      PureCLIP merge distance (default: 8)
+      --iv [str]                      PureCLIP chromosomes for HMM training (default: all)
       --bin_size_both [int]           Piranha bin size (default: 3)
       --cluster_dist [int]            Piranha cluster distance (default: 3)
+      --motif [bool]                  DREME motif finding (default: false)
 
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -275,8 +277,10 @@ if (paraclu_check)                               summary['Max density increase']
 if (paraclu_check)                               summary['Max cluster length'] = params.max_cluster_length
 if (pureclip_check)                              summary['Protein binding parameter'] = params.bc
 if (pureclip_check)                              summary['Crosslink merge distance'] = params.dm
+if (pureclip_check && params.iv)                 summary['Chromosomes for HMM'] = params.iv
 if (piranha_check)                               summary['Bin size'] = params.bin_size_both
 if (piranha_check)                               summary['Cluster distance'] = params.cluster_dist
+if (params.peakcaller && params.motif)           summary['Motif calling'] = params.motif
 summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine)                    summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']                            = params.outdir
@@ -960,30 +964,34 @@ if (params.peakcaller && icount_check) {
 
     }
 
-    process icount_motif_dreme {
+    if(params.motif) {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/icount_motif", mode: params.publish_dir_mode
+        process icount_motif_dreme {
 
-        input:
-        tuple val(name), path(peaks) from ch_peaks_icount
-        path(fasta) from ch_fasta_dreme_icount.collect()
-        path(fai) from ch_fai_icount_motif.collect()
+            tag "$name"
+            label 'process_low'
+            publishDir "${params.outdir}/icount_motif", mode: params.publish_dir_mode
 
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
+            input:
+            tuple val(name), path(peaks) from ch_peaks_icount
+            path(fasta) from ch_fasta_dreme_icount.collect()
+            path(fai) from ch_fai_icount_motif.collect()
 
-        script:
+            output:
+            tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
 
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            script:
 
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+            """
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
 
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
+            bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+            dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+            """
+
+        }
 
     }
 
@@ -1028,30 +1036,34 @@ if (params.peakcaller && paraclu_check) {
 
     }
 
+    if(params.motif) {
+
     process paraclu_motif_dreme {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
+            tag "$name"
+            label 'process_low'
+            publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
 
-        input:
-        tuple val(name), path(peaks) from ch_peaks_paraclu
-        path(fasta) from ch_fasta_dreme_paraclu.collect()
-        path(fai) from ch_fai_paraclu_motif.collect()
+            input:
+            tuple val(name), path(peaks) from ch_peaks_paraclu
+            path(fasta) from ch_fasta_dreme_paraclu.collect()
+            path(fai) from ch_fai_paraclu_motif.collect()
 
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
+            output:
+            tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
 
-        script:
+            script:
 
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            """
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
 
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+            bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
+            dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+            """
+
+        }
 
     }
 
@@ -1079,7 +1091,7 @@ if (params.peakcaller && pureclip_check) {
         path "*.peaks.bed.gz" into ch_pureclip_qc
 
         script:
-        
+
         args = " -bc " + params.bc
         args += " -dm " + params.dm
         if(params.iv) args += " -iv " + params.iv + " "
@@ -1099,30 +1111,34 @@ if (params.peakcaller && pureclip_check) {
 
     }
 
-    process pureclip_motif_dreme {
+    if(params.motif) {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
+        process pureclip_motif_dreme {
 
-        input:
-        tuple val(name), path(peaks) from ch_peaks_pureclip
-        path(fasta) from ch_fasta_dreme_pureclip.collect()
-        path(fai) from ch_fai_pureclip_motif.collect()
+            tag "$name"
+            label 'process_low'
+            publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
 
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
+            input:
+            tuple val(name), path(peaks) from ch_peaks_pureclip
+            path(fasta) from ch_fasta_dreme_pureclip.collect()
+            path(fai) from ch_fai_pureclip_motif.collect()
 
-        script:
+            output:
+            tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
 
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            script:
 
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+            """
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
 
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
+            bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+            dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+            """
+
+        }
 
     }
 
@@ -1171,30 +1187,34 @@ if (params.peakcaller && piranha_check) {
 
     }
 
-    process piranha_motif_dreme {
+    if(params.motif) {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/piranha_motif", mode: params.publish_dir_mode
+        process piranha_motif_dreme {
 
-        input:
-        tuple val(name), path(peaks) from ch_peaks_piranha
-        path(fasta) from ch_fasta_dreme_piranha.collect()
-        path(fai) from ch_fai_piranha_motif.collect()
+            tag "$name"
+            label 'process_low'
+            publishDir "${params.outdir}/piranha_motif", mode: params.publish_dir_mode
 
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_piranha
+            input:
+            tuple val(name), path(peaks) from ch_peaks_piranha
+            path(fasta) from ch_fasta_dreme_piranha.collect()
+            path(fai) from ch_fai_piranha_motif.collect()
 
-        script:
+            output:
+            tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_piranha
 
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            script:
 
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+            """
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
 
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
+            bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+            dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+            """
+
+        }
 
     }
 
