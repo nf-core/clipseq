@@ -263,7 +263,7 @@ if (params.gtf)                                  summary['GTF ref'] = params.gtf
 if (params.star_index)                           summary['STAR index'] = params.star_index
 if (params.save_index)                           summary['Save STAR index?'] = params.save_index
 if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
-if (params.smrna_fasta)                          summary['SmalRNA ref'] = [params.smrna_fasta]
+if (params.smrna_fasta)                          summary['SmalRNA ref'] = params.smrna_fasta
 if (params.deduplicate)                          summary['Deduplicate'] = params.deduplicate
 if (params.deduplicate && params.umi_separator)  summary['UMI separator'] = params.umi_separator
 if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
@@ -1079,10 +1079,10 @@ if (params.peakcaller && pureclip_check) {
         path "*.peaks.bed.gz" into ch_pureclip_qc
 
         script:
-
-        // iv = params.iv
-        bc = params.bc
-        dm = params.dm
+        
+        args = " -bc " + params.bc
+        args += " -dm " + params.dm
+        if(params.iv) args += " -iv " + params.iv + " "
 
         """
         pureclip \
@@ -1090,8 +1090,7 @@ if (params.peakcaller && pureclip_check) {
         -bai $bai \
         -g $fasta \
         -nt $task.cpus \
-        -bc $bc \
-        -dm $dm \
+        $args \
         -o "${name}.sigxl.bed" \
         -or "${name}.${dm}nt.peaks.bed"
 
