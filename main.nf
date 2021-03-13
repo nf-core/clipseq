@@ -1092,6 +1092,8 @@ if (params.peakcaller && pureclip_check) {
 
         script:
 
+        dm = params.dm
+
         args = " -bc " + params.bc
         args += " -dm " + params.dm
         if(params.iv) args += " -iv " + params.iv + " "
