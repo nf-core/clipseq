@@ -1295,7 +1295,7 @@ process multiqc {
 
     tag "$name"
     label 'process_low'
-    publishDir "${params.outdir}/MultiQC", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/multiqc", mode: params.publish_dir_mode
 
     input:
     file (multiqc_config) from ch_multiqc_config
@@ -1308,8 +1308,8 @@ process multiqc {
     path ('rseqc/*') from ch_rseqc_mqc.collect().ifEmpty([])
     file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
     //file ('dedup/*') from ch_dedup_mqc
-    //file ('software_versions/*') from ch_software_versions_yaml.collect()
-    //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
+    file ('software_versions/*') from ch_software_versions_yaml.collect()
+    file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
     output:
     file "*multiqc_report.html" into ch_multiqc_report
@@ -1325,24 +1325,24 @@ process multiqc {
     """
 }
 
-// /*
-//  * STEP 3 - Output Description HTML
-//  */
-// process output_documentation {
-//     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
-//
-//     input:
-//     file output_docs from ch_output_docs
-//     file images from ch_output_docs_images
+/*
+ * STEP 10 - Output Description HTML
+ */
+process output_documentation {
+    publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
 
-//     output:
-//     file "results_description.html"
+    input:
+    file output_docs from ch_output_docs
+    file images from ch_output_docs_images
 
-//     script:
-//     """
-//     markdown_to_html.py $output_docs -o results_description.html
-//     """
-// }
+    output:
+    file "results_description.html"
+
+    script:
+    """
+    markdown_to_html.py $output_docs -o results_description.html
+    """
+}
 
 /*
 ================================================================================
