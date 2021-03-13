@@ -282,7 +282,7 @@ if (pureclip_check && params.iv)                 summary['Chromosomes for HMM'] 
 if (piranha_check)                               summary['Bin size'] = params.bin_size_both
 if (piranha_check)                               summary['Cluster distance'] = params.cluster_dist
 if (params.peakcaller && params.motif)           summary['Motif calling'] = params.motif
-if (params.peakcaller && params.motif)           summary['Number of peaks for motif calling'] = params.motif_sample
+if (params.peakcaller && params.motif)           summary['Peak sample size'] = params.motif_sample
 summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine)                    summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']                            = params.outdir
@@ -1062,9 +1062,12 @@ if (params.peakcaller && paraclu_check) {
 
             script:
 
+            motif_sample = params.motif_sample
+
             """
             pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
@@ -1139,9 +1142,12 @@ if (params.peakcaller && pureclip_check) {
 
             script:
 
+            motif_sample = params.motif_sample
+
             """
             pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
@@ -1215,9 +1221,12 @@ if (params.peakcaller && piranha_check) {
 
             script:
 
+            motif_sample = params.motif_sample
+
             """
             pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
