@@ -240,10 +240,14 @@ if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
 // MultiQC empty channels from peakcaller checks
-if ('paraclu' !in callers) {ch_paraclu_qc = Channel.empty()}
-if ('icount' !in callers) ch_icount_qc = Channel.empty()
-if ('piranha' !in callers) ch_piranha_qc = Channel.empty()
-if ('pureclip' !in callers) ch_pureclip_qc = Channel.empty()
+ch_paraclu_qc = Channel.empty()
+ch_icount_qc = Channel.empty()
+ch_piranha_qc = Channel.empty()
+ch_pureclip_qc = Channel.empty()
+// if ('paraclu' !in callers) ch_paraclu_qc = Channel.empty()
+// if ('icount' !in callers) ch_icount_qc = Channel.empty()
+// if ('piranha' !in callers) ch_piranha_qc = Channel.empty()
+// if ('pureclip' !in callers) ch_pureclip_qc = Channel.empty()
 
 if (params.input) {
     Channel
