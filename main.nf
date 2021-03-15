@@ -127,38 +127,47 @@ if(!params.smrna_fasta) {
     }
 }
 
-// Set up peak caller logic
-def paraclu_check = false
-def icount_check = false
-def pureclip_check = false
-def piranha_check = false
+/*---- Try different peakcaller login ---*/
 
-if (params.peakcaller){
-
-    def peak_list = params.peakcaller.split(',').collect()
-    peak_list.each {
-        if ( it == 'all') {
-            paraclu_check = true
-            icount_check = true
-            pureclip_check = true
-            piranha_check = true
-        } else if ( it == 'paraclu' && !paraclu_check ) {
-            paraclu_check = true
-        } else if ( it == 'icount' && !icount_check ) {
-            icount_check = true
-        } else if ( it == 'pureclip' && !pureclip_check ) {
-            pureclip_check = true
-        } else if ( it == 'piranha' && !piranha_check ) {
-            piranha_check = true
-        } else {
-            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip', 'piranha'"
-        }
-    }
+callerList = [ 'icount', 'paraclu', 'pureclip', 'piranha']
+callers = params.peakcaller ? params.peakcaller.split(',').collect{ it.trim().toLowerCase() } : []
+if ((callerList + callers).unique().size() != callerList.size()) {
+    exit 1, "Invalid variant calller option: ${params.peakcaller}. Valid options: ${callerList.join(', ')}"
 }
 
+
+// Set up peak caller logic
+// def paraclu_check = false
+// def icount_check = false
+// def pureclip_check = false
+// def piranha_check = false
+
+// if (params.peakcaller){
+
+//     def peak_list = params.peakcaller.split(',').collect()
+//     peak_list.each {
+//         if ( it == 'all') {
+//             paraclu_check = true
+//             icount_check = true
+//             pureclip_check = true
+//             piranha_check = true
+//         } else if ( it == 'paraclu' && !paraclu_check ) {
+//             paraclu_check = true
+//         } else if ( it == 'icount' && !icount_check ) {
+//             icount_check = true
+//         } else if ( it == 'pureclip' && !pureclip_check ) {
+//             pureclip_check = true
+//         } else if ( it == 'piranha' && !piranha_check ) {
+//             piranha_check = true
+//         } else {
+//             exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip', 'piranha'"
+//         }
+//     }
+// }
+
 // cannot run icount wihtout gtf file
-if (!params.gtf && icount_check) {
-    icount_check = false
+if (!params.gtf && 'icount' in callers) {
+    //icount_check = false      SET UP GTF CHECK HERE INSTEAD??
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
@@ -231,10 +240,10 @@ if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
 // MultiQC empty channels from peakcaller checks
-if (!paraclu_check) ch_paraclu_qc = Channel.empty()
-if (!icount_check) ch_icount_qc = Channel.empty()
-if (!piranha_check) ch_piranha_qc = Channel.empty()
-if (!pureclip_check) ch_pureclip_qc = Channel.empty()
+if ('paraclu' !in callers) ch_paraclu_qc = Channel.empty()
+if ('icount' !in callers) ch_icount_qc = Channel.empty()
+if ('piranha' !in callers) ch_piranha_qc = Channel.empty()
+if ('pureclip' !in callers) ch_pureclip_qc = Channel.empty()
 
 if (params.input) {
     Channel
@@ -993,153 +1002,163 @@ if (params.peakcaller && icount_check) {
  * STEP 7b - Peak-call (paraclu)
  */
 
-if (params.peakcaller && paraclu_check) {
 
-    process paraclu_peak_call {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/paraclu", mode: params.publish_dir_mode
+process paraclu_peak_call {
 
-        input:
-        tuple val(name), path(xlinks) from ch_xlinks_paraclu
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/paraclu", mode: params.publish_dir_mode
 
-        output:
-        tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
-        path "*.peaks.bed.gz" into ch_paraclu_qc
+    when:
+    'paraclu' in callers
 
-        script:
+    input:
+    tuple val(name), path(xlinks) from ch_xlinks_paraclu
 
-        min_value = params.min_value
-        min_density_increase = params.min_density_increase
-        max_cluster_length = params.max_cluster_length
+    output:
+    tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
+    path "*.peaks.bed.gz" into ch_paraclu_qc
 
-        """
-        pigz -d -c $xlinks | \
-        awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \
-        sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
+    script:
 
-        paraclu ${min_value} paraclu_input.tsv | \
-        paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \
-        awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
-        bedtools sort |
-        pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
-        """
+    min_value = params.min_value
+    min_density_increase = params.min_density_increase
+    max_cluster_length = params.max_cluster_length
 
-    }
+    """
+    pigz -d -c $xlinks | \
+    awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \
+    sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
 
-    process paraclu_motif_dreme {
-
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
-
-        input:
-        tuple val(name), path(peaks) from ch_peaks_paraclu
-        path(fasta) from ch_fasta_dreme_paraclu.collect()
-        path(fai) from ch_fai_paraclu_motif.collect()
-
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
-
-        script:
-
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
-
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
-
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
-
-    }
+    paraclu ${min_value} paraclu_input.tsv | \
+    paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \
+    awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
+    bedtools sort |
+    pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
+    """
 
 }
+
+process paraclu_motif_dreme {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
+
+    when:
+    'paraclu' in callers
+
+    input:
+    tuple val(name), path(peaks) from ch_peaks_paraclu
+    path(fasta) from ch_fasta_dreme_paraclu.collect()
+    path(fai) from ch_fai_paraclu_motif.collect()
+
+    output:
+    tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
+
+    script:
+
+    """
+    pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+    bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+
+    bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+    dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+    """
+
+}
+
+
 
 /*
  * STEP 7c - Peak-call (PureCLIP)
  */
 
-if (params.peakcaller && pureclip_check) {
+process pureclip_peak_call {
 
-    process pureclip_peak_call {
+    tag "$name"
+    label 'process_high'
+    publishDir "${params.outdir}/pureclip", mode: params.publish_dir_mode
 
-        tag "$name"
-        label 'process_high'
-        publishDir "${params.outdir}/pureclip", mode: params.publish_dir_mode
+    when:
+    'pureclip' in callers
 
-        input:
-        tuple val(name), path(bam), path(bai) from ch_dedup_pureclip
-        path(fasta) from ch_fasta_pureclip.collect()
+    input:
+    tuple val(name), path(bam), path(bai) from ch_dedup_pureclip
+    path(fasta) from ch_fasta_pureclip.collect()
 
-        output:
-        tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
-        tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
-        path "*.peaks.bed.gz" into ch_pureclip_qc
+    output:
+    tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
+    tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
+    path "*.peaks.bed.gz" into ch_pureclip_qc
 
-        script:
+    script:
 
-        // iv = params.iv
-        bc = params.bc
-        dm = params.dm
+    // iv = params.iv
+    bc = params.bc
+    dm = params.dm
 
-        """
-        pureclip \
-        -i $bam \
-        -bai $bai \
-        -g $fasta \
-        -nt $task.cpus \
-        -bc $bc \
-        -dm $dm \
-        -o "${name}.sigxl.bed" \
-        -or "${name}.${dm}nt.peaks.bed"
+    """
+    pureclip \
+    -i $bam \
+    -bai $bai \
+    -g $fasta \
+    -nt $task.cpus \
+    -bc $bc \
+    -dm $dm \
+    -o "${name}.sigxl.bed" \
+    -or "${name}.${dm}nt.peaks.bed"
 
-        pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
-        """
-
-    }
-
-    process pureclip_motif_dreme {
-
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
-
-        input:
-        tuple val(name), path(peaks) from ch_peaks_pureclip
-        path(fasta) from ch_fasta_dreme_pureclip.collect()
-        path(fai) from ch_fai_pureclip_motif.collect()
-
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
-
-        script:
-
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
-
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
-
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
-
-    }
+    pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
+    """
 
 }
+
+process pureclip_motif_dreme {
+
+    tag "$name"
+    label 'process_low'
+    publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
+
+    input:
+    tuple val(name), path(peaks) from ch_peaks_pureclip
+    path(fasta) from ch_fasta_dreme_pureclip.collect()
+    path(fai) from ch_fai_pureclip_motif.collect()
+
+    output:
+    tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
+
+    script:
+
+    """
+    pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+    bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+
+    bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+    dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+    """
+
+}
+
+
 
 /*
  * STEP 7d - Peak-call (Piranha)
  */
 
-if (params.peakcaller && piranha_check) {
+// if (params.peakcaller && piranha_check) {
 
     process piranha_peak_call {
 
         tag "$name"
         label 'process_high'
         publishDir "${params.outdir}/piranha", mode: params.publish_dir_mode
+
+        when:
+        'piranha' in callers
 
         input:
         tuple val(name), path(xlinks) from ch_xlinks_piranha
@@ -1199,7 +1218,7 @@ if (params.peakcaller && piranha_check) {
 
     }
 
-}
+// }
 
 /*
  * STEP 8 - QC plots
