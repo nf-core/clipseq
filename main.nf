@@ -138,7 +138,7 @@ if ((callerList + callers).unique().size() != callerList.size()) {
 
 // Set up peak caller logic
 // def paraclu_check = false
-// def icount_check = false
+def icount_check = false
 // def pureclip_check = false
 // def piranha_check = false
 
@@ -240,7 +240,7 @@ if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
 // MultiQC empty channels from peakcaller checks
-if ('paraclu' !in callers) ch_paraclu_qc = Channel.empty()
+if ('paraclu' !in callers) {ch_paraclu_qc = Channel.empty()}
 if ('icount' !in callers) ch_icount_qc = Channel.empty()
 if ('piranha' !in callers) ch_piranha_qc = Channel.empty()
 if ('pureclip' !in callers) ch_pureclip_qc = Channel.empty()
@@ -279,13 +279,20 @@ if (params.peakcaller)                           summary['Peak caller'] = params
 if (params.segment)                              summary['iCount segment'] = params.segment
 if (icount_check)                                summary['Half window'] = params.half_window
 if (icount_check)                                summary['Merge window'] = params.merge_window
-if (paraclu_check)                               summary['Min value'] = params.min_value
-if (paraclu_check)                               summary['Max density increase'] = params.min_density_increase
-if (paraclu_check)                               summary['Max cluster length'] = params.max_cluster_length
-if (pureclip_check)                              summary['Protein binding parameter'] = params.bc
-if (pureclip_check)                              summary['Crosslink merge distance'] = params.dm
-if (piranha_check)                               summary['Bin size'] = params.bin_size_both
-if (piranha_check)                               summary['Cluster distance'] = params.cluster_dist
+if ('paraclu' in callerList)                     summary['Min value'] = params.min_value
+if ('paraclu' in callerList)                     summary['Max density increase'] = params.min_density_increase
+if ('paraclu' in callerList)                     summary['Max cluster length'] = params.max_cluster_length
+if ('pureclip' in callerList)                    summary['Protein binding parameter'] = params.bc
+if ('pureclip' in callerList)                    summary['Crosslink merge distance'] = params.dm
+if ('piranha' in callerList)                     summary['Bin size'] = params.bin_size_both
+if ('piranha' in callerList)                     summary['Cluster distance'] = params.cluster_dist
+// if (paraclu_check)                               summary['Min value'] = params.min_value
+// if (paraclu_check)                               summary['Max density increase'] = params.min_density_increase
+// if (paraclu_check)                               summary['Max cluster length'] = params.max_cluster_length
+// if (pureclip_check)                              summary['Protein binding parameter'] = params.bc
+// if (pureclip_check)                              summary['Crosslink merge distance'] = params.dm
+// if (piranha_check)                               summary['Bin size'] = params.bin_size_both
+// if (piranha_check)                               summary['Cluster distance'] = params.cluster_dist
 summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine)                    summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']                            = params.outdir
