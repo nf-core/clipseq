@@ -364,6 +364,16 @@
         "save_index": {
             "type": "boolean",
             "description": "Save STAR index if generated within pipeline."
+        },
+        "iv": {
+            "type": "string"
+        },
+        "motif": {
+            "type": "string"
+        },
+        "motif_sample": {
+            "type": "integer",
+            "default": 1000
         }
     }
 }
