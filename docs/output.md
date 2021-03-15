@@ -36,7 +36,7 @@ For further reading and documentation see the [FastQC help pages](http://www.bio
 * `sample.trimmed.fastq.gz`: FASTQ file after trimming
 * `sample.cutadapt.log`: Cutadapt log file
 
-## Pre-mapping
+## Pre-mapping 
 
 For CLIP data analysis it is often important to pre-map to rRNA and tRNA sequences. FASTA files for a number of organisms are provided as part of the pipeline. [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is used to identify these reads.
 
