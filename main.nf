@@ -175,7 +175,11 @@ if (params.gtf && icount_check) {
     } else {
         gtf_file_str = params.gtf
     }
+    println gtf_file_str
+    println 'hello'
     File gtf_file = new File(gtf_file_str)
+    println gtf_file
+    println 'goodbye'
     boolean compatibility = check_gtf_by_line( gtf_file, 30 )
     if (hasExtension(params.gtf, 'gz')) {
         boolean fileSuccessfullyDeleted =  new File("${workflow.workDir}/tmp_gtf.txt").delete()
@@ -1493,13 +1497,32 @@ def decompressGzipFile(String gzipFile, String newFile) {
     }
 }
 
+def tmpSaveFile String oldFile, String newFile) {
+    try {
+        FileInputStream fis = new FileInputStream(gzipFile);
+        GZIPInputStream gis = new GZIPInputStream(fis);
+        FileOutputStream fos = new FileOutputStream(newFile);
+        byte[] buffer = new byte[1024];
+        int len;
+        while((len = gis.read(buffer)) != -1){
+            fos.write(buffer, 0, len);
+        }
+        //close resources
+        fos.close();
+        gis.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
 def boolean check_gtf_by_line( File f, int n ) {
   boolean compatible = false
   int count = 0
   boolean gene = false
   boolean ensembl = false
   boolean gencode = false
-  f.withReader { r ->
+  println f
+  f.withReader('UTF-8') { r ->
     while( count<n && ( !gene && ( !ensembl || !gencode ) ) ) {
         line = r.readLine();
         count = count + 1;
