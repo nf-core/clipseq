@@ -1087,73 +1087,75 @@ if ('paraclu' in callers) {
  * STEP 7c - Peak-call (PureCLIP)
  */
 
+if ('pureclip' in callers) {
+
 process pureclip_peak_call {
 
-    tag "$name"
-    label 'process_high'
-    publishDir "${params.outdir}/pureclip", mode: params.publish_dir_mode
+        tag "$name"
+        label 'process_high'
+        publishDir "${params.outdir}/pureclip", mode: params.publish_dir_mode
 
-    when:
-    'pureclip' in callers
+        when:
+        'pureclip' in callers
 
-    input:
-    tuple val(name), path(bam), path(bai) from ch_dedup_pureclip
-    path(fasta) from ch_fasta_pureclip.collect()
+        input:
+        tuple val(name), path(bam), path(bai) from ch_dedup_pureclip
+        path(fasta) from ch_fasta_pureclip.collect()
 
-    output:
-    tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
-    tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
-    path "*.peaks.bed.gz" into ch_pureclip_qc
+        output:
+        tuple val(name), path("${name}.sigxl.bed.gz") into ch_sigxlinks_pureclip
+        tuple val(name), path("${name}.${dm}nt.peaks.bed.gz") into ch_peaks_pureclip
+        path "*.peaks.bed.gz" into ch_pureclip_qc
 
-    script:
+        script:
 
-    // iv = params.iv
-    bc = params.bc
-    dm = params.dm
+        // iv = params.iv
+        bc = params.bc
+        dm = params.dm
 
-    """
-    pureclip \
-    -i $bam \
-    -bai $bai \
-    -g $fasta \
-    -nt $task.cpus \
-    -bc $bc \
-    -dm $dm \
-    -o "${name}.sigxl.bed" \
-    -or "${name}.${dm}nt.peaks.bed"
+        """
+        pureclip \
+        -i $bam \
+        -bai $bai \
+        -g $fasta \
+        -nt $task.cpus \
+        -bc $bc \
+        -dm $dm \
+        -o "${name}.sigxl.bed" \
+        -or "${name}.${dm}nt.peaks.bed"
 
-    pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
-    """
+        pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
+        """
 
+    }
+
+    process pureclip_motif_dreme {
+
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
+
+        input:
+        tuple val(name), path(peaks) from ch_peaks_pureclip
+        path(fasta) from ch_fasta_dreme_pureclip.collect()
+        path(fai) from ch_fai_pureclip_motif.collect()
+
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
+
+        script:
+
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """
+
+    }
 }
-
-process pureclip_motif_dreme {
-
-    tag "$name"
-    label 'process_low'
-    publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
-
-    input:
-    tuple val(name), path(peaks) from ch_peaks_pureclip
-    path(fasta) from ch_fasta_dreme_pureclip.collect()
-    path(fai) from ch_fai_pureclip_motif.collect()
-
-    output:
-    tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
-
-    script:
-
-    """
-    pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-    bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
-
-    bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
-
-    dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-    """
-
-}
-
 
 
 /*
@@ -1161,6 +1163,8 @@ process pureclip_motif_dreme {
  */
 
 // if (params.peakcaller && piranha_check) {
+
+if ('piranha' in callers) {
 
     process piranha_peak_call {
 
@@ -1228,7 +1232,7 @@ process pureclip_motif_dreme {
         """
 
     }
-
+}
 // }
 
 /*
@@ -1246,7 +1250,7 @@ process clipqc {
     file ('mapped/*') from ch_align_qc.collect().ifEmpty([])
     file ('dedup/*') from ch_dedup_qc.collect().ifEmpty([])
     file ('xlinks/*') from ch_xlinks_qc.collect().ifEmpty([])
-    file ('icount/*') from ch_icount_qc.collect().ifEmpty([])
+    path ('icount/*') from ch_icount_qc.collect().ifEmpty([])
     file ('paraclu/*') from ch_paraclu_qc.collect().ifEmpty([])
     file ('pureclip/*') from ch_pureclip_qc.collect().ifEmpty([])
     file ('piranha/*') from ch_piranha_qc.collect().ifEmpty([])
@@ -1258,19 +1262,19 @@ process clipqc {
 
     clip_qc_args = ''
 
-    if (icount_check) {
+    if ('icount' in callers) {
         clip_qc_args += ' icount '
     }
 
-    if (paraclu_check) {
+    if ('paraclu' in callers) {
         clip_qc_args += ' paraclu '
     }
 
-    if (pureclip_check) {
+    if ('pureclip' in callers) {
         clip_qc_args += ' pureclip '
     }
 
-    if (piranha_check) {
+    if ('piranha' in callers) {
         clip_qc_args += ' piranha '
     }
 
