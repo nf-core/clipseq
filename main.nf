@@ -240,14 +240,14 @@ if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
 // MultiQC empty channels from peakcaller checks
-ch_paraclu_qc = Channel.empty()
-ch_icount_qc = Channel.empty()
-ch_piranha_qc = Channel.empty()
-ch_pureclip_qc = Channel.empty()
-// if ('paraclu' !in callers) ch_paraclu_qc = Channel.empty()
-// if ('icount' !in callers) ch_icount_qc = Channel.empty()
-// if ('piranha' !in callers) ch_piranha_qc = Channel.empty()
-// if ('pureclip' !in callers) ch_pureclip_qc = Channel.empty()
+// ch_paraclu_qc = Channel.empty()
+// ch_icount_qc = Channel.empty()
+// ch_piranha_qc = Channel.empty()
+// ch_pureclip_qc = Channel.empty()
+if ('paraclu' !in callers) ch_paraclu_qc = Channel.empty()
+if ('icount' !in callers) ch_icount_qc = Channel.empty()
+if ('piranha' !in callers) ch_piranha_qc = Channel.empty()
+if ('pureclip' !in callers) ch_pureclip_qc = Channel.empty()
 
 if (params.input) {
     Channel
@@ -283,13 +283,13 @@ if (params.peakcaller)                           summary['Peak caller'] = params
 if (params.segment)                              summary['iCount segment'] = params.segment
 if (icount_check)                                summary['Half window'] = params.half_window
 if (icount_check)                                summary['Merge window'] = params.merge_window
-if ('paraclu' in callerList)                     summary['Min value'] = params.min_value
-if ('paraclu' in callerList)                     summary['Max density increase'] = params.min_density_increase
-if ('paraclu' in callerList)                     summary['Max cluster length'] = params.max_cluster_length
-if ('pureclip' in callerList)                    summary['Protein binding parameter'] = params.bc
-if ('pureclip' in callerList)                    summary['Crosslink merge distance'] = params.dm
-if ('piranha' in callerList)                     summary['Bin size'] = params.bin_size_both
-if ('piranha' in callerList)                     summary['Cluster distance'] = params.cluster_dist
+if ('paraclu' in callers)                     summary['Min value'] = params.min_value
+if ('paraclu' in callers)                     summary['Max density increase'] = params.min_density_increase
+if ('paraclu' in callers)                     summary['Max cluster length'] = params.max_cluster_length
+if ('pureclip' in callers)                    summary['Protein binding parameter'] = params.bc
+if ('pureclip' in callers)                    summary['Crosslink merge distance'] = params.dm
+if ('piranha' in callers)                     summary['Bin size'] = params.bin_size_both
+if ('piranha' in callers)                     summary['Cluster distance'] = params.cluster_dist
 // if (paraclu_check)                               summary['Min value'] = params.min_value
 // if (paraclu_check)                               summary['Max density increase'] = params.min_density_increase
 // if (paraclu_check)                               summary['Max cluster length'] = params.max_cluster_length
@@ -1014,73 +1014,73 @@ if (params.peakcaller && icount_check) {
  */
 
 
+if ('paraclu' in callers) {
+    process paraclu_peak_call {
 
-process paraclu_peak_call {
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/paraclu", mode: params.publish_dir_mode
 
-    tag "$name"
-    label 'process_low'
-    publishDir "${params.outdir}/paraclu", mode: params.publish_dir_mode
+        when:
+        'paraclu' in callers
 
-    when:
-    'paraclu' in callers
+        input:
+        tuple val(name), path(xlinks) from ch_xlinks_paraclu
 
-    input:
-    tuple val(name), path(xlinks) from ch_xlinks_paraclu
+        output:
+        tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
+        path "*.peaks.bed.gz" into ch_paraclu_qc
 
-    output:
-    tuple val(name), path("${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz") into ch_peaks_paraclu
-    path "*.peaks.bed.gz" into ch_paraclu_qc
+        script:
 
-    script:
+        min_value = params.min_value
+        min_density_increase = params.min_density_increase
+        max_cluster_length = params.max_cluster_length
 
-    min_value = params.min_value
-    min_density_increase = params.min_density_increase
-    max_cluster_length = params.max_cluster_length
+        """
+        pigz -d -c $xlinks | \
+        awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \
+        sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
 
-    """
-    pigz -d -c $xlinks | \
-    awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \
-    sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
+        paraclu ${min_value} paraclu_input.tsv | \
+        paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \
+        awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
+        bedtools sort |
+        pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
+        """
 
-    paraclu ${min_value} paraclu_input.tsv | \
-    paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \
-    awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
-    bedtools sort |
-    pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
-    """
+    }
 
+    process paraclu_motif_dreme {
+
+        tag "$name"
+        label 'process_low'
+        publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
+
+        when:
+        'paraclu' in callers
+
+        input:
+        tuple val(name), path(peaks) from ch_peaks_paraclu
+        path(fasta) from ch_fasta_dreme_paraclu.collect()
+        path(fai) from ch_fai_paraclu_motif.collect()
+
+        output:
+        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
+
+        script:
+
+        """
+        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+
+        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+        """
+
+    }
 }
-
-process paraclu_motif_dreme {
-
-    tag "$name"
-    label 'process_low'
-    publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
-
-    when:
-    'paraclu' in callers
-
-    input:
-    tuple val(name), path(peaks) from ch_peaks_paraclu
-    path(fasta) from ch_fasta_dreme_paraclu.collect()
-    path(fai) from ch_fai_paraclu_motif.collect()
-
-    output:
-    tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
-
-    script:
-
-    """
-    pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-    bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
-
-    bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
-
-    dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-    """
-
-}
-
 
 
 /*
