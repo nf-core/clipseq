@@ -10,6 +10,8 @@
 */
 
 import java.util.zip.GZIPInputStream
+// import java.nio.ReadableByteChannel
+// import java.nio.FileChannel
 
 def helpMessage() {
     log.info nfcoreHeader()
@@ -174,12 +176,13 @@ if (params.gtf && icount_check) {
         decompressGzipFile(params.gtf, gtf_file_str)
     } else {
         gtf_file_str = params.gtf
+        // println params.gtf
+        // gtf_file_str = "${workflow.workDir}/tmp_gtf.txt"
+        // saveURL2(params.gtf, gtf_file_str)
     }
-    println gtf_file_str
-    println 'hello'
+
     File gtf_file = new File(gtf_file_str)
-    println gtf_file
-    println 'goodbye'
+
     boolean compatibility = check_gtf_by_line( gtf_file, 30 )
     if (hasExtension(params.gtf, 'gz')) {
         boolean fileSuccessfullyDeleted =  new File("${workflow.workDir}/tmp_gtf.txt").delete()
@@ -1497,12 +1500,27 @@ def decompressGzipFile(String gzipFile, String newFile) {
     }
 }
 
-def saveURL(String url, String FILE_NAME) {
-    ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-    FileOutputStream fileOutputStream = new FileOutputStream(FILE_NAME);
-    FileChannel fileChannel = fileOutputStream.getChannel();
-    fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+def saveURL2(String FILE_URL, String FILE_NAME) {
+    try (BufferedInputStream in = new BufferedInputStream(new URL(FILE_URL).openStream());
+    FileOutputStream fileOutputStream = new FileOutputStream(FILE_NAME)) {
+        byte dataBuffer[] = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+            fileOutputStream.write(dataBuffer, 0, bytesRead);
+        }
+        println 'finished?'
+    } catch (IOException e) {
+        println 'exception'
+        // handle exception
+    }
 }
+
+// def saveURL(String url, String FILE_NAME) {
+//     ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+//     FileOutputStream fileOutputStream = new FileOutputStream(FILE_NAME);
+//     FileChannel fileChannel = fileOutputStream.getChannel();
+//     fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+// }
 
 def boolean check_gtf_by_line( File f, int n ) {
   boolean compatible = false
