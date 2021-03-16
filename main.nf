@@ -1497,24 +1497,6 @@ def decompressGzipFile(String gzipFile, String newFile) {
     }
 }
 
-def tmpSaveFile String oldFile, String newFile) {
-    try {
-        FileInputStream fis = new FileInputStream(gzipFile);
-        GZIPInputStream gis = new GZIPInputStream(fis);
-        FileOutputStream fos = new FileOutputStream(newFile);
-        byte[] buffer = new byte[1024];
-        int len;
-        while((len = gis.read(buffer)) != -1){
-            fos.write(buffer, 0, len);
-        }
-        //close resources
-        fos.close();
-        gis.close();
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
-
 def boolean check_gtf_by_line( File f, int n ) {
   boolean compatible = false
   int count = 0
