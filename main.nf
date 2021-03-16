@@ -1497,6 +1497,13 @@ def decompressGzipFile(String gzipFile, String newFile) {
     }
 }
 
+def saveURL(String url, String FILE_NAME) {
+    ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+    FileOutputStream fileOutputStream = new FileOutputStream(FILE_NAME);
+    FileChannel fileChannel = fileOutputStream.getChannel();
+    fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+}
+
 def boolean check_gtf_by_line( File f, int n ) {
   boolean compatible = false
   int count = 0
