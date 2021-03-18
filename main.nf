@@ -192,6 +192,7 @@ params.deduplicate = true
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
 if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
+
 // fai channels
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
 if (params.fai) ch_fai_icount = Channel.value(params.fai)
@@ -523,33 +524,32 @@ if (!params.star_index) {
             """
         }
     } else if (!params.gtf){
-            process generate_star_index_no_gtf {
+        process generate_star_index_no_gtf {
 
-                tag "$fasta"
-                label 'process_high'
-                publishDir path: { params.save_index ? "${params.outdir}/STAR_index" : params.outdir },
-                    saveAs: { params.save_index ? it : null }, mode: params.publish_dir_mode
+            tag "$fasta"
+            label 'process_high'
+            publishDir path: { params.save_index ? "${params.outdir}/STAR_index" : params.outdir },
+                saveAs: { params.save_index ? it : null }, mode: params.publish_dir_mode
 
-                input:
-                path(fasta) from ch_fasta
-                val(sa_ind_base) from ch_genomeSAindexNbases
+            input:
+            path(fasta) from ch_fasta
+            val(sa_ind_base) from ch_genomeSAindexNbases
 
-                output:
-                path("STAR_${fasta.baseName}") into ch_star_index
+            output:
+            path("STAR_${fasta.baseName}") into ch_star_index
 
-                script:
+            script:
 
-                """
-                mkdir STAR_${fasta.baseName}
-                STAR \\
-                    --runMode genomeGenerate --runThreadN ${task.cpus} \\
-                    --genomeDir STAR_${fasta.baseName} \\
-                    --genomeFastaFiles $fasta \\
-                    --genomeSAindexNbases $sa_ind_base \\
-                """
+            """
+            mkdir STAR_${fasta.baseName}
+            STAR \\
+                --runMode genomeGenerate --runThreadN ${task.cpus} \\
+                --genomeDir STAR_${fasta.baseName} \\
+                --genomeFastaFiles $fasta \\
+                --genomeSAindexNbases $sa_ind_base \\
+            """
         }
     }
-
 }
 
 
