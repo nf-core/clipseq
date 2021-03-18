@@ -731,9 +731,12 @@ process align {
                 --outSAMtype BAM Unsorted"
 
     """
-    STAR --runThreadN $task.cpus --runMode alignReads --genomeDir $index \
-    --readFilesIn $reads --readFilesCommand gunzip -c \
-    --outFileNamePrefix ${name}. $clip_args
+    STAR \\
+        --runThreadN $task.cpus \\
+        --runMode alignReads \\
+        --genomeDir $index \\
+        --readFilesIn $reads --readFilesCommand gunzip -c \\
+        --outFileNamePrefix ${name}. $clip_args
 
     samtools sort -@ $task.cpus -o ${name}.Aligned.sortedByCoord.out.bam ${name}.Aligned.out.bam
     samtools index -@ $task.cpus ${name}.Aligned.sortedByCoord.out.bam
