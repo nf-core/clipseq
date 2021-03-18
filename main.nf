@@ -174,7 +174,7 @@ if (!params.gtf && 'icount' in callers) {
 def gtf_check = false
 String gtf_file_str = ""
 String gtf_col_3 = ""
-if (params.gtf && icount_check) {
+if (params.gtf && 'icount' in callers) {
     if (hasExtension(params.gtf, 'gz')) {
         gtf_file_str = "${workflow.workDir}/tmp_gtf.txt"
         decompressGzipFile(params.gtf, gtf_file_str)
@@ -188,6 +188,7 @@ if (params.gtf && icount_check) {
     }
     if (compatibility) {
         gtf_check = true
+        icount_check = true
     }
     if (!gtf_check) {
         icount_check = false
@@ -245,7 +246,7 @@ if (params.fai) ch_fai_size = Channel.value(params.fai)
 // ch_piranha_qc = Channel.empty()
 // ch_pureclip_qc = Channel.empty()
 if ('paraclu' !in callers) ch_paraclu_qc = Channel.empty()
-if ('icount' !in callers) ch_icount_qc = Channel.empty()
+if ('icount' !in callers || !icount_check) ch_icount_qc = Channel.empty()
 if ('piranha' !in callers) ch_piranha_qc = Channel.empty()
 if ('pureclip' !in callers) ch_pureclip_qc = Channel.empty()
 
@@ -1262,7 +1263,7 @@ process clipqc {
 
     clip_qc_args = ''
 
-    if ('icount' in callers) {
+    if ('icount' in callers && icount_check) {
         clip_qc_args += ' icount '
     }
 
