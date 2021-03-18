@@ -523,27 +523,28 @@ if (!params.star_index) {
     } else if (!params.gtf){
             process generate_star_index_no_gtf {
 
-            tag "$fasta"
-            label 'process_high'
-            publishDir path: { params.save_index ? "${params.outdir}/STAR_index" : params.outdir },
-                saveAs: { params.save_index ? it : null }, mode: params.publish_dir_mode
+                tag "$fasta"
+                label 'process_high'
+                publishDir path: { params.save_index ? "${params.outdir}/STAR_index" : params.outdir },
+                    saveAs: { params.save_index ? it : null }, mode: params.publish_dir_mode
 
-            input:
-            path(fasta) from ch_fasta
-            val(sa_ind_base) from ch_genomeSAindexNbases
+                input:
+                path(fasta) from ch_fasta
+                val(sa_ind_base) from ch_genomeSAindexNbases
 
-            output:
-            path("STAR_${fasta.baseName}") into ch_star_index
+                output:
+                path("STAR_${fasta.baseName}") into ch_star_index
 
-            script:
+                script:
 
-            """
-            mkdir STAR_${fasta.baseName}
-            STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
-            --genomeDir STAR_${fasta.baseName} \
-            --genomeFastaFiles $fasta \
-            --genomeSAindexNbases $sa_ind_base \
-            """
+                """
+                mkdir STAR_${fasta.baseName}
+                STAR \\
+                    --runMode genomeGenerate --runThreadN ${task.cpus} \\
+                    --genomeDir STAR_${fasta.baseName} \\
+                    --genomeFastaFiles $fasta \\
+                    --genomeSAindexNbases $sa_ind_base \\
+                """
         }
     }
 
