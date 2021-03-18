@@ -1075,13 +1075,13 @@ process pureclip_peak_call {
 
         """
         pureclip \
-        -i $bam \
-        -bai $bai \
-        -g $fasta \
-        -nt $task.cpus \
-        $args \
-        -o "${name}.sigxl.bed" \
-        -or "${name}.${dm}nt.peaks.bed"
+            -i $bam \
+            -bai $bai \
+            -g $fasta \
+            -nt $task.cpus \
+            $args \
+            -o "${name}.sigxl.bed" \
+            -or "${name}.${dm}nt.peaks.bed"
 
         pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
         """
