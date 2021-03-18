@@ -66,7 +66,7 @@ The nf-core/clipseq pipeline comes with documentation about the pipeline: [usage
 
 ## Credits
 
-nf-core/clipseq was originally written by Charlotte West, Anob Chakrabarti.
+nf-core/clipseq was originally written by Charlotte West (GitHub: charlotte-west) , Anob Chakrabarti (GitHub: amchakra).
 
 We thank the members of Luscombe Lab for their assistance in the development of this pipeline.
 
