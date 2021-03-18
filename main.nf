@@ -376,7 +376,6 @@ if (params.fasta) {
     } else {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
-            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
             .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip; ch_fasta_dreme_piranha }
     }
 }
@@ -410,22 +409,22 @@ if (params.fasta) {
 
 if (!params.fai) {
     process generate_fai {
-            tag "$fasta"
-            label 'process_low'
+        tag "$fasta"
+        label 'process_low'
 
-            input:
-            path(fasta) from ch_fasta_fai
+        input:
+        path(fasta) from ch_fasta_fai
 
-            output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
+        output:
+        path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
 
-            script:
+        script:
 
-            command = "samtools faidx $fasta"
+        command = "samtools faidx $fasta"
 
-            """
-            ${command}
-            """
+        """
+        ${command}
+        """
     }
 }
 
