@@ -632,7 +632,6 @@ process fastqc {
     fastqc --quiet --threads $task.cpus ${new_reads}
     mv ${new_reads_simple}*.html ${name}_reads_fastqc.html
     mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
-
     """
 }
 
