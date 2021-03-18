@@ -137,6 +137,8 @@ if ((callerList + callers).unique().size() != callerList.size()) {
 
 if ('icount' in callers) {
     icount_check = true
+} else {
+    icount_check = false
 }
 
 // Check genome is igenomes is used and icount peakcaller
