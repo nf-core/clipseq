@@ -580,6 +580,8 @@ if (params.peakcaller && icount_check) {
             script:
 
             """
+            mkdir tmp
+            export ICOUNT_TMP_ROOT=\$PWD/tmp
             iCount segment $gtf icount_${gtf} $fai
             """
 
