@@ -49,9 +49,9 @@ def helpMessage() {
       --min_value [int]               Paraclu minimum cluster count/value (default: 10)
       --min_density_increase [int]    Paraclu minimum density increase (default: 2)
       --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
-      --bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
-      --dm [str]                      PureCLIP merge distance (default: 8)
-      --iv [str]                      PureCLIP chromosomes for HMM training (default: all)
+      --pureclip_bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
+      --pureclip_dm [str]                      PureCLIP merge distance (default: 8)
+      --pureclip_iv [str]                      PureCLIP chromosomes for HMM training (default: all)
       --bin_size_both [int]           Piranha bin size (default: 3)
       --cluster_dist [int]            Piranha cluster distance (default: 3)
       --motif [bool]                  DREME motif finding (default: false)
@@ -240,8 +240,8 @@ if (icount_check)                                summary['Merge window'] = param
 if ('paraclu' in callers)                     summary['Min value'] = params.min_value
 if ('paraclu' in callers)                     summary['Max density increase'] = params.min_density_increase
 if ('paraclu' in callers)                     summary['Max cluster length'] = params.max_cluster_length
-if ('pureclip' in callers)                    summary['Protein binding parameter'] = params.bc
-if ('pureclip' in callers)                    summary['Crosslink merge distance'] = params.dm
+if ('pureclip' in callers)                    summary['Protein binding parameter'] = params.pureclip_bc
+if ('pureclip' in callers)                    summary['Crosslink merge distance'] = params.pureclip_dm
 if ('piranha' in callers)                     summary['Bin size'] = params.bin_size_both
 if ('piranha' in callers)                     summary['Cluster distance'] = params.cluster_dist
 summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
@@ -1066,11 +1066,11 @@ process pureclip_peak_call {
 
         script:
 
-        dm = params.dm
+        dm = params.pureclip_dm
 
-        args = " -bc " + params.bc
-        args += " -dm " + params.dm
-        if(params.iv) args += " -iv " + params.iv + " "
+        args = " -bc " + params.pureclip_bc
+        args += " -dm " + params.pureclip_dm
+        if(params.pureclip_iv) args += " -iv " + params.pureclip_iv + " "
 
         """
         pureclip \
