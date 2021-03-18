@@ -135,6 +135,10 @@ if ((callerList + callers).unique().size() != callerList.size()) {
     exit 1, "Invalid variant calller option: ${params.peakcaller}. Valid options: ${callerList.join(', ')}"
 }
 
+if ('icount' in callers) {
+    icount_check = true
+}
+
 // Check genome is igenomes is used and icount peakcaller
 icount_compatible = [ 'GRCh37', 'GRCm38', 'TAIR10', 'EB2', 'UMD3.1', 'WBcel235', 'CanFam3.1', 'GRCz10', 'BDGP6', 'EquCab2', 'EB1', 'Galgal4', 'Gm01', 'Mmul_1', 'IRGSP-1.0', 'CHIMP2.1.4', 'Rnor_6.0', 'R64-1-1', 'EF2', 'Sbi1', 'Sscrofa10.2', 'AGPv3' ]
 if (('icount' in callers) && !(params.genome in icount_compatible)) {
