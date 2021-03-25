@@ -101,9 +101,9 @@ It has to be a comma-separated file with 2 columns, and a header row as shown in
 
 ```bash
 sample,fastq
-exp1_rep1,clip0001_01.fastq.gz,
-exp1_rep2,clip0001_02.fastq.gz,
-exp2_rep1,clip0002_01.fastq.gz,
+exp1_rep1,clip0001_01.fastq.gz
+exp1_rep2,clip0001_02.fastq.gz
+exp2_rep1,clip0002_01.fastq.gz
 exp2_rep2,clip0002_02.fastq.gz
 ```
 

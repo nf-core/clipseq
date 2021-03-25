@@ -9,10 +9,6 @@
 ----------------------------------------------------------------------------------------
 */
 
-import java.util.zip.GZIPInputStream
-// import java.nio.ReadableByteChannel
-// import java.nio.FileChannel
-
 def helpMessage() {
     log.info nfcoreHeader()
     log.info"""
@@ -53,9 +49,9 @@ def helpMessage() {
       --min_value [int]               Paraclu minimum cluster count/value (default: 10)
       --min_density_increase [int]    Paraclu minimum density increase (default: 2)
       --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
-      --bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
-      --dm [str]                      PureCLIP merge distance (default: 8)
-      --iv [str]                      PureCLIP chromosomes for HMM training (default: all)
+      --pureclip_bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
+      --pureclip_dm [str]                      PureCLIP merge distance (default: 8)
+      --pureclip_iv [str]                      PureCLIP chromosomes for HMM training (default: all)
       --bin_size_both [int]           Piranha bin size (default: 3)
       --cluster_dist [int]            Piranha cluster distance (default: 3)
       --motif [bool]                  DREME motif finding (default: false)
@@ -77,7 +73,6 @@ def helpMessage() {
     """.stripIndent()
 }
 
-    //   --iv [str]                      PureCLIP genomic chromosomes to learn HMM parameters, (default: 'chr1;chr2;chr3')
 
 // Show help message
 if (params.help) {
@@ -132,7 +127,7 @@ if(!params.smrna_fasta) {
     }
 }
 
-/*---- Try different peakcaller login ---*/
+/*---- Check Peakcaller Options ---*/
 
 callerList = [ 'icount', 'paraclu', 'pureclip', 'piranha']
 callers = params.peakcaller ? params.peakcaller.split(',').collect{ it.trim().toLowerCase() } : []
@@ -140,71 +135,25 @@ if ((callerList + callers).unique().size() != callerList.size()) {
     exit 1, "Invalid variant calller option: ${params.peakcaller}. Valid options: ${callerList.join(', ')}"
 }
 
+if ('icount' in callers) {
+    icount_check = true
+} else {
+    icount_check = false
+}
 
-// Set up peak caller logic
-// def paraclu_check = false
-def icount_check = false
-// def pureclip_check = false
-// def piranha_check = false
-
-// if (params.peakcaller){
-
-//     def peak_list = params.peakcaller.split(',').collect()
-//     peak_list.each {
-//         if ( it == 'all') {
-//             paraclu_check = true
-//             icount_check = true
-//             pureclip_check = true
-//             piranha_check = true
-//         } else if ( it == 'paraclu' && !paraclu_check ) {
-//             paraclu_check = true
-//         } else if ( it == 'icount' && !icount_check ) {
-//             icount_check = true
-//         } else if ( it == 'pureclip' && !pureclip_check ) {
-//             pureclip_check = true
-//         } else if ( it == 'piranha' && !piranha_check ) {
-//             piranha_check = true
-//         } else {
-//             exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip', 'piranha'"
-//         }
-//     }
-// }
+// Check genome is igenomes is used and icount peakcaller
+icount_compatible = [ 'GRCh37', 'GRCm38', 'TAIR10', 'EB2', 'UMD3.1', 'WBcel235', 'CanFam3.1', 'GRCz10', 'BDGP6', 'EquCab2', 'EB1', 'Galgal4', 'Gm01', 'Mmul_1', 'IRGSP-1.0', 'CHIMP2.1.4', 'Rnor_6.0', 'R64-1-1', 'EF2', 'Sbi1', 'Sscrofa10.2', 'AGPv3' ]
+if (('icount' in callers) && !(params.genome in icount_compatible)) {
+    icount_check = false
+    log.warn "The provided genome '${params.genome}' is not compatible with the iCount peakcaller, so it will be skipped. Please see documentation"
+}
 
 // cannot run icount wihtout gtf file
 if (!params.gtf && 'icount' in callers) {
-    //icount_check = false      SET UP GTF CHECK HERE INSTEAD??
+    icount_check = false
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-def gtf_check = false
-String gtf_file_str = ""
-String gtf_col_3 = ""
-if (params.gtf && 'icount' in callers) {
-    if (hasExtension(params.gtf, 'gz')) {
-        gtf_file_str = "${workflow.workDir}/tmp_gtf.txt"
-        decompressGzipFile(params.gtf, gtf_file_str)
-    } else {
-        gtf_file_str = params.gtf
-        // println params.gtf
-        // gtf_file_str = "${workflow.workDir}/tmp_gtf.txt"
-        // saveURL2(params.gtf, gtf_file_str)
-    }
-
-    File gtf_file = new File(gtf_file_str)
-
-    boolean compatibility = check_gtf_by_line( gtf_file, 30 )
-    if (hasExtension(params.gtf, 'gz')) {
-        boolean fileSuccessfullyDeleted =  new File("${workflow.workDir}/tmp_gtf.txt").delete()
-    }
-    if (compatibility) {
-        gtf_check = true
-        icount_check = true
-    }
-    if (!gtf_check) {
-        icount_check = false
-        log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
-    }
-}
 
 // Has the run name been specified by the user?
 // this has the bonus effect of catching both -name and --name
@@ -243,6 +192,7 @@ params.deduplicate = true
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
 if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
+
 // fai channels
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
 if (params.fai) ch_fai_icount = Channel.value(params.fai)
@@ -293,17 +243,10 @@ if (icount_check)                                summary['Merge window'] = param
 if ('paraclu' in callers)                     summary['Min value'] = params.min_value
 if ('paraclu' in callers)                     summary['Max density increase'] = params.min_density_increase
 if ('paraclu' in callers)                     summary['Max cluster length'] = params.max_cluster_length
-if ('pureclip' in callers)                    summary['Protein binding parameter'] = params.bc
-if ('pureclip' in callers)                    summary['Crosslink merge distance'] = params.dm
+if ('pureclip' in callers)                    summary['Protein binding parameter'] = params.pureclip_bc
+if ('pureclip' in callers)                    summary['Crosslink merge distance'] = params.pureclip_dm
 if ('piranha' in callers)                     summary['Bin size'] = params.bin_size_both
 if ('piranha' in callers)                     summary['Cluster distance'] = params.cluster_dist
-// if (paraclu_check)                               summary['Min value'] = params.min_value
-// if (paraclu_check)                               summary['Max density increase'] = params.min_density_increase
-// if (paraclu_check)                               summary['Max cluster length'] = params.max_cluster_length
-// if (pureclip_check)                              summary['Protein binding parameter'] = params.bc
-// if (pureclip_check)                              summary['Crosslink merge distance'] = params.dm
-// if (piranha_check)                               summary['Bin size'] = params.bin_size_both
-// if (piranha_check)                               summary['Cluster distance'] = params.cluster_dist
 summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine)                    summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']                            = params.outdir
@@ -436,7 +379,6 @@ if (params.fasta) {
     } else {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
-            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
             .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip; ch_fasta_dreme_piranha }
     }
 }
@@ -470,22 +412,22 @@ if (params.fasta) {
 
 if (!params.fai) {
     process generate_fai {
-            tag "$fasta"
-            label 'process_low'
+        tag "$fasta"
+        label 'process_low'
 
-            input:
-            path(fasta) from ch_fasta_fai
+        input:
+        path(fasta) from ch_fasta_fai
 
-            output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
+        output:
+        path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
 
-            script:
+        script:
 
-            command = "samtools faidx $fasta"
+        command = "samtools faidx $fasta"
 
-            """
-            ${command}
-            """
+        """
+        ${command}
+        """
     }
 }
 
@@ -529,11 +471,6 @@ if (!params.star_index) {
     // transform genome size to calculate genomeSAindexNbases to generate STAR index
     ch_genomeSAindexNbases = ch_genome_size
     .map { it -> it.getText("UTF-8") as int }
-    // .map { it -> (it / 2) - 1 }
-    // .map { it -> Math.round(Math.log(it) / Math.log(2)) }
-    // .map { it -> Math.min( 14, it ).shortValue() }
-    // .map { it -> it.toString() }
-
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
@@ -587,7 +524,7 @@ if (!params.star_index) {
             """
         }
     } else if (!params.gtf){
-            process generate_star_index_no_gtf {
+        process generate_star_index_no_gtf {
 
             tag "$fasta"
             label 'process_high'
@@ -605,14 +542,14 @@ if (!params.star_index) {
 
             """
             mkdir STAR_${fasta.baseName}
-            STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
-            --genomeDir STAR_${fasta.baseName} \
-            --genomeFastaFiles $fasta \
-            --genomeSAindexNbases $sa_ind_base \
+            STAR \\
+                --runMode genomeGenerate --runThreadN ${task.cpus} \\
+                --genomeDir STAR_${fasta.baseName} \\
+                --genomeFastaFiles $fasta \\
+                --genomeSAindexNbases $sa_ind_base \\
             """
         }
     }
-
 }
 
 
@@ -645,6 +582,8 @@ if (params.peakcaller && icount_check) {
             script:
 
             """
+            mkdir tmp
+            export ICOUNT_TMP_ROOT=\$PWD/tmp
             iCount segment $gtf icount_${gtf} $fai
             """
 
@@ -682,7 +621,6 @@ process fastqc {
 
     output:
     file "*fastqc.{zip,html}" into ch_fastqc_pretrim_mqc
-    // tuple val(name), path(reads) into ch_fastqc_pretrim_mqc
 
     script:
 
@@ -696,7 +634,6 @@ process fastqc {
     fastqc --quiet --threads $task.cpus ${new_reads}
     mv ${new_reads_simple}*.html ${name}_reads_fastqc.html
     mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
-
     """
 }
 
@@ -727,11 +664,7 @@ process cutadapt {
 }
 
 /*
- * STEP 3 - Post-trimming FastQC
- */
-
-/*
- * STEP 4 - Premapping
+ * STEP 3 - Premapping
  */
 
 if (params.smrna_fasta) {
@@ -767,7 +700,7 @@ if (params.smrna_fasta) {
 }
 
 /*
- * STEP 5 - Aligning
+ * STEP 4 - Aligning
  */
 
 process align {
@@ -800,9 +733,12 @@ process align {
                 --outSAMtype BAM Unsorted"
 
     """
-    STAR --runThreadN $task.cpus --runMode alignReads --genomeDir $index \
-    --readFilesIn $reads --readFilesCommand gunzip -c \
-    --outFileNamePrefix ${name}. $clip_args
+    STAR \\
+        --runThreadN $task.cpus \\
+        --runMode alignReads \\
+        --genomeDir $index \\
+        --readFilesIn $reads --readFilesCommand gunzip -c \\
+        --outFileNamePrefix ${name}. $clip_args
 
     samtools sort -@ $task.cpus -o ${name}.Aligned.sortedByCoord.out.bam ${name}.Aligned.out.bam
     samtools index -@ $task.cpus ${name}.Aligned.sortedByCoord.out.bam
@@ -918,7 +854,7 @@ if (params.gtf) {
     
 }
 /*
- * STEP 6 - Identify crosslinks
+ * STEP 7 - Identify crosslinks
  */
 
 process get_crosslinks {
@@ -951,7 +887,7 @@ process get_crosslinks {
 }
 
 /*
- * STEP 7a - Peak-call (iCount)
+ * STEP 8a - Peak-call (iCount)
  */
 
 if (params.peakcaller && icount_check) {
@@ -1027,7 +963,7 @@ if (params.peakcaller && icount_check) {
 }
 
 /*
- * STEP 7b - Peak-call (paraclu)
+ * STEP 8b - Peak-call (paraclu)
  */
 
 
@@ -1108,7 +1044,7 @@ if ('paraclu' in callers) {
 
 
 /*
- * STEP 7c - Peak-call (PureCLIP)
+ * STEP 8c - Peak-call (PureCLIP)
  */
 
 if ('pureclip' in callers) {
@@ -1133,21 +1069,21 @@ process pureclip_peak_call {
 
         script:
 
-        dm = params.dm
+        dm = params.pureclip_dm
 
-        args = " -bc " + params.bc
-        args += " -dm " + params.dm
-        if(params.iv) args += " -iv " + params.iv + " "
+        args = " -bc " + params.pureclip_bc
+        args += " -dm " + params.pureclip_dm
+        if(params.pureclip_iv) args += " -iv " + params.pureclip_iv + " "
 
         """
         pureclip \
-        -i $bam \
-        -bai $bai \
-        -g $fasta \
-        -nt $task.cpus \
-        $args \
-        -o "${name}.sigxl.bed" \
-        -or "${name}.${dm}nt.peaks.bed"
+            -i $bam \
+            -bai $bai \
+            -g $fasta \
+            -nt $task.cpus \
+            $args \
+            -o "${name}.sigxl.bed" \
+            -or "${name}.${dm}nt.peaks.bed"
 
         pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
         """
@@ -1191,10 +1127,9 @@ process pureclip_peak_call {
 
 
 /*
- * STEP 7d - Peak-call (Piranha)
+ * STEP 8d - Peak-call (Piranha)
  */
 
-// if (params.peakcaller && piranha_check) {
 
 if ('piranha' in callers) {
 
@@ -1272,7 +1207,6 @@ if ('piranha' in callers) {
 
     }
 }
-// }
 
 /*
  * STEP 8 - QC plots
@@ -1507,81 +1441,6 @@ workflow.onComplete {
 // Check file extension - from nf-core/rnaseq
 def hasExtension(it, extension) {
     it.toString().toLowerCase().endsWith(extension.toLowerCase())
-}
-
-// Decompress file
-def decompressGzipFile(String gzipFile, String newFile) {
-    try {
-        FileInputStream fis = new FileInputStream(gzipFile);
-        GZIPInputStream gis = new GZIPInputStream(fis);
-        FileOutputStream fos = new FileOutputStream(newFile);
-        byte[] buffer = new byte[1024];
-        int len;
-        while((len = gis.read(buffer)) != -1){
-            fos.write(buffer, 0, len);
-        }
-        //close resources
-        fos.close();
-        gis.close();
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
-
-def saveURL2(String FILE_URL, String FILE_NAME) {
-    try (BufferedInputStream in = new BufferedInputStream(new URL(FILE_URL).openStream());
-    FileOutputStream fileOutputStream = new FileOutputStream(FILE_NAME)) {
-        byte dataBuffer[] = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-            fileOutputStream.write(dataBuffer, 0, bytesRead);
-        }
-        println 'finished?'
-    } catch (IOException e) {
-        println 'exception'
-        // handle exception
-    }
-}
-
-// def saveURL(String url, String FILE_NAME) {
-//     ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-//     FileOutputStream fileOutputStream = new FileOutputStream(FILE_NAME);
-//     FileChannel fileChannel = fileOutputStream.getChannel();
-//     fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-// }
-
-def boolean check_gtf_by_line( File f, int n ) {
-  boolean compatible = false
-  int count = 0
-  boolean gene = false
-  boolean ensembl = false
-  boolean gencode = false
-  println f
-  f.withReader('UTF-8') { r ->
-    while( count<n && ( !gene && ( !ensembl || !gencode ) ) ) {
-        line = r.readLine();
-        count = count + 1;
-        if (!gene) {
-            if (line =~ /\bgene\b/) {
-                gene = true
-            }
-        };
-        if (gene && !ensembl) {
-            if(line.contains('ensembl')) {
-                ensembl = true
-            }
-        };
-        if (!gene && !gencode) {
-            if(line.contains('GENCODE')){
-                gencode = true
-            }
-        };
-        if (gene && ( ensembl || gencode )) {
-            compatible = true
-        };
-    }
-  }
-  compatible
 }
 
 def nfcoreHeader() {

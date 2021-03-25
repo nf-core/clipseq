@@ -128,7 +128,7 @@ For more information about how to use MultiQC reports, see [https://multiqc.info
   * `multiqc_data/`: directory containing parsed statistics from the different tools used in the pipeline.
   * `multiqc_plots/`: directory containing static images from the report in various formats.
 
-## CLIP summary metrics
+### CLIP summary metrics
 
 The pipeline provides CLIP-specific summary metrics that are plotted in the MultiQC report.
 

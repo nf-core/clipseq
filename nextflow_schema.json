@@ -148,15 +148,6 @@
                     "default": 200,
                     "description": "Paraclu maximum cluster length"
                 },
-                "bc": {
-                    "type": "integer",
-                    "description": "PureCLIP binding characteristics"
-                },
-                "dm": {
-                    "type": "integer",
-                    "default": 8,
-                    "description": "PureCLIP merging distance"
-                },
                 "bin_size_both": {
                     "type": "integer",
                     "default": 3,
@@ -357,6 +348,21 @@
         }
     ],
     "properties": {
+        "pureclip_bc": {
+            "type": "integer",
+            "description": "PureCLIP flag to set parameters according to binding characteristics of protein",
+            "default": "0"
+        },
+        "pureclip_dm": {
+            "type": "string",
+            "description": "PureCLIP merge distance",
+            "default": "8"
+        },
+        "pureclip_iv": {
+            "type": "string",
+            "description": "PureCLIP chromosomes for HMM training",
+            "default": "all"
+        },
         "smrna_org": {
             "type": "string",
             "description": "Organism for small RNA reference."
@@ -364,9 +370,6 @@
         "save_index": {
             "type": "boolean",
             "description": "Save STAR index if generated within pipeline."
-        },
-        "iv": {
-            "type": "string"
         },
         "motif": {
             "type": "string"
