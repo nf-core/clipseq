@@ -245,6 +245,7 @@ if ('paraclu' in callers)                     summary['Max density increase'] = 
 if ('paraclu' in callers)                     summary['Max cluster length'] = params.max_cluster_length
 if ('pureclip' in callers)                    summary['Protein binding parameter'] = params.pureclip_bc
 if ('pureclip' in callers)                    summary['Crosslink merge distance'] = params.pureclip_dm
+if ('pureclip' in callers)                    summary['Chromosomes for HMM'] = params.pureclip_iv
 if ('piranha' in callers)                     summary['Bin size'] = params.bin_size_both
 if ('piranha' in callers)                     summary['Cluster distance'] = params.cluster_dist
 summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
