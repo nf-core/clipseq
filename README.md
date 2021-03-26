@@ -66,9 +66,9 @@ The nf-core/clipseq pipeline comes with documentation about the pipeline: [usage
 
 ## Credits
 
-nf-core/clipseq was originally written by Charlotte West (GitHub: charlotte-west) , Anob Chakrabarti (GitHub: amchakra). Developed at The Francis Crick Institute
+nf-core/clipseq was originally written by Charlotte West ([@charlotte-west](https://github.com/charlotte-west)) and Anob Chakrabarti ([@amchakra](https://github.com/amchakra)) from [Luscombe Lab](https://www.crick.ac.uk/research/labs/nicholas-luscombe) at [The Francis Crick Institute](https://www.crick.ac.uk/), London, UK.
 
-We thank the members of Luscombe Lab for their assistance in the development of this pipeline.
+It started life in April 2020 as a Nextflow DSL2 Luscombe Lab ([@luslab](https://github.com/luslab)) lockdown hackathon day and we thank all the lab members for their early contributions.
 
 ## Contributions and Support
 

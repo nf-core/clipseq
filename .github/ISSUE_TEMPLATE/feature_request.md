@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for the nf-core/clipseq
+about: Suggest an idea for the nf-core/clipseq pipeline
 labels: enhancement
 ---
 
