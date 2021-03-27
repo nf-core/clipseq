@@ -1074,7 +1074,7 @@ process pureclip_peak_call {
 
         args = " -bc " + params.pureclip_bc
         args += " -dm " + params.pureclip_dm
-        if(params.pureclip_iv) args += " -iv " + params.pureclip_iv + " "
+        if(params.pureclip_iv) args += " -iv '" + params.pureclip_iv + "' "
 
         """
         pureclip \
