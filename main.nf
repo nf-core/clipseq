@@ -142,7 +142,8 @@ if ('icount' in callers) {
 }
 
 // Check genome is igenomes is used and icount peakcaller
-icount_compatible = [ 'GRCh37', 'GRCm38', 'TAIR10', 'EB2', 'UMD3.1', 'WBcel235', 'CanFam3.1', 'GRCz10', 'BDGP6', 'EquCab2', 'EB1', 'Galgal4', 'Gm01', 'Mmul_1', 'IRGSP-1.0', 'CHIMP2.1.4', 'Rnor_6.0', 'Rnor_5.0','R64-1-1', 'EF2', 'Sbi1', 'Sscrofa10.2', 'AGPv3' ]
+// icount_compatible = [ 'GRCh37', 'GRCm38', 'TAIR10', 'EB2', 'UMD3.1', 'WBcel235', 'CanFam3.1', 'GRCz10', 'BDGP6', 'EquCab2', 'EB1', 'Galgal4', 'Gm01', 'Mmul_1', 'IRGSP-1.0', 'CHIMP2.1.4', 'Rnor_6.0', 'Rnor_5.0','R64-1-1', 'EF2', 'Sbi1', 'Sscrofa10.2', 'AGPv3' ]
+icount_compatible = [] // Currently none of the iGenomes GTFs are compatible (even Ensembl - as different to the ones downloaded directly from Ensembl)
 if (params.genome && ('icount' in callers) && !(params.genome in icount_compatible)) {
     icount_check = false
     log.warn "The provided genome '${params.genome}' is not compatible with the iCount peakcaller, so it will be skipped. Please see documentation"
@@ -233,7 +234,7 @@ if (params.gtf)                                  summary['GTF ref'] = params.gtf
 if (params.star_index)                           summary['STAR index'] = params.star_index
 if (params.save_index)                           summary['Save STAR index?'] = params.save_index
 if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
-if (params.smrna_fasta)                          summary['SmalRNA ref'] = params.smrna_fasta
+if (params.smrna_fasta)                          summary['SmallRNA ref'] = params.smrna_fasta
 if (params.deduplicate)                          summary['Deduplicate'] = params.deduplicate
 if (params.deduplicate && params.umi_separator)  summary['UMI separator'] = params.umi_separator
 if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
