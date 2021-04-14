@@ -661,17 +661,15 @@ if(params.move_umi) {
         tuple val(name), path(reads) from ch_fastq
 
         output:
-        tuple val(name), path("${name}.trimmed.fastq.gz") into ch_umi_moved
+        tuple val(name), path("${name}.umi.fastq.gz") into ch_umi_moved
 
         script:
 
-        umi = params.move_umi
-
         """
         umi_tools extract \
-        -p $umi \
+        -p "$params.move_umi" \
         -I $reads \
-        -S $name.umi.fastq.gz
+        -S ${name}.umi.fastq.gz
         """
     }
 
