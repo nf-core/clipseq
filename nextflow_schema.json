@@ -182,7 +182,7 @@
                 "pureclip_bc": {
                     "type": "integer",
                     "description": "PureCLIP binding characteristics of protein",
-                    "default": "0",
+                    "default": 0,
                     "fa_icon": "fas fa-file-contract"
                 },
                 "pureclip_dm": {
