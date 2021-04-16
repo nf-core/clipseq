@@ -51,6 +51,11 @@ if (!params.genome && params.smrna_org) {
     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
 }
 
+// Auto-load genome files from genome config
+params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
+params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
+params.star_index = params.genome ? params.genomes[ params.genome ].star ?: false : false
+
 ////////////////////////////////////////////////////
 /* --    COLLECT CONFIGURATION PARAMETERS      -- */
 ////////////////////////////////////////////////////
@@ -151,10 +156,7 @@ if (params.input) {
         .map{ row -> [ row.sample, file(row.fastq, checkIfExists: true) ] }
         .into{ ch_fastq; ch_fastq_fastqc_pretrim }
 } else {
-    Channel
-        .fromFilePairs(params.input, size: params.single_end ? 1 : 2)
-        .ifEmpty { exit 1, "Cannot find any reads matching: ${params.input}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
-        .into { ch_read_files_fastqc; ch_read_files_trimming }
+    exit 1, "Samples comma-separated input file not specified"
 }
 
 ////////////////////////////////////////////////////
@@ -514,6 +516,8 @@ if (params.peakcaller && icount_check) {
  * STEP 1 - FastQC
  */
 process fastqc {
+    tag "$name"
+    label 'process_medium'
     publishDir "${params.outdir}/fastqc", mode: params.publish_dir_mode,
         saveAs: { filename ->
                       filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
@@ -735,13 +739,11 @@ if (params.gtf) {
 process get_crosslinks {
     tag "$name"
     label 'process_medium'
-    publishDir "${params.outdir}/fastqc", mode: params.publish_dir_mode,
-        saveAs: { filename ->
-                      filename.indexOf('.zip') > 0 ? "zips/$filename" : "$filename"
-        }
+    publishDir "${params.outdir}/xlinks", mode: params.publish_dir_mode
 
     input:
-    set val(name), file(reads) from ch_read_files_fastqc
+    tuple val(name), path(bam), path(bai) from ch_dedup
+    path(fai) from ch_fai_crosslinks.collect()
 
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu, ch_xlinks_piranha
@@ -750,7 +752,12 @@ process get_crosslinks {
 
     script:
     """
-    fastqc --quiet --threads $task.cpus $reads
+    bedtools bamtobed -i $bam > dedup.bed
+    bedtools shift -m 1 -p -1 -i dedup.bed -g $fai > shifted.bed
+    bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "+"}' > pos.bed
+    bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "-"}' > neg.bed
+    cat pos.bed neg.bed | sort -k1,1 -k2,2n | pigz > ${name}.xl.bed.gz
+    zcat ${name}.xl.bed.gz | awk '{OFS = "\t"}{if (\$6 == "+") {print \$1, \$2, \$3, \$5} else {print \$1, \$2, \$3, -\$5}}' | pigz > ${name}.xl.bedgraph.gz
     """
 }
 
@@ -1248,6 +1255,11 @@ workflow.onComplete {
 workflow.onError {
     // Print unexpected parameters - easiest is to just rerun validation
     NfcoreSchema.validateParameters(params, json_schema, log)
+}
+
+// Check file extension - from nf-core/rnaseq
+def hasExtension(it, extension) {
+    it.toString().toLowerCase().endsWith(extension.toLowerCase())
 }
 
 def checkHostname() {
