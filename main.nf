@@ -129,7 +129,8 @@ ch_output_docs_images = file("$projectDir/docs/images/", checkIfExists: true)
 ////////////////////////////////////////////////////
 
 params.adapter = "AGATCGGAAGAGC"
-params.umi_separator = ":"
+params.move_umi = false
+params.umi_separator = params.move_umi ? '_' : ':'
 params.deduplicate = true
 
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
@@ -179,6 +180,7 @@ if (params.star_index)                           summary['STAR index'] = params.
 if (params.save_index)                           summary['Save STAR index?'] = params.save_index
 if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
 if (params.smrna_fasta)                          summary['SmallRNA ref'] = params.smrna_fasta
+if (params.move_umi)                             summary['UMI pattern'] = params.move_umi
 if (params.deduplicate)                          summary['Deduplicate'] = params.deduplicate
 if (params.deduplicate && params.umi_separator)  summary['UMI separator'] = params.umi_separator
 if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
@@ -543,6 +545,37 @@ process fastqc {
 }
 
 /*
+ * STEP 1.1 - Move UMI to FastQ header if flagged
+ */
+if (params.move_umi) {
+    process move_umi {
+        tag "$name"
+        label 'process_medium'
+        publishDir "${params.outdir}/umi", mode: params.publish_dir_mode,
+            saveAs: { filename ->
+                        filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
+                    }
+
+        input:
+        tuple val(name), path(reads) from ch_fastq
+
+        output:
+        tuple val(name), path("${name}.umi.fastq.gz") into ch_umi_moved
+
+        script:
+        """
+        umi_tools \\
+            extract \\
+            -p "$params.move_umi" \\
+            -I $reads \\
+            -S ${name}.umi.fastq.gz
+        """
+    }
+} else {
+    ch_umi_moved = ch_fastq
+}
+
+/*
  * STEP 2 - Read trimming
  */
 process cutadapt {
@@ -551,7 +584,7 @@ process cutadapt {
     publishDir "${params.outdir}/cutadapt", mode: params.publish_dir_mode
 
     input:
-    tuple val(name), path(reads) from ch_fastq
+    tuple val(name), path(reads) from ch_umi_moved
 
     output:
     tuple val(name), path("${name}.trimmed.fastq.gz") into ch_trimmed

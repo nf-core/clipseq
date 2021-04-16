@@ -111,6 +111,12 @@
                     "default": "AGATCGGAAGAGC",
                     "fa_icon": "fas fa-angle-double-left"
                 },
+                "move_umi": {
+                    "type": "string",
+                    "fa_icon": "fas fa-barcode",
+                    "default": "False",
+                    "description": "UMI format to move to FastQ header (optional)"
+                },
                 "deduplicate": {
                     "type": "boolean",
                     "default": true,
@@ -120,7 +126,7 @@
                 "umi_separator": {
                     "type": "string",
                     "default": ":",
-                    "description": "UMI separator in the FASTA read name",
+                    "description": "UMI separator in the FastQ read name",
                     "fa_icon": "fas fa-barcode"
                 }
             },
@@ -176,7 +182,6 @@
                 "pureclip_bc": {
                     "type": "integer",
                     "description": "PureCLIP binding characteristics of protein",
-                    "default": 0,
                     "fa_icon": "fas fa-file-contract"
                 },
                 "pureclip_dm": {
