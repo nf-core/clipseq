@@ -607,17 +607,17 @@ process align {
     path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
-    clip_args = "--outFilterMultimapNmax 1 \\
-                --outFilterMultimapScoreRange 1 \\
-                --outSAMattributes All \\
-                --alignSJoverhangMin 8 \\
-                --alignSJDBoverhangMin 1 \\
-                --outFilterType BySJout \\
-                --alignIntronMin 20 \\
-                --alignIntronMax 1000000 \\
-                --outFilterScoreMin 10  \\
-                --alignEndsType Extend5pOfRead1 \\
-                --twopassMode Basic \\
+    clip_args = "--outFilterMultimapNmax 1 \
+                --outFilterMultimapScoreRange 1 \
+                --outSAMattributes All \
+                --alignSJoverhangMin 8 \
+                --alignSJDBoverhangMin 1 \
+                --outFilterType BySJout \
+                --alignIntronMin 20 \
+                --alignIntronMax 1000000 \
+                --outFilterScoreMin 10  \
+                --alignEndsType Extend5pOfRead1 \
+                --twopassMode Basic \
                 --outSAMtype BAM Unsorted"
     """
     STAR \\
