@@ -437,7 +437,7 @@ if (!params.star_index) {
             STAR \\
                 --runMode genomeGenerate \\
                 --runThreadN ${task.cpus} \\
-                --genomeDir STAR_${fasta.baseName} \A
+                --genomeDir STAR_${fasta.baseName} \\
                 --genomeFastaFiles $fasta \\
                 --genomeSAindexNbases $sa_ind_base \\
                 --sjdbGTFfile $gtf
