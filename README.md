@@ -1,7 +1,5 @@
 # ![nf-core/clipseq](docs/images/nf-core-clipseq_logo.png)
 
-**CLIP analysis pipeline**.
-
 [![GitHub Actions CI Status](https://github.com/nf-core/clipseq/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/clipseq/actions)
 [![GitHub Actions Linting Status](https://github.com/nf-core/clipseq/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/clipseq/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A520.04.0-brightgreen.svg)](https://www.nextflow.io/)
@@ -66,9 +64,9 @@ The nf-core/clipseq pipeline comes with documentation about the pipeline: [usage
 
 ## Credits
 
-nf-core/clipseq was originally written by Charlotte West, Anob Chakrabarti.
+nf-core/clipseq was originally written by Charlotte West ([@charlotte-west](https://github.com/charlotte-west)) and Anob Chakrabarti ([@amchakra](https://github.com/amchakra)) from [Luscombe Lab](https://www.crick.ac.uk/research/labs/nicholas-luscombe) at [The Francis Crick Institute](https://www.crick.ac.uk/), London, UK.
 
-We thank the members of Luscombe Lab for their assistance in the development of this pipeline.
+It started life in April 2020 as a Nextflow DSL2 Luscombe Lab ([@luslab](https://github.com/luslab)) lockdown hackathon day and we thank all the lab members for their early contributions.
 
 ## Contributions and Support
 
@@ -90,4 +88,3 @@ You can cite the `nf-core` publication as follows:
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
 >
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
-> ReadCube: [Full Access Link](https://rdcu.be/b1GjZ)

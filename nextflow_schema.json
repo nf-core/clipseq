@@ -16,7 +16,7 @@
             "properties": {
                 "input": {
                     "type": "string",
-                    "fa_icon": "fas fa-dna",
+                    "fa_icon": "fas fa-file-csv",
                     "description": "Input FastQ files.",
                     "help_text": "Use this to specify the location of your input FastQ files. For example:\n\n```bash\n--input 'path/to/data/sample_*_{1,2}.fastq'\n```\n\nPlease note the following requirements:\n\n1. The path must be enclosed in quotes\n2. The path must have at least one `*` wildcard character\n3. When using the pipeline with paired end data, the path must use `{1,2}` notation to specify read pairs.\n\nIf left unspecified, a default pattern is used: `data/*{1,2}.fastq.gz`"
                 },
@@ -47,27 +47,41 @@
                     "fa_icon": "fas fa-book",
                     "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`.\n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
                 },
+                "smrna_org": {
+                    "type": "string",
+                    "description": "Organism for small RNA reference.",
+                    "fa_icon": "fas fa-book"
+                },
                 "smrna_fasta": {
                     "type": "string",
-                    "description": "Path to small RNA FASTA file"
+                    "description": "Path to small RNA FASTA file",
+                    "fa_icon": "fas fa-file-code"
                 },
                 "fasta": {
                     "type": "string",
-                    "fa_icon": "fas fa-font",
+                    "fa_icon": "fas fa-file-code",
                     "description": "Path to genome FASTA file.",
                     "help_text": "If you have no genome reference available, the pipeline can build one using a FASTA file. This requires additional time and resources, so it's better to use a pre-build index if possible."
                 },
                 "fai": {
                     "type": "string",
-                    "description": "Path to genome FASTA index file"
+                    "description": "Path to genome FASTA index file",
+                    "fa_icon": "fas fa-file-code"
                 },
                 "gtf": {
                     "type": "string",
-                    "description": "Path to GTF annotation file"
+                    "description": "Path to GTF annotation file",
+                    "fa_icon": "fas fa-file-code"
                 },
                 "star_index": {
                     "type": "string",
-                    "description": "Path to genome STAR index"
+                    "description": "Path to genome STAR index",
+                    "fa_icon": "fas fa-address-book"
+                },
+                "save_index": {
+                    "type": "boolean",
+                    "description": "Save STAR index if generated within pipeline.",
+                    "fa_icon": "fas fa-save"
                 },
                 "igenomes_base": {
                     "type": "string",
@@ -94,19 +108,23 @@
                 "adapter": {
                     "type": "string",
                     "description": "Sequencing adapter for trimming",
-                    "default": "AGATCGGAAGAGC"
+                    "default": "AGATCGGAAGAGC",
+                    "fa_icon": "fas fa-angle-double-left"
                 },
                 "deduplicate": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Deduplicate using UMIs"
+                    "description": "Deduplicate using UMIs",
+                    "fa_icon": "fas fa-barcode"
                 },
                 "umi_separator": {
                     "type": "string",
                     "default": ":",
-                    "description": "UMI separator in the FASTA read name"
+                    "description": "UMI separator in the FASTA read name",
+                    "fa_icon": "fas fa-barcode"
                 }
-            }
+            },
+            "fa_icon": "fas fa-barcode"
         },
         "peak_calling_options": {
             "title": "Peak calling options",
@@ -117,57 +135,96 @@
                 "peakcaller": {
                     "type": "string",
                     "description": "Which peakcaller(s) to use",
-                    "default": "None"
+                    "default": "None",
+                    "fa_icon": "fas fa-mountain"
                 },
                 "segment": {
                     "type": "string",
-                    "description": "Path to iCount segment file"
+                    "description": "Path to iCount segment file",
+                    "fa_icon": "fas fa-file-code"
                 },
                 "half_window": {
                     "type": "integer",
                     "default": 3,
-                    "description": "iCount half-window setting"
+                    "description": "iCount half-window setting",
+                    "fa_icon": "far fa-window-maximize"
                 },
                 "merge_window": {
                     "type": "integer",
                     "default": 3,
-                    "description": "iCount merge-window setting"
+                    "description": "iCount merge-window setting",
+                    "fa_icon": "fas fa-object-group"
                 },
                 "min_value": {
                     "type": "integer",
                     "default": 10,
-                    "description": "Paraclu minimum cluster count"
+                    "description": "Paraclu minimum cluster count",
+                    "fa_icon": "fas fa-calculator"
                 },
                 "min_density_increase": {
                     "type": "integer",
                     "default": 2,
-                    "description": "Paraclu minimum density increase"
+                    "description": "Paraclu minimum density increase",
+                    "fa_icon": "fas fa-calculator"
                 },
                 "max_cluster_length": {
                     "type": "integer",
                     "default": 200,
-                    "description": "Paraclu maximum cluster length"
+                    "description": "Paraclu maximum cluster length",
+                    "fa_icon": "fas fa-object-group"
                 },
-                "bc": {
+                "pureclip_bc": {
                     "type": "integer",
-                    "description": "PureCLIP binding characteristics"
+                    "description": "PureCLIP binding characteristics of protein",
+                    "default": "0",
+                    "fa_icon": "fas fa-file-contract"
                 },
-                "dm": {
-                    "type": "integer",
-                    "default": 8,
-                    "description": "PureCLIP merging distance"
+                "pureclip_dm": {
+                    "type": "string",
+                    "description": "PureCLIP merge distance",
+                    "default": "8",
+                    "fa_icon": "fas fa-object-group"
+                },
+                "pureclip_iv": {
+                    "type": "string",
+                    "description": "PureCLIP chromosomes for HMM training",
+                    "default": "all",
+                    "fa_icon": "fas fa-dna"
                 },
                 "bin_size_both": {
                     "type": "integer",
                     "default": 3,
-                    "description": "Piranha bin size"
+                    "description": "Piranha bin size",
+                    "fa_icon": "fas fa-window-maximize"
                 },
                 "cluster_dist": {
                     "type": "integer",
                     "default": 3,
-                    "description": "Piranha clustering distance"
+                    "description": "Piranha clustering distance",
+                    "fa_icon": "fas fa-object-group"
                 }
-            }
+            },
+            "fa_icon": "fas fa-mountain"
+        },
+        "motif_finding": {
+            "title": "Motif finding",
+            "type": "object",
+            "description": "Define motif finding parameters",
+            "default": "",
+            "properties": {
+                "motif": {
+                    "type": "boolean",
+                    "description": "Perform motif finding",
+                    "fa_icon": "fas fa-sort-alpha-down"
+                },
+                "motif_sample": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Sample n peaks for motif finding",
+                    "fa_icon": "fas fa-check-circle"
+                }
+            },
+            "fa_icon": "fas fa-font"
         },
         "generic_options": {
             "title": "Generic options",
@@ -347,6 +404,9 @@
             "$ref": "#/definitions/peak_calling_options"
         },
         {
+            "$ref": "#/definitions/motif_finding"
+        },
+        {
             "$ref": "#/definitions/generic_options"
         },
         {
@@ -355,15 +415,5 @@
         {
             "$ref": "#/definitions/institutional_config_options"
         }
-    ],
-    "properties": {
-        "smrna_org": {
-            "type": "string",
-            "description": "Organism for small RNA reference."
-        },
-        "save_index": {
-            "type": "boolean",
-            "description": "Save STAR index if generated within pipeline."
-        }
-    }
+    ]
 }

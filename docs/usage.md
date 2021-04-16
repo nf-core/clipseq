@@ -97,20 +97,20 @@ You will need to create a design file with information about the samples in your
 --input '[path to design file]'
 ```
 
-It has to be a comma-separated file with 2 columns, and a header row as shown in the examples below. The column headers must be `sample_id` and `data1`. By naming the `sample_id` rows uniquely, one can identify and simultaneously run multiple replicates and samples:
+It has to be a comma-separated file with 2 columns, and a header row as shown in the examples below. The column headers must be `sample` and `fastq`. By naming the `sample` rows uniquely, one can identify and simultaneously run multiple replicates and samples:
 
 ```bash
-sample_id,data1
-exp1_rep1,clip0001_01.fastq.gz,
-exp1_rep2,clip0001_02.fastq.gz,
-exp2_rep1,clip0002_01.fastq.gz,
+sample,fastq
+exp1_rep1,clip0001_01.fastq.gz
+exp1_rep2,clip0001_02.fastq.gz
+exp2_rep1,clip0002_01.fastq.gz
 exp2_rep2,clip0002_02.fastq.gz
 ```
 
 | Column         | Description                                                                                                 |
 |----------------|-------------------------------------------------------------------------------------------------------------|
-| `sample_id`        | Unique identifier for read, which may include information about sample and replicate. |
-| `data1`    | Full path to FastQ file for read. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `sample`        | Unique identifier for read, which may include information about sample and replicate. |
+| `fastq`    | Full path to FastQ file for read. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
 
 ### `--fasta`
 

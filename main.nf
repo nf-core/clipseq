@@ -9,8 +9,6 @@
 ----------------------------------------------------------------------------------------
 */
 
-import java.util.zip.GZIPInputStream
-
 def helpMessage() {
     log.info nfcoreHeader()
     log.info"""
@@ -51,10 +49,13 @@ def helpMessage() {
       --min_value [int]               Paraclu minimum cluster count/value (default: 10)
       --min_density_increase [int]    Paraclu minimum density increase (default: 2)
       --max_cluster_length [int]      Paraclu maximum cluster length (default: 2)
-      --bc [int]                      PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
-      --dm [str]                      PureCLIP merge distnace (default: 8)
+      --pureclip_bc [int]             PureCLIP flag to set parameters according to binding characteristics of protein (default: 0)
+      --pureclip_dm [str]             PureCLIP merge distance (default: 8)
+      --pureclip_iv [str]             PureCLIP chromosomes for HMM training (default: all)
       --bin_size_both [int]           Piranha bin size (default: 3)
       --cluster_dist [int]            Piranha cluster distance (default: 3)
+      --motif [bool]                  DREME motif finding (default: false)
+      --motif_sample [int]            DREME number of peaks to sample for motif finding (default: 1000)
 
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -72,7 +73,6 @@ def helpMessage() {
     """.stripIndent()
 }
 
-    //   --iv [str]                      PureCLIP genomic chromosomes to learn HMM parameters, (default: 'chr1;chr2;chr3')
 
 // Show help message
 if (params.help) {
@@ -127,64 +127,34 @@ if(!params.smrna_fasta) {
     }
 }
 
-// Set up peak caller logic
-def paraclu_check = false
-def icount_check = false
-def pureclip_check = false
-def piranha_check = false
+/*---- Check Peakcaller Options ---*/
 
-if (params.peakcaller){
+callerList = [ 'icount', 'paraclu', 'pureclip', 'piranha']
+callers = params.peakcaller ? params.peakcaller.split(',').collect{ it.trim().toLowerCase() } : []
+if ((callerList + callers).unique().size() != callerList.size()) {
+    exit 1, "Invalid variant calller option: ${params.peakcaller}. Valid options: ${callerList.join(', ')}"
+}
 
-    def peak_list = params.peakcaller.split(',').collect()
-    peak_list.each {
-        if ( it == 'all') {
-            paraclu_check = true
-            icount_check = true
-            pureclip_check = true
-            piranha_check = true
-        } else if ( it == 'paraclu' && !paraclu_check ) {
-            paraclu_check = true
-        } else if ( it == 'icount' && !icount_check ) {
-            icount_check = true
-        } else if ( it == 'pureclip' && !pureclip_check ) {
-            pureclip_check = true
-        } else if ( it == 'piranha' && !piranha_check ) {
-            piranha_check = true
-        } else {
-            exit 1, "Invalid peak caller option: ${it}. Valid options: 'icount', 'paraclu', 'pureclip', 'piranha'"
-        }
-    }
+if ('icount' in callers) {
+    icount_check = true
+} else {
+    icount_check = false
+}
+
+// Check genome is igenomes is used and icount peakcaller
+// icount_compatible = [ 'GRCh37', 'GRCm38', 'TAIR10', 'EB2', 'UMD3.1', 'WBcel235', 'CanFam3.1', 'GRCz10', 'BDGP6', 'EquCab2', 'EB1', 'Galgal4', 'Gm01', 'Mmul_1', 'IRGSP-1.0', 'CHIMP2.1.4', 'Rnor_6.0', 'Rnor_5.0','R64-1-1', 'EF2', 'Sbi1', 'Sscrofa10.2', 'AGPv3' ]
+icount_compatible = [] // Currently none of the iGenomes GTFs are compatible (even Ensembl - as different to the ones downloaded directly from Ensembl)
+if (params.genome && ('icount' in callers) && !(params.genome in icount_compatible)) {
+    icount_check = false
+    log.warn "The provided genome '${params.genome}' is not compatible with the iCount peakcaller, so it will be skipped. Please see documentation"
 }
 
 // cannot run icount wihtout gtf file
-if (!params.gtf && icount_check) {
+if (!params.gtf && 'icount' in callers) {
     icount_check = false
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-def gtf_check = false
-String gtf_file_str = ""
-String gtf_col_3 = ""
-if (params.gtf && icount_check) {
-    if (hasExtension(params.gtf, 'gz')) {
-        gtf_file_str = "${workflow.workDir}/tmp_gtf.txt"
-        decompressGzipFile(params.gtf, gtf_file_str)
-    } else {
-        gtf_file_str = params.gtf
-    }
-    File gtf_file = new File(gtf_file_str)
-    boolean compatibility = check_gtf_by_line( gtf_file, 30 )
-    if (hasExtension(params.gtf, 'gz')) {
-        boolean fileSuccessfullyDeleted =  new File("${workflow.workDir}/tmp_gtf.txt").delete()
-    }
-    if (compatibility) {
-        gtf_check = true
-    }
-    if (!gtf_check) {
-        icount_check = false
-        log.warn "The supplied gtf file is not compatible with iCount. Peakcalling with iCount will be skipped"
-    }
-}
 
 // Has the run name been specified by the user?
 // this has the bonus effect of catching both -name and --name
@@ -223,6 +193,7 @@ params.deduplicate = true
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
 if (params.gtf) ch_check_gtf = Channel.value(params.gtf)
+
 // fai channels
 if (params.fai) ch_fai_crosslinks = Channel.value(params.fai)
 if (params.fai) ch_fai_icount = Channel.value(params.fai)
@@ -231,16 +202,16 @@ if (params.fai) ch_fai_paraclu_motif = Channel.value(params.fai)
 if (params.fai) ch_fai_size = Channel.value(params.fai)
 
 // MultiQC empty channels from peakcaller checks
-if (!paraclu_check) ch_paraclu_qc = Channel.empty()
-if (!icount_check) ch_icount_qc = Channel.empty()
-if (!piranha_check) ch_piranha_qc = Channel.empty()
-if (!pureclip_check) ch_pureclip_qc = Channel.empty()
+if (!('paraclu' in callers)) ch_paraclu_qc = Channel.empty()
+if (!('icount' in callers) || !icount_check) ch_icount_qc = Channel.empty()
+if (!('piranha' in callers)) ch_piranha_qc = Channel.empty()
+if (!('pureclip' in callers)) ch_pureclip_qc = Channel.empty()
 
 if (params.input) {
     Channel
         .fromPath(params.input, checkIfExists: true)
         .splitCsv(header:true)
-        .map{ row -> [ row.sample_id, file(row.data1, checkIfExists: true) ] }
+        .map{ row -> [ row.sample, file(row.fastq, checkIfExists: true) ] }
         .into{ ch_fastq; ch_fastq_fastqc_pretrim }
 } else {
     exit 1, "Samples comma-separated input file not specified"
@@ -263,20 +234,21 @@ if (params.gtf)                                  summary['GTF ref'] = params.gtf
 if (params.star_index)                           summary['STAR index'] = params.star_index
 if (params.save_index)                           summary['Save STAR index?'] = params.save_index
 if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
-if (params.smrna_fasta)                          summary['SmalRNA ref'] = [params.smrna_fasta]
+if (params.smrna_fasta)                          summary['SmallRNA ref'] = params.smrna_fasta
 if (params.deduplicate)                          summary['Deduplicate'] = params.deduplicate
 if (params.deduplicate && params.umi_separator)  summary['UMI separator'] = params.umi_separator
 if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
 if (params.segment)                              summary['iCount segment'] = params.segment
 if (icount_check)                                summary['Half window'] = params.half_window
 if (icount_check)                                summary['Merge window'] = params.merge_window
-if (paraclu_check)                               summary['Min value'] = params.min_value
-if (paraclu_check)                               summary['Max density increase'] = params.min_density_increase
-if (paraclu_check)                               summary['Max cluster length'] = params.max_cluster_length
-if (pureclip_check)                              summary['Protein binding parameter'] = params.bc
-if (pureclip_check)                              summary['Crosslink merge distance'] = params.dm
-if (piranha_check)                               summary['Bin size'] = params.bin_size_both
-if (piranha_check)                               summary['Cluster distance'] = params.cluster_dist
+if ('paraclu' in callers)                     summary['Min value'] = params.min_value
+if ('paraclu' in callers)                     summary['Max density increase'] = params.min_density_increase
+if ('paraclu' in callers)                     summary['Max cluster length'] = params.max_cluster_length
+if ('pureclip' in callers)                    summary['Protein binding parameter'] = params.pureclip_bc
+if ('pureclip' in callers)                    summary['Crosslink merge distance'] = params.pureclip_dm
+if ('pureclip' in callers)                    summary['Chromosomes for HMM'] = params.pureclip_iv
+if ('piranha' in callers)                     summary['Bin size'] = params.bin_size_both
+if ('piranha' in callers)                     summary['Cluster distance'] = params.cluster_dist
 summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine)                    summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']                            = params.outdir
@@ -409,7 +381,6 @@ if (params.fasta) {
     } else {
         Channel
             .fromPath(params.fasta, checkIfExists: true)
-            .ifEmpty { exit 1, "Genome reference fasta not found: ${params.fasta}" }
             .into { ch_fasta; ch_fasta_fai; ch_fasta_dreme_icount; ch_fasta_dreme_paraclu; ch_fasta_pureclip; ch_fasta_dreme_pureclip; ch_fasta_dreme_piranha }
     }
 }
@@ -443,22 +414,22 @@ if (params.fasta) {
 
 if (!params.fai) {
     process generate_fai {
-            tag "$fasta"
-            label 'process_low'
+        tag "$fasta"
+        label 'process_low'
 
-            input:
-            path(fasta) from ch_fasta_fai
+        input:
+        path(fasta) from ch_fasta_fai
 
-            output:
-            path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
+        output:
+        path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
 
-            script:
+        script:
 
-            command = "samtools faidx $fasta"
+        command = "samtools faidx $fasta"
 
-            """
-            ${command}
-            """
+        """
+        ${command}
+        """
     }
 }
 
@@ -502,11 +473,6 @@ if (!params.star_index) {
     // transform genome size to calculate genomeSAindexNbases to generate STAR index
     ch_genomeSAindexNbases = ch_genome_size
     .map { it -> it.getText("UTF-8") as int }
-    // .map { it -> (it / 2) - 1 }
-    // .map { it -> Math.round(Math.log(it) / Math.log(2)) }
-    // .map { it -> Math.min( 14, it ).shortValue() }
-    // .map { it -> it.toString() }
-
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
@@ -560,7 +526,7 @@ if (!params.star_index) {
             """
         }
     } else if (!params.gtf){
-            process generate_star_index_no_gtf {
+        process generate_star_index_no_gtf {
 
             tag "$fasta"
             label 'process_high'
@@ -578,14 +544,14 @@ if (!params.star_index) {
 
             """
             mkdir STAR_${fasta.baseName}
-            STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
-            --genomeDir STAR_${fasta.baseName} \
-            --genomeFastaFiles $fasta \
-            --genomeSAindexNbases $sa_ind_base \
+            STAR \\
+                --runMode genomeGenerate --runThreadN ${task.cpus} \\
+                --genomeDir STAR_${fasta.baseName} \\
+                --genomeFastaFiles $fasta \\
+                --genomeSAindexNbases $sa_ind_base \\
             """
         }
     }
-
 }
 
 
@@ -618,6 +584,8 @@ if (params.peakcaller && icount_check) {
             script:
 
             """
+            mkdir tmp
+            export ICOUNT_TMP_ROOT=\$PWD/tmp
             iCount segment $gtf icount_${gtf} $fai
             """
 
@@ -655,7 +623,6 @@ process fastqc {
 
     output:
     file "*fastqc.{zip,html}" into ch_fastqc_pretrim_mqc
-    // tuple val(name), path(reads) into ch_fastqc_pretrim_mqc
 
     script:
 
@@ -669,7 +636,6 @@ process fastqc {
     fastqc --quiet --threads $task.cpus ${new_reads}
     mv ${new_reads_simple}*.html ${name}_reads_fastqc.html
     mv ${new_reads_simple}*.zip ${name}_reads_fastqc.zip
-
     """
 }
 
@@ -700,11 +666,7 @@ process cutadapt {
 }
 
 /*
- * STEP 3 - Post-trimming FastQC
- */
-
-/*
- * STEP 4 - Premapping
+ * STEP 3 - Premapping
  */
 
 if (params.smrna_fasta) {
@@ -740,7 +702,7 @@ if (params.smrna_fasta) {
 }
 
 /*
- * STEP 5 - Aligning
+ * STEP 4 - Aligning
  */
 
 process align {
@@ -773,9 +735,12 @@ process align {
                 --outSAMtype BAM Unsorted"
 
     """
-    STAR --runThreadN $task.cpus --runMode alignReads --genomeDir $index \
-    --readFilesIn $reads --readFilesCommand gunzip -c \
-    --outFileNamePrefix ${name}. $clip_args
+    STAR \\
+        --runThreadN $task.cpus \\
+        --runMode alignReads \\
+        --genomeDir $index \\
+        --readFilesIn $reads --readFilesCommand gunzip -c \\
+        --outFileNamePrefix ${name}. $clip_args
 
     samtools sort -@ $task.cpus -o ${name}.Aligned.sortedByCoord.out.bam ${name}.Aligned.out.bam
     samtools index -@ $task.cpus ${name}.Aligned.sortedByCoord.out.bam
@@ -891,7 +856,7 @@ if (params.gtf) {
     
 }
 /*
- * STEP 6 - Identify crosslinks
+ * STEP 7 - Identify crosslinks
  */
 
 process get_crosslinks {
@@ -924,7 +889,7 @@ process get_crosslinks {
 }
 
 /*
- * STEP 7a - Peak-call (iCount)
+ * STEP 8a - Peak-call (iCount)
  */
 
 if (params.peakcaller && icount_check) {
@@ -950,6 +915,9 @@ if (params.peakcaller && icount_check) {
         merge_window = params.merge_window
 
         """
+        mkdir tmp
+        ICOUNT_TMP_ROOT=\$PWD/tmp
+
         iCount peaks $segment $xlinks ${name}.${half_window}nt.sigxl.bed.gz --half_window ${half_window} --fdr 0.05
 
         pigz -d -c ${name}.${half_window}nt.sigxl.bed.gz | \
@@ -960,46 +928,56 @@ if (params.peakcaller && icount_check) {
 
     }
 
-    process icount_motif_dreme {
+    if(params.motif) {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/icount_motif", mode: params.publish_dir_mode
+        process icount_motif_dreme {
 
-        input:
-        tuple val(name), path(peaks) from ch_peaks_icount
-        path(fasta) from ch_fasta_dreme_icount.collect()
-        path(fai) from ch_fai_icount_motif.collect()
+            tag "$name"
+            label 'process_low'
+            publishDir "${params.outdir}/icount_motif", mode: params.publish_dir_mode
 
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
+            input:
+            tuple val(name), path(peaks) from ch_peaks_icount
+            path(fasta) from ch_fasta_dreme_icount.collect()
+            path(fai) from ch_fai_icount_motif.collect()
 
-        script:
+            output:
+            tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
 
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            script:
 
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+            motif_sample = params.motif_sample
 
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
+            """
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            shuf -n $motif_sample > resized_peaks.bed
+
+            bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+            dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+            """
+
+        }
 
     }
 
 }
 
 /*
- * STEP 7b - Peak-call (paraclu)
+ * STEP 8b - Peak-call (paraclu)
  */
 
-if (params.peakcaller && paraclu_check) {
 
+if ('paraclu' in callers) {
     process paraclu_peak_call {
 
         tag "$name"
         label 'process_low'
         publishDir "${params.outdir}/paraclu", mode: params.publish_dir_mode
+
+        when:
+        'paraclu' in callers
 
         input:
         tuple val(name), path(xlinks) from ch_xlinks_paraclu
@@ -1028,46 +1006,59 @@ if (params.peakcaller && paraclu_check) {
 
     }
 
+    if(params.motif) {
+
     process paraclu_motif_dreme {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
+            tag "$name"
+            label 'process_low'
+            publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
+
+        when:
+        'paraclu' in callers
 
         input:
         tuple val(name), path(peaks) from ch_peaks_paraclu
         path(fasta) from ch_fasta_dreme_paraclu.collect()
         path(fai) from ch_fai_paraclu_motif.collect()
 
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
+            output:
+            tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
 
-        script:
+            script:
 
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            motif_sample = params.motif_sample
 
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+            """
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            shuf -n $motif_sample > resized_peaks.bed
 
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
+            bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+            dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+            """
+
+        }
 
     }
-
 }
 
+
 /*
- * STEP 7c - Peak-call (PureCLIP)
+ * STEP 8c - Peak-call (PureCLIP)
  */
 
-if (params.peakcaller && pureclip_check) {
+if ('pureclip' in callers) {
 
-    process pureclip_peak_call {
+process pureclip_peak_call {
 
         tag "$name"
         label 'process_high'
         publishDir "${params.outdir}/pureclip", mode: params.publish_dir_mode
+
+        when:
+        'pureclip' in callers
 
         input:
         tuple val(name), path(bam), path(bai) from ch_dedup_pureclip
@@ -1080,66 +1071,78 @@ if (params.peakcaller && pureclip_check) {
 
         script:
 
-        // iv = params.iv
-        bc = params.bc
-        dm = params.dm
+        dm = params.pureclip_dm
+
+        args = " -bc " + params.pureclip_bc
+        args += " -dm " + params.pureclip_dm
+        if(params.pureclip_iv) args += " -iv '" + params.pureclip_iv + "' "
 
         """
         pureclip \
-        -i $bam \
-        -bai $bai \
-        -g $fasta \
-        -nt $task.cpus \
-        -bc $bc \
-        -dm $dm \
-        -o "${name}.sigxl.bed" \
-        -or "${name}.${dm}nt.peaks.bed"
+            -i $bam \
+            -bai $bai \
+            -g $fasta \
+            -nt $task.cpus \
+            $args \
+            -o "${name}.sigxl.bed" \
+            -or "${name}.${dm}nt.peaks.bed"
 
         pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
         """
 
     }
 
-    process pureclip_motif_dreme {
+    if(params.motif) {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
+        process pureclip_motif_dreme {
 
-        input:
-        tuple val(name), path(peaks) from ch_peaks_pureclip
-        path(fasta) from ch_fasta_dreme_pureclip.collect()
-        path(fai) from ch_fai_pureclip_motif.collect()
+            tag "$name"
+            label 'process_low'
+            publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
 
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
+            input:
+            tuple val(name), path(peaks) from ch_peaks_pureclip
+            path(fasta) from ch_fasta_dreme_pureclip.collect()
+            path(fai) from ch_fai_pureclip_motif.collect()
 
-        script:
+            output:
+            tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
 
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            script:
 
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+            motif_sample = params.motif_sample
 
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
+            """
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            shuf -n $motif_sample > resized_peaks.bed
+
+            bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+            dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+            """
+
+        }
 
     }
-
 }
 
+
 /*
- * STEP 7d - Peak-call (Piranha)
+ * STEP 8d - Peak-call (Piranha)
  */
 
-if (params.peakcaller && piranha_check) {
+
+if ('piranha' in callers) {
 
     process piranha_peak_call {
 
         tag "$name"
         label 'process_high'
         publishDir "${params.outdir}/piranha", mode: params.publish_dir_mode
+
+        when:
+        'piranha' in callers
 
         input:
         tuple val(name), path(xlinks) from ch_xlinks_piranha
@@ -1172,33 +1175,39 @@ if (params.peakcaller && piranha_check) {
 
     }
 
-    process piranha_motif_dreme {
+    if(params.motif) {
 
-        tag "$name"
-        label 'process_low'
-        publishDir "${params.outdir}/piranha_motif", mode: params.publish_dir_mode
+        process piranha_motif_dreme {
 
-        input:
-        tuple val(name), path(peaks) from ch_peaks_piranha
-        path(fasta) from ch_fasta_dreme_piranha.collect()
-        path(fai) from ch_fai_piranha_motif.collect()
+            tag "$name"
+            label 'process_low'
+            publishDir "${params.outdir}/piranha_motif", mode: params.publish_dir_mode
 
-        output:
-        tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_piranha
+            input:
+            tuple val(name), path(peaks) from ch_peaks_piranha
+            path(fasta) from ch_fasta_dreme_piranha.collect()
+            path(fai) from ch_fai_piranha_motif.collect()
 
-        script:
+            output:
+            tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_piranha
 
-        """
-        pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-        bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai > resized_peaks.bed
+            script:
 
-        bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+            motif_sample = params.motif_sample
 
-        dreme -norc -o ${name}_dreme -p resized_peaks.fasta
-        """
+            """
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            shuf -n $motif_sample > resized_peaks.bed
+
+            bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
+
+            dreme -norc -o ${name}_dreme -p resized_peaks.fasta
+            """
+
+        }
 
     }
-
 }
 
 /*
@@ -1216,7 +1225,7 @@ process clipqc {
     file ('mapped/*') from ch_align_qc.collect().ifEmpty([])
     file ('dedup/*') from ch_dedup_qc.collect().ifEmpty([])
     file ('xlinks/*') from ch_xlinks_qc.collect().ifEmpty([])
-    file ('icount/*') from ch_icount_qc.collect().ifEmpty([])
+    path ('icount/*') from ch_icount_qc.collect().ifEmpty([])
     file ('paraclu/*') from ch_paraclu_qc.collect().ifEmpty([])
     file ('pureclip/*') from ch_pureclip_qc.collect().ifEmpty([])
     file ('piranha/*') from ch_piranha_qc.collect().ifEmpty([])
@@ -1228,19 +1237,19 @@ process clipqc {
 
     clip_qc_args = ''
 
-    if (icount_check) {
+    if ('icount' in callers && icount_check) {
         clip_qc_args += ' icount '
     }
 
-    if (paraclu_check) {
+    if ('paraclu' in callers) {
         clip_qc_args += ' paraclu '
     }
 
-    if (pureclip_check) {
+    if ('pureclip' in callers) {
         clip_qc_args += ' pureclip '
     }
 
-    if (piranha_check) {
+    if ('piranha' in callers) {
         clip_qc_args += ' piranha '
     }
 
@@ -1257,12 +1266,11 @@ process multiqc {
 
     tag "$name"
     label 'process_low'
-    publishDir "${params.outdir}/MultiQC", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/multiqc", mode: params.publish_dir_mode
 
     input:
     file (multiqc_config) from ch_multiqc_config
     file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-    // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from ch_fastqc_pretrim_mqc.collect().ifEmpty([])
     file ('cutadapt/*') from ch_cutadapt_mqc.collect().ifEmpty([])
     file ('premap/*') from ch_premap_mqc.collect().ifEmpty([])
@@ -1271,8 +1279,8 @@ process multiqc {
     path ('rseqc/*') from ch_rseqc_mqc.collect().ifEmpty([])
     file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
     //file ('dedup/*') from ch_dedup_mqc
-    //file ('software_versions/*') from ch_software_versions_yaml.collect()
-    //file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
+    file ('software_versions/*') from ch_software_versions_yaml.collect()
+    file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
     output:
     file "*multiqc_report.html" into ch_multiqc_report
@@ -1288,24 +1296,24 @@ process multiqc {
     """
 }
 
-// /*
-//  * STEP 3 - Output Description HTML
-//  */
-// process output_documentation {
-//     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
-//
-//     input:
-//     file output_docs from ch_output_docs
-//     file images from ch_output_docs_images
+/*
+ * STEP 10 - Output Description HTML
+ */
+process output_documentation {
+    publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
 
-//     output:
-//     file "results_description.html"
+    input:
+    file output_docs from ch_output_docs
+    file images from ch_output_docs_images
 
-//     script:
-//     """
-//     markdown_to_html.py $output_docs -o results_description.html
-//     """
-// }
+    output:
+    file "results_description.html"
+
+    script:
+    """
+    markdown_to_html.py $output_docs -o results_description.html
+    """
+}
 
 /*
 ================================================================================
@@ -1435,58 +1443,6 @@ workflow.onComplete {
 // Check file extension - from nf-core/rnaseq
 def hasExtension(it, extension) {
     it.toString().toLowerCase().endsWith(extension.toLowerCase())
-}
-
-// Decompress file
-def decompressGzipFile(String gzipFile, String newFile) {
-    try {
-        FileInputStream fis = new FileInputStream(gzipFile);
-        GZIPInputStream gis = new GZIPInputStream(fis);
-        FileOutputStream fos = new FileOutputStream(newFile);
-        byte[] buffer = new byte[1024];
-        int len;
-        while((len = gis.read(buffer)) != -1){
-            fos.write(buffer, 0, len);
-        }
-        //close resources
-        fos.close();
-        gis.close();
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
-
-def boolean check_gtf_by_line( File f, int n ) {
-  boolean compatible = false
-  int count = 0
-  boolean gene = false
-  boolean ensembl = false
-  boolean gencode = false
-  f.withReader { r ->
-    while( count<n && ( !gene && ( !ensembl || !gencode ) ) ) {
-        line = r.readLine();
-        count = count + 1;
-        if (!gene) {
-            if (line =~ /\bgene\b/) {
-                gene = true
-            }
-        };
-        if (gene && !ensembl) {
-            if(line.contains('ensembl')) {
-                ensembl = true
-            }
-        };
-        if (!gene && !gencode) {
-            if(line.contains('GENCODE')){
-                gencode = true
-            }
-        };
-        if (gene && ( ensembl || gencode )) {
-            compatible = true
-        };
-    }
-  }
-  compatible
 }
 
 def nfcoreHeader() {
