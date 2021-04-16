@@ -381,7 +381,7 @@ if (!params.star_index) {
 
     // Calculate genomeSAindexNbases for building star index
     process check_genome_size {
-        tag "$name"
+        tag "$fai"
         label 'process_low'
 
         input:
@@ -1067,7 +1067,6 @@ if ('piranha' in callers) {
  * STEP 8 - QC plots
  */
 process clipqc {
-    tag "$name"
     label 'process_low'
     publishDir "${params.outdir}/clipqc", mode: params.publish_dir_mode 
 
@@ -1112,7 +1111,6 @@ process clipqc {
  * STEP 9 - MultiQC
  */
 process multiqc {
-    tag "$name"
     label 'process_low'
     publishDir "${params.outdir}/multiqc", mode: params.publish_dir_mode
 

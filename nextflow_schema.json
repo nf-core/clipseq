@@ -141,7 +141,6 @@
                 "peakcaller": {
                     "type": "string",
                     "description": "Which peakcaller(s) to use",
-                    "default": "None",
                     "fa_icon": "fas fa-mountain"
                 },
                 "segment": {
