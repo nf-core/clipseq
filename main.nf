@@ -320,7 +320,6 @@ if (params.fasta) {
 
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
-
         process decompress_fasta {
             tag "$fasta_gz"
             label 'process_low'
@@ -364,7 +363,6 @@ if (!params.fai) {
  * Generating STAR index
  */
 if (!params.star_index) {
-
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
             ch_gtf_gz_star = Channel
@@ -395,12 +393,10 @@ if (!params.star_index) {
     }
 
     // transform genome size to calculate genomeSAindexNbases to generate STAR index
-    ch_genomeSAindexNbases = ch_genome_size
-    .map { it -> it.getText("UTF-8") as int }
+    ch_genomeSAindexNbases = ch_genome_size.map { it -> it.getText("UTF-8") as int }
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
-
             process decompress_gtf {
                 tag "$gtf_gz"
                 label 'process_low'
@@ -420,7 +416,6 @@ if (!params.star_index) {
     }
 
     if (params.gtf) {
-
         process generate_star_index {
             tag "$fasta"
             label 'process_high'
@@ -448,7 +443,7 @@ if (!params.star_index) {
                 --sjdbGTFfile $gtf
             """
         }
-    } else if (!params.gtf){
+    } else if (!params.gtf) {
         process generate_star_index_no_gtf {
             tag "$fasta"
             label 'process_high'
@@ -482,7 +477,7 @@ if (!params.star_index) {
  */
 // iCount GTF input autodetects gz
 if (params.peakcaller && icount_check) {
-    if(!params.segment) {
+    if (!params.segment) {
 
         ch_gtf_icount = Channel
             .fromPath(params.gtf, checkIfExists: true)
@@ -506,7 +501,6 @@ if (params.peakcaller && icount_check) {
             iCount segment $gtf icount_${gtf} $fai
             """
         }
-
     } else {
         ch_segment = Channel.value(params.segment)
     }
@@ -764,7 +758,6 @@ process get_crosslinks {
  * STEP 8a - Peak-call (iCount)
  */
 if (params.peakcaller && icount_check) {
-
     process icount_peak_call {
         tag "$name"
         label 'process_low'
@@ -796,7 +789,6 @@ if (params.peakcaller && icount_check) {
     }
 
     if (params.motif) {
-
         process icount_motif_dreme {
             tag "$name"
             label 'process_low'
@@ -862,7 +854,6 @@ if ('paraclu' in callers) {
     }
 
     if (params.motif) {
-
         process paraclu_motif_dreme {
             tag "$name"
             label 'process_low'
@@ -898,7 +889,6 @@ if ('paraclu' in callers) {
  * STEP 8c - Peak-call (PureCLIP)
  */
 if ('pureclip' in callers) {
-
     process pureclip_peak_call {
         tag "$name"
         label 'process_high'
@@ -936,7 +926,6 @@ if ('pureclip' in callers) {
     }
 
     if (params.motif) {
-
         process pureclip_motif_dreme {
             tag "$name"
             label 'process_low'
@@ -970,7 +959,6 @@ if ('pureclip' in callers) {
  * STEP 8d - Peak-call (Piranha)
  */
 if ('piranha' in callers) {
-
     process piranha_peak_call {
         tag "$name"
         label 'process_high'
@@ -1007,7 +995,6 @@ if ('piranha' in callers) {
     }
 
     if (params.motif) {
-
         process piranha_motif_dreme {
             tag "$name"
             label 'process_low'
