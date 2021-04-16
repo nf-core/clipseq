@@ -354,9 +354,8 @@ if (!params.fai) {
         path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
 
         script:
-        command = "samtools faidx $fasta"
         """
-        ${command}
+        samtools faidx $fasta
         """
     }
 }
@@ -393,7 +392,6 @@ if (!params.star_index) {
         """
         awk '{total = total + \$2}END{if ((log(total)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(total)/log(2))/2 - 1}}' $fai > genome_size.txt
         """
-
     }
 
     // transform genome size to calculate genomeSAindexNbases to generate STAR index
@@ -440,6 +438,7 @@ if (!params.star_index) {
             script:
             """
             mkdir STAR_${fasta.baseName}
+
             STAR \\
                 --runMode genomeGenerate \\
                 --runThreadN ${task.cpus} \\
@@ -466,6 +465,7 @@ if (!params.star_index) {
             script:
             """
             mkdir STAR_${fasta.baseName}
+
             STAR \\
                 --runMode genomeGenerate --runThreadN ${task.cpus} \\
                 --genomeDir STAR_${fasta.baseName} \\
@@ -613,17 +613,17 @@ process align {
     path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
-    clip_args = "--outFilterMultimapNmax 1 \
-                --outFilterMultimapScoreRange 1 \
-                --outSAMattributes All \
-                --alignSJoverhangMin 8 \
-                --alignSJDBoverhangMin 1 \
-                --outFilterType BySJout \
-                --alignIntronMin 20 \
-                --alignIntronMax 1000000 \
-                --outFilterScoreMin 10  \
-                --alignEndsType Extend5pOfRead1 \
-                --twopassMode Basic \
+    clip_args = "--outFilterMultimapNmax 1 \\
+                --outFilterMultimapScoreRange 1 \\
+                --outSAMattributes All \\
+                --alignSJoverhangMin 8 \\
+                --alignSJDBoverhangMin 1 \\
+                --outFilterType BySJout \\
+                --alignIntronMin 20 \\
+                --alignIntronMax 1000000 \\
+                --outFilterScoreMin 10  \\
+                --alignEndsType Extend5pOfRead1 \\
+                --twopassMode Basic \\
                 --outSAMtype BAM Unsorted"
     """
     STAR \\
@@ -724,6 +724,7 @@ if (params.gtf) {
         script:
         """
         gtf2bed $gtf > gene.bed
+
         read_distribution.py \\
             -i $bam \\
             -r gene.bed \\
@@ -787,9 +788,9 @@ if (params.peakcaller && icount_check) {
 
         iCount peaks $segment $xlinks ${name}.${half_window}nt.sigxl.bed.gz --half_window ${half_window} --fdr 0.05
 
-        pigz -d -c ${name}.${half_window}nt.sigxl.bed.gz | \
-        bedtools sort | \
-        bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
+        pigz -d -c ${name}.${half_window}nt.sigxl.bed.gz | \\
+        bedtools sort | \\
+        bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \\
         pigz > ${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz
         """
     }
@@ -812,8 +813,8 @@ if (params.peakcaller && icount_check) {
             script:
             motif_sample = params.motif_sample
             """
-            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \\
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \\
             shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
@@ -848,14 +849,14 @@ if ('paraclu' in callers) {
         min_density_increase = params.min_density_increase
         max_cluster_length = params.max_cluster_length
         """
-        pigz -d -c $xlinks | \
-        awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \
+        pigz -d -c $xlinks | \\
+        awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \\
         sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
 
-        paraclu ${min_value} paraclu_input.tsv | \
-        paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \
-        awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
-        bedtools sort |
+        paraclu ${min_value} paraclu_input.tsv | \\
+        paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \\
+        awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' | \\
+        bedtools sort | \\
         pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
         """
     }
@@ -881,8 +882,8 @@ if ('paraclu' in callers) {
             script:
             motif_sample = params.motif_sample
             """
-            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \\
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \\
             shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
@@ -952,8 +953,8 @@ if ('pureclip' in callers) {
             script:
             motif_sample = params.motif_sample
             """
-            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \\
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \\
             shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
@@ -989,8 +990,8 @@ if ('piranha' in callers) {
         bin_size_both = params.bin_size_both
         cluster_dist = params.cluster_dist
         """
-        pigz -d -c $xlinks | \
-        awk '{OFS="\t"}{for(i=0;i<\$5;i++) print }' \
+        pigz -d -c $xlinks | \\
+        awk '{OFS="\t"}{for(i=0;i<\$5;i++) print }' \\
         > expanded.bed
 
         Piranha \\
@@ -1000,7 +1001,7 @@ if ('piranha' in callers) {
             -u $cluster_dist \\
             -o paraclu.bed
 
-        awk '{OFS="\t"}{print \$1, \$2, \$3, ".", \$5, \$6}' paraclu.bed | \
+        awk '{OFS="\t"}{print \$1, \$2, \$3, ".", \$5, \$6}' paraclu.bed | \\
         pigz > ${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz
         """
     }
@@ -1023,8 +1024,8 @@ if ('piranha' in callers) {
             script:
             motif_sample = params.motif_sample
             """
-            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \\
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \\
             shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
