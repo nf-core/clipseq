@@ -40,12 +40,12 @@ By default, the pipeline currently performs the following:
 
 1. Install [`nextflow`](https://nf-co.re/usage/installation)
 
-2. Install any of [`Docker`](https://docs.docker.com/engine/installation/), [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) or [`Podman`](https://podman.io/) for full pipeline reproducibility _(please only use [`Conda`](https://conda.io/miniconda.html) as a last resort; see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))_
+2. Install any of [`Docker`](https://docs.docker.com/engine/installation/), [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/), [`Podman`](https://podman.io/), [`Shifter`](https://nersc.gitlab.io/development/shifter/how-to-use/) or [`Charliecloud`](https://hpc.github.io/charliecloud/) for full pipeline reproducibility _(please only use [`Conda`](https://conda.io/miniconda.html) as a last resort; see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))_
 
 3. Download the pipeline and test it on a minimal dataset with a single command:
 
     ```bash
-    nextflow run nf-core/clipseq -profile test,<docker/singularity/podman/conda/institute>
+    nextflow run nf-core/clipseq -profile test,<docker/singularity/podman/shifter/charliecloud/conda/institute>
     ```
 
     > Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
@@ -53,7 +53,7 @@ By default, the pipeline currently performs the following:
 4. Start running your own analysis!
 
     ```bash
-    nextflow run nf-core/clipseq --input '[path to design file]' --fasta '[path to genome FASTA]' -profile docker
+    nextflow run nf-core/clipseq -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> --input '[path to design file]' --fasta '[path to genome FASTA]'
     ```
 
 See [usage docs](https://nf-co.re/clipseq/usage) for all of the available options when running the pipeline.

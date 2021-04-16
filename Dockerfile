@@ -1,4 +1,4 @@
-FROM nfcore/base:1.12.1
+FROM nfcore/base:1.13.3
 LABEL authors="Charlotte West, Anob Chakrabarti" \
       description="Docker image containing all software requirements for the nf-core/clipseq pipeline"
 
