@@ -228,8 +228,6 @@ if (params.email || params.email_on_fail) {
     summary['E-mail on failure']                 = params.email_on_fail
     summary['MultiQC maxsize']                   = params.max_multiqc_email_size
 }
-log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
-log.info "-\033[2m--------------------------------------------------\033[0m-"
 
 // Check the hostnames against configured profiles
 checkHostname()
@@ -563,10 +561,11 @@ CLIP PIPELINE
 */
 
 /*
- * Parse software version numbers
+ * STEP 1 - FastQC
  */
-process get_software_versions {
-    publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
+
+process fastqc {
+    publishDir "${params.outdir}/fastqc", mode: params.publish_dir_mode,
         saveAs: { filename ->
                       filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
                 }
