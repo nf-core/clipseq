@@ -45,10 +45,16 @@ if (!params.genome && params.smrna_org) {
     if (params.smrna_org in smrna_list) {
         params.smrna_fasta = params.smrna[ params.smrna_org ].smrna_fasta
     } else {
-        log.warn "There is no smRNA available for species '${params.smrna_org}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat. Alternative you can supply your own smRNA fasta using --smrna_fasta"
+        params.smrna_fasta = false
+        log.warn "There is no smRNA available for species '${params.smrna_org}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat, fruitfly, zebrafish, yeast. Alternative you can supply your own smRNA fasta using --smrna_fasta"
     }
 } else {
-    params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
+    if (params.genome && params.smrna.containsKey(params.genome)) {
+        params.smrna_fasta = params.smrna[ params.genome ].smrna_fasta
+    } else {
+        params.smrna_fasta = false
+        log.warn "There is no smRNA available for species '${params.smrna_org}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat, fruitfly, zebrafish, yeast. Alternative you can supply your own smRNA fasta using --smrna_fasta"
+    }
 }
 
 // Auto-load genome files from genome config
