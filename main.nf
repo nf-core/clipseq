@@ -612,6 +612,7 @@ if (params.smrna_fasta) {
 } else {
     ch_unmapped = ch_trimmed
     ch_premap_mqc = Channel.empty()
+    ch_premap_qc = Channel.empty()
 }
 
 /*
