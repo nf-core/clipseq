@@ -30,11 +30,9 @@ if (params.validate_params) {
     NfcoreSchema.validateParameters(params, json_schema, log)
 }
 
-/*
-================================================================================
-SET UP CONFIGURATION VARIABLES
-================================================================================
-*/
+////////////////////////////////////////////////////
+/* --      SET UP CONFIGURATION VARIABLE       -- */
+////////////////////////////////////////////////////
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -53,8 +51,13 @@ if (!params.genome && params.smrna_org) {
     params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
 }
 
+// Auto-load genome files from genome config
+params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
+params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
+params.star_index = params.genome ? params.genomes[ params.genome ].star ?: false : false
+
 ////////////////////////////////////////////////////
-/* --     Collect configuration parameters     -- */
+/* --    COLLECT CONFIGURATION PARAMETERS      -- */
 ////////////////////////////////////////////////////
 
 // Check input path parameters to see if they exist
@@ -104,14 +107,6 @@ if (!params.gtf && 'icount' in callers) {
     log.warn "iCount can only be run with a gtf annotation file - iCount will be skipped"
 }
 
-
-// Has the run name been specified by the user?
-// this has the bonus effect of catching both -name and --name
-custom_runName = params.name
-if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {
-    custom_runName = workflow.runName
-}
-
 // Check AWS batch settings
 if (workflow.profile.contains('awsbatch')) {
     // AWSBatch sanity checking
@@ -129,14 +124,13 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 ch_output_docs = file("$projectDir/docs/output.md", checkIfExists: true)
 ch_output_docs_images = file("$projectDir/docs/images/", checkIfExists: true)
 
-/*
-================================================================================
-SET-UP INPUTS
-================================================================================
-*/
+////////////////////////////////////////////////////
+/* --               SET-UP INPUTS              -- */
+////////////////////////////////////////////////////
 
 params.adapter = "AGATCGGAAGAGC"
-params.umi_separator = ":"
+params.move_umi = false
+params.umi_separator = params.move_umi ? '_' : ':'
 params.deduplicate = true
 
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
@@ -163,10 +157,7 @@ if (params.input) {
         .map{ row -> [ row.sample, file(row.fastq, checkIfExists: true) ] }
         .into{ ch_fastq; ch_fastq_fastqc_pretrim }
 } else {
-    Channel
-        .fromFilePairs(params.input, size: params.single_end ? 1 : 2)
-        .ifEmpty { exit 1, "Cannot find any reads matching: ${params.input}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
-        .into { ch_read_files_fastqc; ch_read_files_trimming }
+    exit 1, "Samples comma-separated input file not specified"
 }
 
 ////////////////////////////////////////////////////
@@ -175,16 +166,13 @@ if (params.input) {
 
 log.info NfcoreSchema.params_summary_log(workflow, params, json_schema)
 
-/*
-================================================================================
-HEADER LOG
-================================================================================
-*/
+////////////////////////////////////////////////////
+/* --               HEADER LOG                 -- */
+////////////////////////////////////////////////////
 
-// Header log info
 def summary = [:]
 if (workflow.revision)                           summary['Pipeline Release'] = workflow.revision
-summary['Run Name']                              = custom_runName ?: workflow.runName
+summary['Run Name']                              = workflow.runName
 summary['Input']                                 = params.input
 if (params.fasta)                                summary['Fasta ref'] = params.fasta
 if (params.gtf)                                  summary['GTF ref'] = params.gtf
@@ -192,20 +180,21 @@ if (params.star_index)                           summary['STAR index'] = params.
 if (params.save_index)                           summary['Save STAR index?'] = params.save_index
 if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
 if (params.smrna_fasta)                          summary['SmallRNA ref'] = params.smrna_fasta
+if (params.move_umi)                             summary['UMI pattern'] = params.move_umi
 if (params.deduplicate)                          summary['Deduplicate'] = params.deduplicate
 if (params.deduplicate && params.umi_separator)  summary['UMI separator'] = params.umi_separator
 if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
 if (params.segment)                              summary['iCount segment'] = params.segment
 if (icount_check)                                summary['Half window'] = params.half_window
 if (icount_check)                                summary['Merge window'] = params.merge_window
-if ('paraclu' in callers)                     summary['Min value'] = params.min_value
-if ('paraclu' in callers)                     summary['Max density increase'] = params.min_density_increase
-if ('paraclu' in callers)                     summary['Max cluster length'] = params.max_cluster_length
-if ('pureclip' in callers)                    summary['Protein binding parameter'] = params.pureclip_bc
-if ('pureclip' in callers)                    summary['Crosslink merge distance'] = params.pureclip_dm
-if ('pureclip' in callers)                    summary['Chromosomes for HMM'] = params.pureclip_iv
-if ('piranha' in callers)                     summary['Bin size'] = params.bin_size_both
-if ('piranha' in callers)                     summary['Cluster distance'] = params.cluster_dist
+if ('paraclu' in callers)                        summary['Min value'] = params.min_value
+if ('paraclu' in callers)                        summary['Max density increase'] = params.min_density_increase
+if ('paraclu' in callers)                        summary['Max cluster length'] = params.max_cluster_length
+if ('pureclip' in callers)                       summary['Protein binding parameter'] = params.pureclip_bc
+if ('pureclip' in callers)                       summary['Crosslink merge distance'] = params.pureclip_dm
+if ('pureclip' in callers)                       summary['Chromosomes for HMM'] = params.pureclip_iv
+if ('piranha' in callers)                        summary['Bin size'] = params.bin_size_both
+if ('piranha' in callers)                        summary['Cluster distance'] = params.cluster_dist
 summary['Max Resources']                         = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine)                    summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']                            = params.outdir
@@ -228,8 +217,6 @@ if (params.email || params.email_on_fail) {
     summary['E-mail on failure']                 = params.email_on_fail
     summary['MultiQC maxsize']                   = params.max_multiqc_email_size
 }
-log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
-log.info "-\033[2m--------------------------------------------------\033[0m-"
 
 // Check the hostnames against configured profiles
 checkHostname()
@@ -265,7 +252,6 @@ process get_software_versions {
     file "software_versions.csv"
 
     script:
-
     """
     echo $workflow.manifest.version > v_pipeline.txt
     echo $workflow.nextflow.version > v_nextflow.txt
@@ -295,19 +281,15 @@ process get_software_versions {
     """
 }
 
-/*
-================================================================================
-PREPROCESSING
-================================================================================
-*/
+////////////////////////////////////////////////////
+/* --             PREPROCESSING                -- */
+////////////////////////////////////////////////////
 
 /*
  * Generating premapping index
  */
-
 if (params.smrna_fasta) {
     process generate_premap_index {
-
         tag "$smrna_fasta"
         label 'process_low'
 
@@ -318,13 +300,11 @@ if (params.smrna_fasta) {
         path("${smrna_fasta.simpleName}.*.bt2") into ch_bt2_index
 
         script:
-
         """
         bowtie2-build --threads $task.cpus $smrna_fasta ${smrna_fasta.simpleName}
         """
     }
 }
-
 
 /*
  * Decompression
@@ -344,9 +324,7 @@ if (params.fasta) {
 
 if (params.fasta) {
     if (hasExtension(params.fasta, 'gz')) {
-
         process decompress_fasta {
-
             tag "$fasta_gz"
             label 'process_low'
 
@@ -357,7 +335,6 @@ if (params.fasta) {
             path("*.fa") into (ch_fasta, ch_fasta_fai, ch_fasta_dreme_icount, ch_fasta_dreme_paraclu, ch_fasta_pureclip, ch_fasta_dreme_pureclip, ch_fasta_dreme_piranha)
 
             script:
-
             """
             pigz -d -c $fasta_gz > ${fasta_gz.baseName}
             """
@@ -368,7 +345,6 @@ if (params.fasta) {
 /*
  * Generating fai index
  */
-
 if (!params.fai) {
     process generate_fai {
         tag "$fasta"
@@ -381,11 +357,8 @@ if (!params.fai) {
         path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
 
         script:
-
-        command = "samtools faidx $fasta"
-
         """
-        ${command}
+        samtools faidx $fasta
         """
     }
 }
@@ -393,9 +366,7 @@ if (!params.fai) {
 /*
  * Generating STAR index
  */
-
 if (!params.star_index) {
-
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
             ch_gtf_gz_star = Channel
@@ -410,7 +381,7 @@ if (!params.star_index) {
 
     // Calculate genomeSAindexNbases for building star index
     process check_genome_size {
-        tag "$name"
+        tag "$fai"
         label 'process_low'
 
         input:
@@ -420,22 +391,17 @@ if (!params.star_index) {
         path("genome_size.txt") into ch_genome_size
 
         script:
-
         """
         awk '{total = total + \$2}END{if ((log(total)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(total)/log(2))/2 - 1}}' $fai > genome_size.txt
         """
-
     }
 
     // transform genome size to calculate genomeSAindexNbases to generate STAR index
-    ch_genomeSAindexNbases = ch_genome_size
-    .map { it -> it.getText("UTF-8") as int }
+    ch_genomeSAindexNbases = ch_genome_size.map { it -> it.getText("UTF-8") as int }
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
-
             process decompress_gtf {
-
                 tag "$gtf_gz"
                 label 'process_low'
 
@@ -446,18 +412,15 @@ if (!params.star_index) {
                 path("*.gtf") into ch_gtf_star
 
                 script:
-
                 """
                 pigz -d -c $gtf_gz > ${gtf_gz.baseName}
                 """
-
             }
         }
     }
 
     if (params.gtf) {
         process generate_star_index {
-
             tag "$fasta"
             label 'process_high'
             publishDir path: { params.save_index ? "${params.outdir}/STAR_index" : params.outdir },
@@ -472,19 +435,20 @@ if (!params.star_index) {
             path("STAR_${fasta.baseName}") into ch_star_index
 
             script:
-
             """
             mkdir STAR_${fasta.baseName}
-            STAR --runMode genomeGenerate --runThreadN ${task.cpus} \
-            --genomeDir STAR_${fasta.baseName} \
-            --genomeFastaFiles $fasta \
-            --genomeSAindexNbases $sa_ind_base \
-            --sjdbGTFfile $gtf
+
+            STAR \\
+                --runMode genomeGenerate \\
+                --runThreadN ${task.cpus} \\
+                --genomeDir STAR_${fasta.baseName} \\
+                --genomeFastaFiles $fasta \\
+                --genomeSAindexNbases $sa_ind_base \\
+                --sjdbGTFfile $gtf
             """
         }
-    } else if (!params.gtf){
+    } else if (!params.gtf) {
         process generate_star_index_no_gtf {
-
             tag "$fasta"
             label 'process_high'
             publishDir path: { params.save_index ? "${params.outdir}/STAR_index" : params.outdir },
@@ -498,9 +462,9 @@ if (!params.star_index) {
             path("STAR_${fasta.baseName}") into ch_star_index
 
             script:
-
             """
             mkdir STAR_${fasta.baseName}
+
             STAR \\
                 --runMode genomeGenerate --runThreadN ${task.cpus} \\
                 --genomeDir STAR_${fasta.baseName} \\
@@ -515,20 +479,16 @@ if (!params.star_index) {
 /*
  * Generating iCount segment file
  */
-
 // iCount GTF input autodetects gz
 if (params.peakcaller && icount_check) {
-
-    if(!params.segment) {
+    if (!params.segment) {
 
         ch_gtf_icount = Channel
             .fromPath(params.gtf, checkIfExists: true)
             .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
 
         process icount_segment {
-
             tag "$gtf"
-
             publishDir "${params.outdir}/icount", mode: params.publish_dir_mode
 
             input:
@@ -539,34 +499,28 @@ if (params.peakcaller && icount_check) {
             path("icount_${gtf}") into ch_segment
 
             script:
-
             """
             mkdir tmp
             export ICOUNT_TMP_ROOT=\$PWD/tmp
             iCount segment $gtf icount_${gtf} $fai
             """
-
         }
-
     } else {
-
         ch_segment = Channel.value(params.segment)
-
     }
-
 }
 
-/*
-================================================================================
-CLIP PIPELINE
-================================================================================
-*/
+////////////////////////////////////////////////////
+/* --             CLIP PIPELINE                -- */
+////////////////////////////////////////////////////
 
 /*
- * Parse software version numbers
+ * STEP 1 - FastQC
  */
-process get_software_versions {
-    publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
+process fastqc {
+    tag "$name"
+    label 'process_medium'
+    publishDir "${params.outdir}/fastqc", mode: params.publish_dir_mode,
         saveAs: { filename ->
                       filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
                 }
@@ -578,12 +532,10 @@ process get_software_versions {
     file "*fastqc.{zip,html}" into ch_fastqc_pretrim_mqc
 
     script:
-
     read_ext = reads.getName().split('\\.', 2)[1]
     read_name = reads.getName().split('\\.', 2)[0]
     new_reads = "${name}_reads_fastqc.${read_ext}"
     new_reads_simple = "${name}_reads_fastqc"
-
     """
     cp ${reads} ${new_reads}
     fastqc --quiet --threads $task.cpus ${new_reads}
@@ -593,38 +545,63 @@ process get_software_versions {
 }
 
 /*
+ * STEP 1.1 - Move UMI to FastQ header if flagged
+ */
+if (params.move_umi) {
+    process move_umi {
+        tag "$name"
+        label 'process_medium'
+        publishDir "${params.outdir}/umi", mode: params.publish_dir_mode,
+            saveAs: { filename ->
+                        filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
+                    }
+
+        input:
+        tuple val(name), path(reads) from ch_fastq
+
+        output:
+        tuple val(name), path("${name}.umi.fastq.gz") into ch_umi_moved
+
+        script:
+        """
+        umi_tools \\
+            extract \\
+            -p "$params.move_umi" \\
+            -I $reads \\
+            -S ${name}.umi.fastq.gz
+        """
+    }
+} else {
+    ch_umi_moved = ch_fastq
+}
+
+/*
  * STEP 2 - Read trimming
  */
-
 process cutadapt {
-
     tag "$name"
     label 'process_high'
     publishDir "${params.outdir}/cutadapt", mode: params.publish_dir_mode
 
     input:
-    tuple val(name), path(reads) from ch_fastq
+    tuple val(name), path(reads) from ch_umi_moved
 
     output:
     tuple val(name), path("${name}.trimmed.fastq.gz") into ch_trimmed
     path "*.log" into ch_cutadapt_mqc
 
     script:
-
     """
     ln -s $reads ${name}.fastq.gz
     cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz ${name}.fastq.gz > ${name}_cutadapt.log
     """
-
 }
 
 /*
  * STEP 3 - Premapping
  */
-
 if (params.smrna_fasta) {
     process premap {
-
         tag "$name"
         label 'process_high'
         publishDir "${params.outdir}/premap", mode: params.publish_dir_mode
@@ -639,27 +616,21 @@ if (params.smrna_fasta) {
         path "*.log" into ch_premap_mqc, ch_premap_qc
 
         script:
-
         """
         bowtie2 -p $task.cpus -x ${index[0].simpleName} --un-gz ${name}.unmapped.fastq.gz -U $reads 2> ${name}.premap.log | \
         samtools sort -@ $task.cpus /dev/stdin > ${name}.premapped.bam && \
         samtools index -@ $task.cpus ${name}.premapped.bam
         """
-
     }
 } else {
-
     ch_unmapped = ch_trimmed
     ch_premap_mqc = Channel.empty()
-
 }
 
 /*
  * STEP 4 - Aligning
  */
-
 process align {
-
     tag "$name"
     label 'process_high'
     publishDir "${params.outdir}/mapped", mode: params.publish_dir_mode
@@ -673,7 +644,6 @@ process align {
     path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
-
     clip_args = "--outFilterMultimapNmax 1 \
                 --outFilterMultimapScoreRange 1 \
                 --outSAMattributes All \
@@ -686,7 +656,6 @@ process align {
                 --alignEndsType Extend5pOfRead1 \
                 --twopassMode Basic \
                 --outSAMtype BAM Unsorted"
-
     """
     STAR \\
         --runThreadN $task.cpus \\
@@ -703,9 +672,7 @@ process align {
 /*
  * STEP 5 - Aligning QC
  */
-
 process preseq {
-
     tag "$name"
     label 'process_low'
     publishDir "${params.outdir}/preseq", mode: params.publish_dir_mode
@@ -718,26 +685,22 @@ process preseq {
     path '*.log'
 
     script:
-
     """
-    preseq lc_extrap \
-        -output ${name}.ccurve.txt \
-        -verbose \
-        -bam \
-        -seed 42 \
+    preseq lc_extrap \\
+        -output ${name}.ccurve.txt \\
+        -verbose \\
+        -bam \\
+        -seed 42 \\
         $bam
     cp .command.err ${name}.command.log
     """
-
 }
 
 /*
  * STEP 6 - Deduplicate
  */
 if (params.deduplicate) {
-
     process dedup {
-
         tag "$name"
         label 'process_high'
         publishDir "${params.outdir}/dedup", mode: params.publish_dir_mode
@@ -750,27 +713,27 @@ if (params.deduplicate) {
         path "*.log" into ch_dedup_mqc, ch_dedup_qc
 
         script:
-
         """
-        umi_tools dedup --umi-separator="$params.umi_separator" -I $bam -S ${name}.dedup.bam --output-stats=${name} --log=${name}.log
+        umi_tools \\
+            dedup \\
+            --umi-separator="$params.umi_separator" \\
+            -I $bam \\
+            -S ${name}.dedup.bam \\
+            --output-stats=${name} \\
+            --log=${name}.log
         samtools index -@ $task.cpus ${name}.dedup.bam
         """
-
     }
-
 } else {
-
     ch_dedup = ch_aligned
     ch_dedup_mqc = Channel.empty()
     ch_dedup_qc = Channel.empty()
     ch_dedup_rseqc = ch_aligned
-
 }
 
 /*
  * STEP 6a - RSeQC
  */
-
 if (params.gtf) {
     
     ch_gtf_rseqc = Channel
@@ -778,7 +741,6 @@ if (params.gtf) {
         .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
 
     process rseqc {
-
         tag "$name"
         label 'process_low'
         publishDir "${params.outdir}/rseqc", mode: params.publish_dir_mode
@@ -791,37 +753,30 @@ if (params.gtf) {
         path '*.read_distribution.txt' into ch_rseqc_mqc
 
         script:
-
         """
         gtf2bed $gtf > gene.bed
-        read_distribution.py \
-            -i $bam \
-            -r gene.bed \
+
+        read_distribution.py \\
+            -i $bam \\
+            -r gene.bed \\
             > ${name}.read_distribution.txt
         """
-
     }
-
 } else {
-
     ch_rseqc_mqc = Channel.empty()
-    
 }
+
 /*
  * STEP 7 - Identify crosslinks
  */
-
 process get_crosslinks {
-
     tag "$name"
     label 'process_medium'
-    publishDir "${params.outdir}/fastqc", mode: params.publish_dir_mode,
-        saveAs: { filename ->
-                      filename.indexOf('.zip') > 0 ? "zips/$filename" : "$filename"
-        }
+    publishDir "${params.outdir}/xlinks", mode: params.publish_dir_mode
 
     input:
-    set val(name), file(reads) from ch_read_files_fastqc
+    tuple val(name), path(bam), path(bai) from ch_dedup
+    path(fai) from ch_fai_crosslinks.collect()
 
     output:
     tuple val(name), path("${name}.xl.bed.gz") into ch_xlinks_icount, ch_xlinks_paraclu, ch_xlinks_piranha
@@ -830,18 +785,20 @@ process get_crosslinks {
 
     script:
     """
-    fastqc --quiet --threads $task.cpus $reads
+    bedtools bamtobed -i $bam > dedup.bed
+    bedtools shift -m 1 -p -1 -i dedup.bed -g $fai > shifted.bed
+    bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "+"}' > pos.bed
+    bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "-"}' > neg.bed
+    cat pos.bed neg.bed | sort -k1,1 -k2,2n | pigz > ${name}.xl.bed.gz
+    zcat ${name}.xl.bed.gz | awk '{OFS = "\t"}{if (\$6 == "+") {print \$1, \$2, \$3, \$5} else {print \$1, \$2, \$3, -\$5}}' | pigz > ${name}.xl.bedgraph.gz
     """
 }
 
 /*
  * STEP 8a - Peak-call (iCount)
  */
-
 if (params.peakcaller && icount_check) {
-
     process icount_peak_call {
-
         tag "$name"
         label 'process_low'
         publishDir "${params.outdir}/icount", mode: params.publish_dir_mode
@@ -856,28 +813,23 @@ if (params.peakcaller && icount_check) {
         path "*.peaks.bed.gz" into ch_icount_qc
 
         script:
-
         half_window = params.half_window
         merge_window = params.merge_window
-
         """
         mkdir tmp
         ICOUNT_TMP_ROOT=\$PWD/tmp
 
         iCount peaks $segment $xlinks ${name}.${half_window}nt.sigxl.bed.gz --half_window ${half_window} --fdr 0.05
 
-        pigz -d -c ${name}.${half_window}nt.sigxl.bed.gz | \
-        bedtools sort | \
-        bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \
+        pigz -d -c ${name}.${half_window}nt.sigxl.bed.gz | \\
+        bedtools sort | \\
+        bedtools merge -s -d ${merge_window} -c 4,5,6 -o distinct,sum,distinct | \\
         pigz > ${name}.${half_window}nt_${merge_window}nt.peaks.bed.gz
         """
-
     }
 
-    if(params.motif) {
-
+    if (params.motif) {
         process icount_motif_dreme {
-
             tag "$name"
             label 'process_low'
             publishDir "${params.outdir}/icount_motif", mode: params.publish_dir_mode
@@ -891,33 +843,25 @@ if (params.peakcaller && icount_check) {
             tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_icount
 
             script:
-
             motif_sample = params.motif_sample
-
             """
-            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \\
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \\
             shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
             dreme -norc -o ${name}_dreme -p resized_peaks.fasta
             """
-
         }
-
     }
-
 }
 
 /*
  * STEP 8b - Peak-call (paraclu)
  */
-
-
 if ('paraclu' in callers) {
     process paraclu_peak_call {
-
         tag "$name"
         label 'process_low'
         publishDir "${params.outdir}/paraclu", mode: params.publish_dir_mode
@@ -933,72 +877,59 @@ if ('paraclu' in callers) {
         path "*.peaks.bed.gz" into ch_paraclu_qc
 
         script:
-
         min_value = params.min_value
         min_density_increase = params.min_density_increase
         max_cluster_length = params.max_cluster_length
-
         """
-        pigz -d -c $xlinks | \
-        awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \
+        pigz -d -c $xlinks | \\
+        awk '{OFS = "\t"}{print \$1, \$6, \$3, \$5}' | \\
         sort -k1,1 -k2,2 -k3,3n > paraclu_input.tsv
 
-        paraclu ${min_value} paraclu_input.tsv | \
-        paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \
-        awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' |
-        bedtools sort |
+        paraclu ${min_value} paraclu_input.tsv | \\
+        paraclu-cut -d ${min_density_increase} -l ${max_cluster_length} | \\
+        awk '{OFS = "\t"}{print \$1, \$3-1, \$4, ".", \$6, \$2}' | \\
+        bedtools sort | \\
         pigz > ${name}.${min_value}_${max_cluster_length}nt_${min_density_increase}.peaks.bed.gz
         """
-
     }
 
-    if(params.motif) {
-
-    process paraclu_motif_dreme {
-
+    if (params.motif) {
+        process paraclu_motif_dreme {
             tag "$name"
             label 'process_low'
             publishDir "${params.outdir}/paraclu_motif", mode: params.publish_dir_mode
 
-        when:
-        'paraclu' in callers
+            when:
+            'paraclu' in callers
 
-        input:
-        tuple val(name), path(peaks) from ch_peaks_paraclu
-        path(fasta) from ch_fasta_dreme_paraclu.collect()
-        path(fai) from ch_fai_paraclu_motif.collect()
+            input:
+            tuple val(name), path(peaks) from ch_peaks_paraclu
+            path(fasta) from ch_fasta_dreme_paraclu.collect()
+            path(fai) from ch_fai_paraclu_motif.collect()
 
             output:
             tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_paraclu
 
             script:
-
             motif_sample = params.motif_sample
-
             """
-            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \\
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \\
             shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
             dreme -norc -o ${name}_dreme -p resized_peaks.fasta
             """
-
         }
-
     }
 }
-
 
 /*
  * STEP 8c - Peak-call (PureCLIP)
  */
-
 if ('pureclip' in callers) {
-
-process pureclip_peak_call {
-
+    process pureclip_peak_call {
         tag "$name"
         label 'process_high'
         publishDir "${params.outdir}/pureclip", mode: params.publish_dir_mode
@@ -1016,32 +947,26 @@ process pureclip_peak_call {
         path "*.peaks.bed.gz" into ch_pureclip_qc
 
         script:
-
         dm = params.pureclip_dm
-
         args = " -bc " + params.pureclip_bc
         args += " -dm " + params.pureclip_dm
-        if(params.pureclip_iv) args += " -iv '" + params.pureclip_iv + "' "
-
+        if (params.pureclip_iv) args += " -iv '" + params.pureclip_iv + "' "
         """
-        pureclip \
-            -i $bam \
-            -bai $bai \
-            -g $fasta \
-            -nt $task.cpus \
-            $args \
-            -o "${name}.sigxl.bed" \
+        pureclip \\
+            -i $bam \\
+            -bai $bai \\
+            -g $fasta \\
+            -nt $task.cpus \\
+            $args \\
+            -o "${name}.sigxl.bed" \\
             -or "${name}.${dm}nt.peaks.bed"
 
         pigz ${name}.sigxl.bed ${name}.${dm}nt.peaks.bed
         """
-
     }
 
-    if(params.motif) {
-
+    if (params.motif) {
         process pureclip_motif_dreme {
-
             tag "$name"
             label 'process_low'
             publishDir "${params.outdir}/pureclip_motif", mode: params.publish_dir_mode
@@ -1055,21 +980,17 @@ process pureclip_peak_call {
             tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_pureclip
 
             script:
-
             motif_sample = params.motif_sample
-
             """
-            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \\
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \\
             shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
             dreme -norc -o ${name}_dreme -p resized_peaks.fasta
             """
-
         }
-
     }
 }
 
@@ -1077,12 +998,8 @@ process pureclip_peak_call {
 /*
  * STEP 8d - Peak-call (Piranha)
  */
-
-
 if ('piranha' in callers) {
-
     process piranha_peak_call {
-
         tag "$name"
         label 'process_high'
         publishDir "${params.outdir}/piranha", mode: params.publish_dir_mode
@@ -1098,33 +1015,27 @@ if ('piranha' in callers) {
         path "*.peaks.bed.gz" into ch_piranha_qc
 
         script:
-
         bin_size_both = params.bin_size_both
         cluster_dist = params.cluster_dist
-
         """
-
-        pigz -d -c $xlinks | \
-        awk '{OFS="\t"}{for(i=0;i<\$5;i++) print }' \
+        pigz -d -c $xlinks | \\
+        awk '{OFS="\t"}{for(i=0;i<\$5;i++) print }' \\
         > expanded.bed
 
-        Piranha \
-        expanded.bed \
-        -s \
-        -b $bin_size_both \
-        -u $cluster_dist \
-        -o paraclu.bed
+        Piranha \\
+            expanded.bed \\
+            -s \\
+            -b $bin_size_both \\
+            -u $cluster_dist \\
+            -o paraclu.bed
 
-        awk '{OFS="\t"}{print \$1, \$2, \$3, ".", \$5, \$6}' paraclu.bed | \
+        awk '{OFS="\t"}{print \$1, \$2, \$3, ".", \$5, \$6}' paraclu.bed | \\
         pigz > ${name}.${bin_size_both}nt_${cluster_dist}nt.peaks.bed.gz
         """
-
     }
 
-    if(params.motif) {
-
+    if (params.motif) {
         process piranha_motif_dreme {
-
             tag "$name"
             label 'process_low'
             publishDir "${params.outdir}/piranha_motif", mode: params.publish_dir_mode
@@ -1138,31 +1049,24 @@ if ('piranha' in callers) {
             tuple val(name), path("${name}_dreme/*") into ch_motif_dreme_piranha
 
             script:
-
             motif_sample = params.motif_sample
-
             """
-            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \
-            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \
+            pigz -d -c $peaks | awk '{OFS="\t"}{if(\$6 == "+") print \$1, \$2, \$2+1, \$4, \$5, \$6; else print \$1, \$3-1, \$3, \$4, \$5, \$6}' | \\
+            bedtools slop -s -l 20 -r 20 -i /dev/stdin -g $fai | \\
             shuf -n $motif_sample > resized_peaks.bed
 
             bedtools getfasta -fi $fasta -bed resized_peaks.bed -fo resized_peaks.fasta
 
             dreme -norc -o ${name}_dreme -p resized_peaks.fasta
             """
-
         }
-
     }
 }
 
 /*
  * STEP 8 - QC plots
  */
-
 process clipqc {
-
-    tag "$name"
     label 'process_low'
     publishDir "${params.outdir}/clipqc", mode: params.publish_dir_mode 
 
@@ -1180,7 +1084,6 @@ process clipqc {
     path "*.tsv" into ch_clipqc_mqc
     
     script:
-
     clip_qc_args = ''
 
     if ('icount' in callers && icount_check) {
@@ -1202,15 +1105,12 @@ process clipqc {
     """
     clip_qc.py $clip_qc_args
     """
-
 }
 
 /*
  * STEP 9 - MultiQC
  */
 process multiqc {
-
-    tag "$name"
     label 'process_low'
     publishDir "${params.outdir}/multiqc", mode: params.publish_dir_mode
 
@@ -1330,7 +1230,8 @@ workflow.onComplete {
     def email_html = html_template.toString()
 
     // Render the sendmail template
-    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
+    def max_multiqc_email_size = params.max_multiqc_email_size as nextflow.util.MemoryUnit
+    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize: max_multiqc_email_size.toBytes() ]
     def sf = new File("$projectDir/assets/sendmail_template.txt")
     def sendmail_template = engine.createTemplate(sf).make(smail_fields)
     def sendmail_html = sendmail_template.toString()
@@ -1386,6 +1287,11 @@ workflow.onComplete {
 workflow.onError {
     // Print unexpected parameters - easiest is to just rerun validation
     NfcoreSchema.validateParameters(params, json_schema, log)
+}
+
+// Check file extension - from nf-core/rnaseq
+def hasExtension(it, extension) {
+    it.toString().toLowerCase().endsWith(extension.toLowerCase())
 }
 
 def checkHostname() {

@@ -20,12 +20,6 @@
                     "description": "Input FastQ files.",
                     "help_text": "Use this to specify the location of your input FastQ files. For example:\n\n```bash\n--input 'path/to/data/sample_*_{1,2}.fastq'\n```\n\nPlease note the following requirements:\n\n1. The path must be enclosed in quotes\n2. The path must have at least one `*` wildcard character\n3. When using the pipeline with paired end data, the path must use `{1,2}` notation to specify read pairs.\n\nIf left unspecified, a default pattern is used: `data/*{1,2}.fastq.gz`"
                 },
-                "single_end": {
-                    "type": "boolean",
-                    "description": "Specifies that the input is single-end reads.",
-                    "fa_icon": "fas fa-align-center",
-                    "help_text": "By default, the pipeline expects paired-end data. If you have single-end data, you need to specify `--single_end` on the command line when you launch the pipeline. A normal glob pattern, enclosed in quotation marks, can then be used for `--input`. For example:\n\n```bash\n--single_end --input '*.fastq'\n```\n\nIt is not possible to run a mixture of single-end and paired-end files in one run."
-                },
                 "outdir": {
                     "type": "string",
                     "description": "The output directory where the results will be saved.",
@@ -117,6 +111,12 @@
                     "default": "AGATCGGAAGAGC",
                     "fa_icon": "fas fa-angle-double-left"
                 },
+                "move_umi": {
+                    "type": "string",
+                    "fa_icon": "fas fa-barcode",
+                    "default": "False",
+                    "description": "UMI format to move to FastQ header (optional)"
+                },
                 "deduplicate": {
                     "type": "boolean",
                     "default": true,
@@ -126,7 +126,7 @@
                 "umi_separator": {
                     "type": "string",
                     "default": ":",
-                    "description": "UMI separator in the FASTA read name",
+                    "description": "UMI separator in the FastQ read name",
                     "fa_icon": "fas fa-barcode"
                 }
             },
@@ -141,7 +141,6 @@
                 "peakcaller": {
                     "type": "string",
                     "description": "Which peakcaller(s) to use",
-                    "default": "None",
                     "fa_icon": "fas fa-mountain"
                 },
                 "segment": {
@@ -182,13 +181,12 @@
                 "pureclip_bc": {
                     "type": "integer",
                     "description": "PureCLIP binding characteristics of protein",
-                    "default": "0",
                     "fa_icon": "fas fa-file-contract"
                 },
                 "pureclip_dm": {
-                    "type": "string",
+                    "type": "integer",
                     "description": "PureCLIP merge distance",
-                    "default": "8",
+                    "default": 8,
                     "fa_icon": "fas fa-object-group"
                 },
                 "pureclip_iv": {
