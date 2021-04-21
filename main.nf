@@ -134,10 +134,7 @@ ch_output_docs_images = file("$projectDir/docs/images/", checkIfExists: true)
 /* --               SET-UP INPUTS              -- */
 ////////////////////////////////////////////////////
 
-params.adapter = "AGATCGGAAGAGC"
-params.move_umi = false
-params.umi_separator = params.move_umi ? '_' : ':'
-params.deduplicate = true
+params.umi_separator = params.move_umi ? '_' : ':' // Define default as ':' unless moving UMI with UMItools in which case '_'
 
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
@@ -1114,7 +1111,6 @@ process multiqc {
     path ('preseq/*') from ch_preseq_mqc.collect().ifEmpty([])
     path ('rseqc/*') from ch_rseqc_mqc.collect().ifEmpty([])
     file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
-    //file ('dedup/*') from ch_dedup_mqc
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
