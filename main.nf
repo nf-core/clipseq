@@ -53,7 +53,7 @@ if (!params.genome && params.smrna_org) {
         params.smrna_fasta = params.smrna[ params.genome ].smrna_fasta
     } else {
         params.smrna_fasta = false
-        log.warn "There is no smRNA available for species '${params.smrna_org}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat, fruitfly, zebrafish, yeast. Alternative you can supply your own smRNA fasta using --smrna_fasta"
+        log.warn "There is no smRNA available for species '${params.genome}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat, fruitfly, zebrafish, yeast. Alternative you can supply your own smRNA fasta using --smrna_fasta"
     }
 }
 
