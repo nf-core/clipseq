@@ -160,7 +160,7 @@ Premapping to rRNA and tRNA will be automatically triggered if there is a refere
 
 ### `--smrna_org`
 
-The pipeline comes equipped with some 'smallRNA' FASTA references for premapping. These are available for the following organisms:
+The pipeline comes equipped with some 'smallRNA' FASTA references for premapping. This includes rRNA and tRNA sequences, the sources of which can be viewed [here](https://github.com/ulelab/smallRNAs/blob/main/Sources.md). The purpose of this premapping is to capture abundant ncRNA that are present in multiple similar copies in the genome, making them hard to assign reads to. tRNA can occur within genes and without proper handling can result in misassignment of reads to mRNA in [certain situations](https://rnajournal.cshlp.org/content/early/2018/08/21/rna.067348.118). The user may also be interested in the tRNA and rRNA binding of their protein, and this premapping enables simple assessment of this binding. These are available for the following organisms:
 
 * Human
   * `--smrna_org human`
