@@ -354,7 +354,7 @@ if (!params.fai) {
         path(fasta) from ch_fasta_fai
 
         output:
-        path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
+        path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif)
 
         script:
         """
@@ -378,26 +378,6 @@ if (!params.star_index) {
                 .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
         }
     }
-
-    // Calculate genomeSAindexNbases for building star index
-    process check_genome_size {
-        tag "$fai"
-        label 'process_low'
-
-        input:
-        path(fai) from ch_fai_size
-
-        output:
-        path("genome_size.txt") into ch_genome_size
-
-        script:
-        """
-        awk '{total = total + \$2}END{if ((log(total)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(total)/log(2))/2 - 1}}' $fai > genome_size.txt
-        """
-    }
-
-    // transform genome size to calculate genomeSAindexNbases to generate STAR index
-    ch_genomeSAindexNbases = ch_genome_size.map { it -> it.getText("UTF-8") as int }
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
@@ -429,13 +409,15 @@ if (!params.star_index) {
             input:
             path(fasta) from ch_fasta
             path(gtf) from ch_gtf_star
-            val(sa_ind_base) from ch_genomeSAindexNbases
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
 
             script:
             """
+            samtools faidx $fasta
+            NUM_BASES=`gawk '{sum = sum + \$2}END{if ((log(sum)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(sum)/log(2))/2 - 1}}' ${fasta}.fai`
+
             mkdir STAR_${fasta.baseName}
 
             STAR \\
@@ -443,7 +425,7 @@ if (!params.star_index) {
                 --runThreadN ${task.cpus} \\
                 --genomeDir STAR_${fasta.baseName} \\
                 --genomeFastaFiles $fasta \\
-                --genomeSAindexNbases $sa_ind_base \\
+                --genomeSAindexNbases \$NUM_BASES \\
                 --sjdbGTFfile $gtf
             """
         }
@@ -456,20 +438,22 @@ if (!params.star_index) {
 
             input:
             path(fasta) from ch_fasta
-            val(sa_ind_base) from ch_genomeSAindexNbases
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
 
             script:
             """
+            samtools faidx $fasta
+            NUM_BASES=`gawk '{sum = sum + \$2}END{if ((log(sum)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(sum)/log(2))/2 - 1}}' ${fasta}.fai`
+
             mkdir STAR_${fasta.baseName}
 
             STAR \\
                 --runMode genomeGenerate --runThreadN ${task.cpus} \\
                 --genomeDir STAR_${fasta.baseName} \\
                 --genomeFastaFiles $fasta \\
-                --genomeSAindexNbases $sa_ind_base \\
+                --genomeSAindexNbases \$NUM_BASES \\
             """
         }
     }
