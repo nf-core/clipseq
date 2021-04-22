@@ -273,7 +273,7 @@ process get_software_versions {
     meme -version > v_meme.txt
     python --version > v_python.txt
     pygmentize -V > v_pygments.txt
-    pigz --version > v_pigz.txt
+    pigz --version 2> v_pigz.txt
     perl -v > v_perl.txt
 
     scrape_software_versions.py &> software_versions_mqc.yaml
