@@ -23,7 +23,6 @@ regexes = {
     "Piranha": ["v_piranha.txt", r"Piranha Version (\S+)"],
     "Paraclu": ["v_paraclu.txt", r"(\S+)"],
     "Meme": ["v_meme.txt", r"(\S+)"],
-    "R": ["v_R.txt", r"R version (\S+)"],
     "Python": ["v_python.txt", r"Python (\S+)"],
     "Pygments": ["v_pygments.txt", r"Pygments version (\S+)"],
     "pigz": ["v_pigz.txt", r"pigz (\S+)"],
