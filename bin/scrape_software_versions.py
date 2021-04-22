@@ -26,7 +26,7 @@ regexes = {
     "Python": ["v_python.txt", r"Python (\S+)"],
     "Pygments": ["v_pygments.txt", r"Pygments version (\S+)"],
     "pigz": ["v_pigz.txt", r"pigz (\S+)"],
-    "Perl": ["v_perl.txt", r"\(v(\S+)"]
+    "Perl": ["v_perl.txt", r"\(v(\S+)\)"]
 }
 
 results = OrderedDict()
