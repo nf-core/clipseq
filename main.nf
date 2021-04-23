@@ -805,7 +805,7 @@ if (params.peakcaller && icount_check) {
         merge_window = params.merge_window
         """
         mkdir tmp
-        ICOUNT_TMP_ROOT=\$PWD/tmp
+        export ICOUNT_TMP_ROOT=\$PWD/tmp
 
         iCount peaks $segment $xlinks ${name}.${half_window}nt.sigxl.bed.gz --half_window ${half_window} --fdr 0.05
 
