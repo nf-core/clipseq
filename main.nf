@@ -45,10 +45,16 @@ if (!params.genome && params.smrna_org) {
     if (params.smrna_org in smrna_list) {
         params.smrna_fasta = params.smrna[ params.smrna_org ].smrna_fasta
     } else {
-        log.warn "There is no smRNA available for species '${params.smrna_org}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat. Alternative you can supply your own smRNA fasta using --smrna_fasta"
+        params.smrna_fasta = false
+        log.warn "There is no smRNA available for species '${params.smrna_org}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat, fruitfly, zebrafish, yeast. Alternative you can supply your own smRNA fasta using --smrna_fasta"
     }
 } else {
-    params.smrna_fasta = params.genome ? params.smrna[ params.genome ].smrna_fasta ?: false : false
+    if (params.genome && params.smrna.containsKey(params.genome)) {
+        params.smrna_fasta = params.smrna[ params.genome ].smrna_fasta
+    } else {
+        params.smrna_fasta = false
+        log.warn "There is no smRNA available for species '${params.genome}'; pre-mapping will be skipped. Currently available options are: human, mouse, rat, fruitfly, zebrafish, yeast. Alternative you can supply your own smRNA fasta using --smrna_fasta"
+    }
 }
 
 // Auto-load genome files from genome config
@@ -128,10 +134,7 @@ ch_output_docs_images = file("$projectDir/docs/images/", checkIfExists: true)
 /* --               SET-UP INPUTS              -- */
 ////////////////////////////////////////////////////
 
-params.adapter = "AGATCGGAAGAGC"
-params.move_umi = false
-params.umi_separator = params.move_umi ? '_' : ':'
-params.deduplicate = true
+params.umi_separator = params.move_umi ? '_' : ':' // Define default as ':' unless moving UMI with UMItools in which case '_'
 
 if (params.smrna_fasta) ch_smrna_fasta = Channel.value(params.smrna_fasta)
 if (params.star_index) ch_star_index = Channel.value(params.star_index)
@@ -353,7 +356,7 @@ if (!params.fai) {
         path(fasta) from ch_fasta_fai
 
         output:
-        path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif, ch_fai_size)
+        path("*.fai") into (ch_fai_crosslinks, ch_fai_icount, ch_fai_icount_motif, ch_fai_paraclu_motif, ch_fai_pureclip_motif, ch_fai_piranha_motif)
 
         script:
         """
@@ -377,26 +380,6 @@ if (!params.star_index) {
                 .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
         }
     }
-
-    // Calculate genomeSAindexNbases for building star index
-    process check_genome_size {
-        tag "$fai"
-        label 'process_low'
-
-        input:
-        path(fai) from ch_fai_size
-
-        output:
-        path("genome_size.txt") into ch_genome_size
-
-        script:
-        """
-        awk '{total = total + \$2}END{if ((log(total)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(total)/log(2))/2 - 1}}' $fai > genome_size.txt
-        """
-    }
-
-    // transform genome size to calculate genomeSAindexNbases to generate STAR index
-    ch_genomeSAindexNbases = ch_genome_size.map { it -> it.getText("UTF-8") as int }
 
     if (params.gtf) {
         if (hasExtension(params.gtf, 'gz')) {
@@ -428,13 +411,15 @@ if (!params.star_index) {
             input:
             path(fasta) from ch_fasta
             path(gtf) from ch_gtf_star
-            val(sa_ind_base) from ch_genomeSAindexNbases
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
 
             script:
             """
+            samtools faidx $fasta
+            NUM_BASES=`awk '{sum = sum + \$2}END{if ((log(sum)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(sum)/log(2))/2 - 1}}' ${fasta}.fai`
+
             mkdir STAR_${fasta.baseName}
 
             STAR \\
@@ -442,7 +427,7 @@ if (!params.star_index) {
                 --runThreadN ${task.cpus} \\
                 --genomeDir STAR_${fasta.baseName} \\
                 --genomeFastaFiles $fasta \\
-                --genomeSAindexNbases $sa_ind_base \\
+                --genomeSAindexNbases \$NUM_BASES \\
                 --sjdbGTFfile $gtf
             """
         }
@@ -455,20 +440,22 @@ if (!params.star_index) {
 
             input:
             path(fasta) from ch_fasta
-            val(sa_ind_base) from ch_genomeSAindexNbases
 
             output:
             path("STAR_${fasta.baseName}") into ch_star_index
 
             script:
             """
+            samtools faidx $fasta
+            NUM_BASES=`awk '{sum = sum + \$2}END{if ((log(sum)/log(2))/2 - 1 > 14) {printf "%.0f", 14} else {printf "%.0f", (log(sum)/log(2))/2 - 1}}' ${fasta}.fai`
+
             mkdir STAR_${fasta.baseName}
 
             STAR \\
                 --runMode genomeGenerate --runThreadN ${task.cpus} \\
                 --genomeDir STAR_${fasta.baseName} \\
                 --genomeFastaFiles $fasta \\
-                --genomeSAindexNbases $sa_ind_base \\
+                --genomeSAindexNbases \$NUM_BASES \\
             """
         }
     }
@@ -624,6 +611,7 @@ if (params.smrna_fasta) {
 } else {
     ch_unmapped = ch_trimmed
     ch_premap_mqc = Channel.empty()
+    ch_premap_qc = Channel.empty()
 }
 
 /*
@@ -816,7 +804,7 @@ if (params.peakcaller && icount_check) {
         merge_window = params.merge_window
         """
         mkdir tmp
-        ICOUNT_TMP_ROOT=\$PWD/tmp
+        export ICOUNT_TMP_ROOT=\$PWD/tmp
 
         iCount peaks $segment $xlinks ${name}.${half_window}nt.sigxl.bed.gz --half_window ${half_window} --fdr 0.05
 
@@ -1123,7 +1111,6 @@ process multiqc {
     path ('preseq/*') from ch_preseq_mqc.collect().ifEmpty([])
     path ('rseqc/*') from ch_rseqc_mqc.collect().ifEmpty([])
     file ('clipqc/*') from ch_clipqc_mqc.collect().ifEmpty([])
-    //file ('dedup/*') from ch_dedup_mqc
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
