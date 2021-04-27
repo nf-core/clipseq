@@ -34,13 +34,13 @@ jobs:
 
       - name: Build new docker image
         if: env.MATCHED_FILES
-        run: docker build --no-cache . -t nfcore/clipseq:1.0.0
+        run: docker build --no-cache . -t nfcore/clipseq:dev
 
       - name: Pull docker image
         if: ${{ !env.MATCHED_FILES }}
         run: |
           docker pull nfcore/clipseq:dev
-          docker tag nfcore/clipseq:dev nfcore/clipseq:1.0.0
+          docker tag nfcore/clipseq:dev nfcore/clipseq:dev
 
       - name: Install Nextflow
         env:
