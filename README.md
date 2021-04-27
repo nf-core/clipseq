@@ -76,7 +76,6 @@ For further information or help, don't hesitate to get in touch on the [Slack `#
 
 ## Citations
 
-<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi. -->
 If you use  nf-core/clipseq for your analysis, please cite it using the following doi: [10.5281/zenodo.4723016](https://doi.org/10.5281/zenodo.4723016)
 
 References of tools and data used in this pipeline can be found in [CITATIONS.md](https://github.com/nf-core/clipseq/CITATIONS.md)
