@@ -23,11 +23,10 @@ regexes = {
     "Piranha": ["v_piranha.txt", r"Piranha Version (\S+)"],
     "Paraclu": ["v_paraclu.txt", r"(\S+)"],
     "Meme": ["v_meme.txt", r"(\S+)"],
-    "R": ["v_R.txt", r"R version (\S+)"],
     "Python": ["v_python.txt", r"Python (\S+)"],
     "Pygments": ["v_pygments.txt", r"Pygments version (\S+)"],
     "pigz": ["v_pigz.txt", r"pigz (\S+)"],
-    "Perl": ["v_perl.txt", r"\(v(\S+)"]
+    "Perl": ["v_perl.txt", r"\(v(\S+)\)"]
 }
 
 results = OrderedDict()
@@ -35,6 +34,25 @@ results["nf-core/clipseq"] = '<span style="color:#999999;">N/A</span>'
 results["Nextflow"] = '<span style="color:#999999;">N/A</span>'
 results["FastQC"] = '<span style="color:#999999;">N/A</span>'
 results["MultiQC"] = '<span style="color:#999999;">N/A</span>'
+results["Cutadapt"] = '<span style="color:#999999;">N/A</span>'
+results["Bowtie2"] = '<span style="color:#999999;">N/A</span>'
+results["STAR"] = '<span style="color:#999999;">N/A</span>'
+results["Samtools"] = '<span style="color:#999999;">N/A</span>'
+results["umi_tools"] = '<span style="color:#999999;">N/A</span>'
+results["bedtools"] = '<span style="color:#999999;">N/A</span>'
+results["preseq"] = '<span style="color:#999999;">N/A</span>'
+results["subread"] = '<span style="color:#999999;">N/A</span>'
+results["rseqc"] = '<span style="color:#999999;">N/A</span>'
+results["iCount"] = '<span style="color:#999999;">N/A</span>'
+results["PureCLIP"] = '<span style="color:#999999;">N/A</span>'
+results["Piranha"] = '<span style="color:#999999;">N/A</span>'
+results["Paraclu"] = '<span style="color:#999999;">N/A</span>'
+results["Meme"] = '<span style="color:#999999;">N/A</span>'
+results["Python"] = '<span style="color:#999999;">N/A</span>'
+results["Pygments"] = '<span style="color:#999999;">N/A</span>'
+results["pigz"] = '<span style="color:#999999;">N/A</span>'
+results["Perl"] = '<span style="color:#999999;">N/A</span>'
+
 
 # Search each file using its regex
 for k, v in regexes.items():

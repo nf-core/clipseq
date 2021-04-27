@@ -25,18 +25,6 @@ extra_fn_clean_exts:
       pattern: _reads
       module: fastqc
 
-parent_id: mapping
-parent_description: 'This section contains mapping metrics'
-
-parent_id: dedup
-parent_description: 'This section contains PCR deduplication metrics'
-
-parent_id: crosslinks
-parent_description: 'This section contains crosslink metrics'
-
-parent_id: peaks
-parent_description: 'This section contains peak metrics'
-
 # Other MultiQC config stuff here
 custom_data:
     mapping:

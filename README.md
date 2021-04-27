@@ -1,7 +1,5 @@
 # ![nf-core/clipseq](docs/images/nf-core-clipseq_logo.png)
 
-**CLIP analysis pipeline**.
-
 [![GitHub Actions CI Status](https://github.com/nf-core/clipseq/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/clipseq/actions)
 [![GitHub Actions Linting Status](https://github.com/nf-core/clipseq/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/clipseq/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A520.04.0-brightgreen.svg)](https://www.nextflow.io/)
@@ -42,12 +40,12 @@ By default, the pipeline currently performs the following:
 
 1. Install [`nextflow`](https://nf-co.re/usage/installation)
 
-2. Install any of [`Docker`](https://docs.docker.com/engine/installation/), [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) or [`Podman`](https://podman.io/) for full pipeline reproducibility _(please only use [`Conda`](https://conda.io/miniconda.html) as a last resort; see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))_
+2. Install any of [`Docker`](https://docs.docker.com/engine/installation/), [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/), [`Podman`](https://podman.io/), [`Shifter`](https://nersc.gitlab.io/development/shifter/how-to-use/) or [`Charliecloud`](https://hpc.github.io/charliecloud/) for full pipeline reproducibility _(please only use [`Conda`](https://conda.io/miniconda.html) as a last resort; see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))_
 
 3. Download the pipeline and test it on a minimal dataset with a single command:
 
     ```bash
-    nextflow run nf-core/clipseq -profile test,<docker/singularity/podman/conda/institute>
+    nextflow run nf-core/clipseq -profile test,<docker/singularity/podman/shifter/charliecloud/conda/institute>
     ```
 
     > Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
@@ -55,7 +53,7 @@ By default, the pipeline currently performs the following:
 4. Start running your own analysis!
 
     ```bash
-    nextflow run nf-core/clipseq --input '[path to design file]' --fasta '[path to genome FASTA]' -profile docker
+    nextflow run nf-core/clipseq -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> --input '[path to design file]' --fasta '[path to genome FASTA]'
     ```
 
 See [usage docs](https://nf-co.re/clipseq/usage) for all of the available options when running the pipeline.
@@ -66,9 +64,9 @@ The nf-core/clipseq pipeline comes with documentation about the pipeline: [usage
 
 ## Credits
 
-nf-core/clipseq was originally written by Charlotte West, Anob Chakrabarti.
+nf-core/clipseq was originally written by Charlotte West ([@charlotte-west](https://github.com/charlotte-west)) and Anob Chakrabarti ([@amchakra](https://github.com/amchakra)) from [Luscombe Lab](https://www.crick.ac.uk/research/labs/nicholas-luscombe) at [The Francis Crick Institute](https://www.crick.ac.uk/), London, UK.
 
-We thank the members of Luscombe Lab for their assistance in the development of this pipeline.
+It started life in April 2020 as a Nextflow DSL2 Luscombe Lab ([@luslab](https://github.com/luslab)) lockdown hackathon day and we thank all the lab members for their early contributions.
 
 ## Contributions and Support
 
@@ -90,4 +88,3 @@ You can cite the `nf-core` publication as follows:
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
 >
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
-> ReadCube: [Full Access Link](https://rdcu.be/b1GjZ)
