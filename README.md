@@ -3,6 +3,7 @@
 [![GitHub Actions CI Status](https://github.com/nf-core/clipseq/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/clipseq/actions)
 [![GitHub Actions Linting Status](https://github.com/nf-core/clipseq/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/clipseq/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A520.04.0-brightgreen.svg)](https://www.nextflow.io/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4723016.svg)](https://doi.org/10.5281/zenodo.4723016)
 
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](https://bioconda.github.io/)
 [![Docker](https://img.shields.io/docker/automated/nfcore/clipseq.svg)](https://hub.docker.com/r/nfcore/clipseq)
