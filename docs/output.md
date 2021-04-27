@@ -12,12 +12,13 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 * [Preprocessing](#preprocessing)
   * [FastQC](#fastqc) - Raw read QC
+  * [UMI-tools](#umi-tools-extract) - Extract UMI from FastQ read and append to read name
   * [Cutadapt](#cutadapt) - Adapter and quality trimming
 * [Alignment](#alignment)
   * [Bowtie 2](#bowtie-2) - Pre-alignment to rRNA and tRNA sequences
   * [STAR](#star) - Splice-aware genome alignment
 * [Crosslink identification](#crosslink-identification)
-  * [UMI-tools](#umi-tools) - UMI-based PCR deduplication
+  * [UMI-tools](#umi-tools-dedup) - UMI-based PCR deduplication
   * [BEDTools](#bedtools) - Single-nucleotide crosslink position identification
 * [Peak calling](#peak-calling)
   * [iCount](#icount)
@@ -46,6 +47,16 @@ For further reading and documentation see the [FastQC help pages](http://www.bio
 * `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
 
 > **NB:** The FastQC plots displayed in the MultiQC report shows _untrimmed_ reads. They may contain adapter sequence and potentially regions with low quality.
+
+### UMI-tools extract
+
+Optionally, [UMI-tools](https://umi-tools.readthedocs.io/en/latest/) is used to extract the UMI from the beginning of the read and append it to the read name using `_` as a delimiter. This has often already been done as part of demultiplexing an Illumina sequencing run.
+
+> **NB** As each FASTQ contains only one sample, the whole barcode (experimental and UMI) can be treated as the UMI as described [here](https://umi-tools.readthedocs.io/en/latest/QUICK_START.html#step-3-extract-the-umis).
+
+**Output directory:** `umi`
+
+* `sample.umi.fastq.gz`: FASTQ file of reads with UMIs extracted
 
 ### Cutadapt
 
@@ -81,7 +92,7 @@ For CLIP data analysis it is often important to pre-map to rRNA and tRNA sequenc
 
 ## Crosslink identification
 
-### UMI-tools
+### UMI-tools dedup
 
 [UMI-tools](https://umi-tools.readthedocs.io/en/latest/) is used for UMI aware PCR deduplication. The directional method is used.
 
