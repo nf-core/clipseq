@@ -1,10 +1,9 @@
 # ![nf-core/clipseq](docs/images/nf-core-clipseq_logo.png)
 
-**CLIP analysis pipeline**.
-
 [![GitHub Actions CI Status](https://github.com/nf-core/clipseq/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/clipseq/actions)
 [![GitHub Actions Linting Status](https://github.com/nf-core/clipseq/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/clipseq/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A520.04.0-brightgreen.svg)](https://www.nextflow.io/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4723016.svg)](https://doi.org/10.5281/zenodo.4723016)
 
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](https://bioconda.github.io/)
 [![Docker](https://img.shields.io/docker/automated/nfcore/clipseq.svg)](https://hub.docker.com/r/nfcore/clipseq)
@@ -12,10 +11,31 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Write a 1-2 sentence summary of what data the pipeline is for and what it does -->
-**nf-core/clipseq** is a bioinformatics best-practise analysis pipeline for
+**nf-core/clipseq** is a bioinformatics best-practice analysis pipeline for CLIP (cross-linking and immunoprecipitation) sequencing data analysis to study RNA-protein interactions.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker containers making installation trivial and results highly reproducible.
+
+## Pipeline Summary
+
+By default, the pipeline currently performs the following:
+
+1. Adapter and quality trimming (`Cutadapt`)
+2. Pre-mapping to e.g. rRNA and tRNA sequences (`Bowtie 2`)
+3. Genome mapping (`STAR`)
+4. UMI-based deduplication (`UMI-tools`)
+5. Crosslink identification (`BEDTools`)
+6. Bedgraph coverage track generation (`BEDTools`)
+7. Peak calling (multiple options):
+    - `iCount`
+    - `Paraclu`
+    - `PureCLIP`
+    - `Piranha`
+8. Motif detection (`DREME`)
+9. Quality control:
+    - Sequencing quality control (`FastQC`)
+    - Library complexity (`Preseq`)
+    - Regional distribution (`RSeQC`)
+10. Overall pipeline run and QC summaries and peak calling comparisons (`MultiQC`)
 
 ## Quick Start
 
@@ -33,37 +53,21 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 4. Start running your own analysis!
 
-    <!-- TODO nf-core: Update the example "typical command" below used to run the pipeline -->
-
     ```bash
-    nextflow run nf-core/clipseq -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> --input '*_R{1,2}.fastq.gz' --genome GRCh37
+    nextflow run nf-core/clipseq -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> --input '[path to design file]' --fasta '[path to genome FASTA]'
     ```
 
 See [usage docs](https://nf-co.re/clipseq/usage) for all of the available options when running the pipeline.
-
-## Pipeline Summary
-
-By default, the pipeline currently performs the following:
-
-<!-- TODO nf-core: Fill in short bullet-pointed list of default steps of pipeline -->
-
-* Sequencing quality control (`FastQC`)
-* Overall pipeline run summaries (`MultiQC`)
 
 ## Documentation
 
 The nf-core/clipseq pipeline comes with documentation about the pipeline: [usage](https://nf-co.re/clipseq/usage) and [output](https://nf-co.re/clipseq/output).
 
-<!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
-
 ## Credits
 
-nf-core/clipseq was originally written by Charlotte West, Anob Chakrabarti.
+nf-core/clipseq was originally written by Charlotte West ([@charlotte-west](https://github.com/charlotte-west)) and Anob Chakrabarti ([@amchakra](https://github.com/amchakra)) from [Luscombe Lab](https://www.crick.ac.uk/research/labs/nicholas-luscombe) at [The Francis Crick Institute](https://www.crick.ac.uk/), London, UK.
 
-We thank the following people for their extensive assistance in the development
-of this pipeline:
-
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
+It started life in April 2020 as a Nextflow DSL2 Luscombe Lab ([@luslab](https://github.com/luslab)) lockdown hackathon day and we thank all the lab members for their early contributions.
 
 ## Contributions and Support
 
@@ -73,8 +77,9 @@ For further information or help, don't hesitate to get in touch on the [Slack `#
 
 ## Citations
 
-<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi. -->
-<!-- If you use  nf-core/clipseq for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
+If you use  nf-core/clipseq for your analysis, please cite it using the following doi: [10.5281/zenodo.4723016](https://doi.org/10.5281/zenodo.4723016)
+
+References of tools and data used in this pipeline can be found in [CITATIONS.md](https://github.com/nf-core/clipseq/CITATIONS.md)
 
 You can cite the `nf-core` publication as follows:
 
@@ -83,7 +88,3 @@ You can cite the `nf-core` publication as follows:
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
 >
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
-
-In addition, references of tools and data used in this pipeline are as follows:
-
-<!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
