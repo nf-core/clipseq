@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Enhancements & fixes
 
+- Updated Template to nf-core/tools 1.14
+- Fixed `Cutadapt` bug if `sample_id` and `fastq` basename are the same
+
 ## [1.0.0] - 2021-04-27
 
 Initial release of nf-core/clipseq, created with the [nf-core](https://nf-co.re/) template.
