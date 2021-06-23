@@ -117,11 +117,10 @@
                     "default": "False",
                     "description": "UMI format to move to FastQ header (optional)"
                 },
-                "deduplicate": {
+                "skip_deduplication": {
                     "type": "boolean",
-                    "default": true,
-                    "description": "Deduplicate using UMIs",
-                    "fa_icon": "fas fa-barcode"
+                    "description": "Skip deduplication using UMIs",
+                    "fa_icon": "fas fa-forward"
                 },
                 "umi_separator": {
                     "type": "string",

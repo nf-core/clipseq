@@ -184,8 +184,8 @@ if (params.save_index)                           summary['Save STAR index?'] = p
 if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
 if (params.smrna_fasta)                          summary['SmallRNA ref'] = params.smrna_fasta
 if (params.move_umi)                             summary['UMI pattern'] = params.move_umi
-if (params.deduplicate)                          summary['Deduplicate'] = params.deduplicate
-if (params.deduplicate && params.umi_separator)  summary['UMI separator'] = params.umi_separator
+if (!params.skip_deduplication)                  summary['Deduplicate'] = params.deduplicate
+if (!params.skip_deduplication && params.umi_separator) summary['UMI separator'] = params.umi_separator
 if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
 if (params.segment)                              summary['iCount segment'] = params.segment
 if (icount_check)                                summary['Half window'] = params.half_window
@@ -686,7 +686,7 @@ process preseq {
 /*
  * STEP 6 - Deduplicate
  */
-if (params.deduplicate) {
+if (!params.skip_deduplication) {
     process dedup {
         tag "$name"
         label 'process_high'
@@ -722,7 +722,7 @@ if (params.deduplicate) {
  * STEP 6a - RSeQC
  */
 if (params.gtf) {
-    
+
     ch_gtf_rseqc = Channel
         .fromPath(params.gtf, checkIfExists: true)
         .ifEmpty { exit 1, "Genome reference gtf not found: ${params.gtf}" }
@@ -1055,7 +1055,7 @@ if ('piranha' in callers) {
  */
 process clipqc {
     label 'process_low'
-    publishDir "${params.outdir}/clipqc", mode: params.publish_dir_mode 
+    publishDir "${params.outdir}/clipqc", mode: params.publish_dir_mode
 
     input:
     file ('premap/*') from ch_premap_qc.collect().ifEmpty([])
@@ -1069,7 +1069,7 @@ process clipqc {
 
     output:
     path "*.tsv" into ch_clipqc_mqc
-    
+
     script:
     clip_qc_args = ''
 
