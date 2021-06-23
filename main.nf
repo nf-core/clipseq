@@ -627,7 +627,7 @@ process align {
     path(index) from ch_star_index.collect()
 
     output:
-    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned, ch_aligned_preseq
+    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned, ch_aligned_preseq, ch_aligned_rseqc
     path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
@@ -715,7 +715,7 @@ if (!params.skip_deduplication) {
     ch_dedup = ch_aligned
     ch_dedup_mqc = Channel.empty()
     ch_dedup_qc = Channel.empty()
-    ch_dedup_rseqc = ch_aligned
+    ch_dedup_rseqc = ch_aligned_rseqc
 }
 
 /*
