@@ -3,14 +3,15 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.1.0dev
-
-* Changed parameter `--deduplicate` (default `true`) to `--skip_deduplication` (default `false`)
-
 ### Enhancements & fixes
 
-- Updated Template to nf-core/tools 1.14
-- Fixed `Cutadapt` bug if `sample_id` and `fastq` basename are the same
+## 1.1.0dev
+
+* Bug fix for RSeQC input channel if skipping deduplication
+* Changed parameter `--deduplicate` (default `true`) to `--skip_deduplication` (default `false`)
+* Added error strategy as `ignore` for Preseq (need to update to a `--skip_preseq` parameter)
+* Fixed `Cutadapt` bug if `sample_id` and `fastq` basename are the same
+* Updated Template to nf-core/tools 1.14
 
 ## [1.0.0] - 2021-04-27
 

@@ -184,7 +184,7 @@ if (params.save_index)                           summary['Save STAR index?'] = p
 if (params.smrna_org)                            summary['SmallRNA organism ref'] = params.smrna_org
 if (params.smrna_fasta)                          summary['SmallRNA ref'] = params.smrna_fasta
 if (params.move_umi)                             summary['UMI pattern'] = params.move_umi
-if (!params.skip_deduplication)                  summary['Deduplicate'] = params.deduplicate
+if (!params.skip_deduplication)                  summary['Deduplicate'] = params.skip_deduplication
 if (!params.skip_deduplication && params.umi_separator) summary['UMI separator'] = params.umi_separator
 if (params.peakcaller)                           summary['Peak caller'] = params.peakcaller
 if (params.segment)                              summary['iCount segment'] = params.segment
@@ -578,7 +578,7 @@ process cutadapt {
 
     script:
     """
-    [ -f ! ${name}.fastq.gz ] && ln -s $reads ${name}.fastq.gz
+    [ ! -f ${name}.fastq.gz ] && ln -s $reads ${name}.fastq.gz
     cutadapt -j ${task.cpus} -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz ${name}.fastq.gz > ${name}_cutadapt.log
     """
 }
@@ -627,7 +627,7 @@ process align {
     path(index) from ch_star_index.collect()
 
     output:
-    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned, ch_aligned_preseq
+    tuple val(name), path("${name}.Aligned.sortedByCoord.out.bam"), path("${name}.Aligned.sortedByCoord.out.bam.bai") into ch_aligned, ch_aligned_preseq, ch_aligned_rseqc
     path "*.Log.final.out" into ch_align_mqc, ch_align_qc
 
     script:
@@ -715,7 +715,7 @@ if (!params.skip_deduplication) {
     ch_dedup = ch_aligned
     ch_dedup_mqc = Channel.empty()
     ch_dedup_qc = Channel.empty()
-    ch_dedup_rseqc = ch_aligned
+    ch_dedup_rseqc = ch_aligned_rseqc
 }
 
 /*
