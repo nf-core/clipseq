@@ -4,7 +4,6 @@
     nf-core/clipseq
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Github : https://github.com/nf-core/clipseq
-
     Website: https://nf-co.re/clipseq
     Slack  : https://nfcore.slack.com/channels/clipseq
 ----------------------------------------------------------------------------------------
