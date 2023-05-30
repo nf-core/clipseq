@@ -2,6 +2,7 @@
 // Uncompress and prepare reference genome files
 //
 
+include { SAMTOOLS_FAIDX } from '../../modules/nf-core/samtools/faidx/main'
 
 
 
@@ -12,17 +13,58 @@
 
 
 workflow PREPARE_GENOME {
+    take:
+    fasta     //      file: /path/to/genome.fasta
+    fasta_fai //      file: /path/to/genome.fasta
+    // gtf          //      file: /path/to/genome.gtf
+
+    main:
+
+    // Init
+    ch_versions = Channel.empty()
+
+    //
+    // MODULE: Uncompress genome fasta file if required
+    //
+    ch_fasta = Channel.empty()
+    if (fasta.endsWith('.gz')) {
+        ch_fasta    = GUNZIP_FASTA ( [ [:], fasta ] ).gunzip.map { it[1] }
+        ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
+    } else {
+        ch_fasta = Channel.value(file(fasta))
+    }
+
+    //
+    // MODULE: Create fasta fai if required
+    //
+    ch_fasta_fai = Channel.empty()
+    if (fasta_fai) {
+        ch_fasta_fai = Channel.value(file(fasta_fai))
+    } else {
+        SAMTOOLS_FAIDX (
+            [ [id:"primary_genome"], fasta ],
+            [[],[]]
+        )
+        ch_fasta_fai = SAMTOOLS_FAIDX.out.fai
+        ch_versions = ch_versions.mix(SAMTOOLS_FAIDX.out.versions)
+    }
+
+    //
+    // MODULE: Uncompress genome GTF file if required
+    //
+    // ch_gtf = Channel.empty()
+    // if (gtf) {
+    //     if (gtf.endsWith('.gz')) {
+    //         ch_gtf      = GUNZIP_GTF ( [ [:], gtf ] ).gunzip.map { it[1] }
+    //         ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
+    //     } else {
+    //         ch_gtf = Channel.value(file(gtf))
+    //     }
+    // } 
     
-    
-    
-    
-    
-    
-    
-    
-    // emit:
-    // fasta                      = ch_fasta                  // channel: [ val(meta), [ fasta ] ]
-    // fasta_fai                  = ch_fasta_fai              // channel: [ val(meta), [ fai ] ]
+    emit:
+    fasta                      = ch_fasta                  // channel: [ val(meta), [ fasta ] ]
+    fasta_fai                  = ch_fasta_fai              // channel: [ val(meta), [ fai ] ]
     // gtf                        = ch_gtf                    // channel: [ val(meta), [ gtf ] ]
     // filtered_gtf               = ch_filt_gtf               // channel: [ val(meta), [ gtf ] ]
     // chrom_sizes                = ch_chrom_sizes            // channel: [ val(meta), [ txt ] ]
@@ -42,7 +84,7 @@ workflow PREPARE_GENOME {
     // regions_resolved_gtf_genic = ch_regions_resolved_gtf_genic // channel: [ val(meta), [ gtf ] ]
     // genome_index               = ch_genome_index           // channel: [ val(meta), [ star_index ] ]
     // smrna_index                = ch_smrna_index            // channel: [ val(meta), [ bt2_index ] ]
-    // versions                   = ch_versions               // channel: [ versions.yml ]
+    versions                   = ch_versions               // channel: [ versions.yml ]
 }
 
 
@@ -129,36 +171,7 @@ workflow PREPARE_GENOME {
 
 //     ch_versions = Channel.empty()
 
-//     //
-//     // Uncompress genome fasta file if required
-//     //
-//     if (fasta.endsWith('.gz')) {
-//         ch_fasta    = GUNZIP_FASTA ( [ [:], fasta ] ).gunzip.map { it[1] }
-//         ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
-//     } else {
-//         ch_fasta = Channel.value(file(fasta))
-//     }
 
-//     //
-//     // Uncompress GTF annotation file or create from GFF3 if required
-//     //
-//     if (gtf) {
-//         if (gtf.endsWith('.gz')) {
-//             ch_gtf      = GUNZIP_GTF ( [ [:], gtf ] ).gunzip.map { it[1] }
-//             ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
-//         } else {
-//             ch_gtf = Channel.value(file(gtf))
-//         }
-//     } else if (gff) {
-//         if (gff.endsWith('.gz')) {
-//             ch_gff      = GUNZIP_GFF ( [ [:], gff ] ).gunzip.map { it[1] }
-//             ch_versions = ch_versions.mix(GUNZIP_GFF.out.versions)
-//         } else {
-//             ch_gff = Channel.value(file(gff))
-//         }
-//         ch_gtf      = GFFREAD ( ch_gff ).gtf
-//         ch_versions = ch_versions.mix(GFFREAD.out.versions)
-//     }
 
 //     //
 //     // Uncompress additional fasta file and concatenate with reference fasta and gtf files
