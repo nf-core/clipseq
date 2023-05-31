@@ -1,0 +1,84 @@
+nextflow_pipeline {
+
+    name "prepare_genome_fasta"
+    script "main.nf"
+
+    test("fasta_preset_genome") {
+        tag "fasta_preset_genome"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Test fai created as the igenomes file does not have one
+            assert new File("$outputDir/00_genome/genome.fa.fai").exists()
+        }
+    }
+
+    test("fasta_raw") {
+        tag "fasta_raw"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                fasta = "s3://ngi-igenomes/igenomes/Saccharomyces_cerevisiae/Ensembl/R64-1-1/Sequence/WholeGenomeFasta/genome.fa"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Test fai created as we did not supply one
+            assert new File("$outputDir/00_genome/genome.fa.fai").exists()
+        }
+    }
+
+    test("fasta_gz") {
+        tag "fasta_gz"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                fasta = "/Users/cheshic/dev/test_data/clipseq/genome.fa.gz"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Test fai created as we did not supply one
+            assert new File("$outputDir/00_genome/genome.fa.fai").exists()
+        }
+    }
+
+    test("fasta_fai") {
+        tag "fasta_fai"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                fasta_fai = "/Users/cheshic/dev/test_data/clipseq/genome.fa.fai"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Check fai does not exist as the process should not have run to generate it
+            assert !(new File("$outputDir/00_genome/genome.fa.fai").exists())
+        }
+    }
+}

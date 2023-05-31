@@ -2,15 +2,8 @@
 // Uncompress and prepare reference genome files
 //
 
-include { SAMTOOLS_FAIDX } from '../../modules/nf-core/samtools/faidx/main'
-
-
-
-
-
-
-
-
+include { SAMTOOLS_FAIDX         } from '../../modules/nf-core/samtools/faidx/main'
+include { GUNZIP as GUNZIP_FASTA } from '../../modules/nf-core/gunzip/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -28,11 +21,13 @@ workflow PREPARE_GENOME {
     //
     ch_fasta = Channel.empty()
     if (fasta.endsWith('.gz')) {
-        ch_fasta    = GUNZIP_FASTA ( [ [:], fasta ] ).gunzip.map { it[1] }
+        ch_fasta    = GUNZIP_FASTA ( [ [id:"primary_genome"], fasta ] ).gunzip
         ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
     } else {
-        ch_fasta = Channel.value(file(fasta))
+        ch_fasta = Channel.value([ [id:"primary_genome"], file(fasta) ])
     }
+    // EXAMPLE CHANNEL STRUCT: [[meta], fasta]
+    //ch_fasta | view
 
     //
     // MODULE: Create fasta fai if required
@@ -42,7 +37,7 @@ workflow PREPARE_GENOME {
         ch_fasta_fai = Channel.value(file(fasta_fai))
     } else {
         SAMTOOLS_FAIDX (
-            [ [id:"primary_genome"], fasta ],
+            ch_fasta,
             [[],[]]
         )
         ch_fasta_fai = SAMTOOLS_FAIDX.out.fai
