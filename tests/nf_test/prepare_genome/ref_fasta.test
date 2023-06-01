@@ -62,4 +62,38 @@ nextflow_pipeline {
             assert !(new File("$outputDir/00_genome/genome.fa.fai").exists())
         }
     }
+
+    test("smrna_fasta_gz") {
+        tag "smrna_fasta_gz"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                smrna_fasta = "/Users/cheshic/dev/test_data/clipseq/homosapiens_smallRNA.fa.gz"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+
+    test("smrna_fasta") {
+        tag "smrna_fasta"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                smrna_fasta = "/Users/cheshic/dev/test_data/clipseq/homosapiens_smallRNA.fa"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
 }

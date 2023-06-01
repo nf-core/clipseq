@@ -3,15 +3,22 @@
 //
 
 include { GUNZIP as GUNZIP_FASTA               } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SMRNA_FASTA         } from '../../modules/nf-core/gunzip/main'
 include { GUNZIP as GUNZIP_GTF                 } from '../../modules/nf-core/gunzip/main'
+include { UNTAR as UNTAR_BT                    } from '../../modules/nf-core/untar/main'
+include { UNTAR as UNTAR_STAR                  } from '../../modules/nf-core/untar/main'
+include { BOWTIE_BUILD                         } from '../../modules/nf-core/bowtie/build/main'
 include { SAMTOOLS_FAIDX                       } from '../../modules/nf-core/samtools/faidx/main'
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS } from '../../modules/local/linux_command'
 
 workflow PREPARE_GENOME {
     take:
-    fasta     // file: .fasta
-    fasta_fai // file: .fai
-    gtf       // file: .gtf
+    fasta               // file: .fasta
+    fasta_fai           // file: .fai
+    smrna_fasta         // file: .fasta
+    gtf                 // file: .gtf
+    target_genome_index // folder: index
+    smrna_genome_index  // folder: index
 
     main:
 
@@ -32,6 +39,19 @@ workflow PREPARE_GENOME {
     //ch_fasta | view
 
     //
+    // MODULE: Uncompress genome smrna_fasta file if required
+    //
+    ch_smrna_fasta = Channel.empty()
+    if (smrna_fasta.toString().endsWith(".gz")) {
+        ch_smrna_fasta = GUNZIP_SMRNA_FASTA ( [ [id:smrna_fasta.baseName], smrna_fasta ] ).gunzip
+        ch_versions = ch_versions.mix(GUNZIP_SMRNA_FASTA.out.versions)
+    } else {
+        ch_smrna_fasta = Channel.of([ [id:smrna_fasta.baseName], smrna_fasta ])
+    }
+    // EXAMPLE CHANNEL STRUCT: [[meta], fasta]
+    //ch_smrna_fasta | view
+
+    //
     // MODULE: Uncompress genome gtf file if required
     //
     ch_gtf = Channel.empty()
@@ -43,6 +63,41 @@ workflow PREPARE_GENOME {
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
     //ch_gtf | view
+
+    /*
+    * MODULES: Uncompress Bowtie index or generate if required
+    */
+    // ch_bt_index = Channel.empty()
+    // if (target_genome_index) {
+    //     if (target_genome_index.toString().endsWith(".tar.gz")) {
+    //         ch_bt_index = UNTAR_BT ( [ [:], target_genome_index ] ).untar
+    //         ch_versions  = ch_versions.mix(UNTAR_BT.out.versions)
+    //     } else {
+    //         ch_bt_index = Channel.of([ [:] , target_genome_index ])
+    //     }
+    // }
+    // else {
+    //     ch_bt_index = BOWTIE_BUILD ( ch_fasta ).index
+    //     ch_versions = ch_versions.mix(BOWTIE_BUILD.out.versions)
+    // }
+
+    /*
+    * MODULES: Uncompress STAR index or generate if required
+    */
+    // ch_star_index = Channel.empty()
+    // if ("star" in aligners && star_index_path) {
+    //     if (star_index_path.toString().endsWith(".tar.gz")) {
+    //         ch_star_index = UNTAR_STAR ( [ [:], star_index_path ] ).untar.flatten().last()
+    //         ch_versions  = ch_versions.mix(UNTAR_STAR.out.versions)
+    //     } else {
+    //         ch_star_index = star_index_path
+    //     }
+    // }
+    // else if ("star" in aligners && !star_index_path) {
+    //     ch_star_index = STAR_GENOMEGENERATE ( ch_fasta_input, ch_gtf_input ).index
+    //     ch_versions   = ch_versions.mix(STAR_GENOMEGENERATE.out.versions)
+    // }
+
 
     //
     // MODULE: Create fasta fai if required

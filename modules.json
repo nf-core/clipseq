@@ -10,6 +10,16 @@
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
                         "installed_by": ["modules"]
                     },
+                    "bowtie/align": {
+                        "branch": "master",
+                        "git_sha": "603ecbd9f45300c9788f197d2a15a005685b4220",
+                        "installed_by": ["modules"]
+                    },
+                    "bowtie/build": {
+                        "branch": "master",
+                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "installed_by": ["modules"]
+                    },
                     "gunzip": {
                         "branch": "master",
                         "git_sha": "5c460c5a4736974abde2843294f35307ee2b0e5e",
@@ -19,11 +29,23 @@
                         "branch": "master",
                         "git_sha": "fd742419940e01ba1c5ecb172c3e32ec840662fe",
                         "installed_by": ["modules"]
+                    },
+                    "star/align": {
+                        "branch": "master",
+                        "git_sha": "57d75dbac06812c59798a48585032f6e50bb1914",
+                        "installed_by": ["modules"]
+                    },
+                    "star/genomegenerate": {
+                        "branch": "master",
+                        "git_sha": "603ecbd9f45300c9788f197d2a15a005685b4220",
+                        "installed_by": ["modules"]
+                    },
+                    "untar": {
+                        "branch": "master",
+                        "git_sha": "5c460c5a4736974abde2843294f35307ee2b0e5e",
+                        "installed_by": ["modules"]
                     }
                 }
-            },
-            "subworkflows": {
-                "nf-core": {}
             }
         }
     }

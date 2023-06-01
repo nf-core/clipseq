@@ -13,7 +13,7 @@ WorkflowClipseq.initialise(params, log)
 check_param_list = [
     input: params.input,
     fasta: params.fasta,
-    // smrna_fasta: params.smrna_fasta,
+    smrna_fasta: params.smrna_fasta,
     gtf: params.gtf
 ]
 for (param in check_param_list) {
@@ -28,7 +28,9 @@ for (param in check_param_list) {
 // Check non-manditory input parameters to see if the files exist if they have been specified
 def checkPathParamList = [
     params.multiqc_config,
-    params.fasta_fai
+    params.fasta_fai,
+    params.target_genome_index,
+    params.smrna_genome_index
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
@@ -127,14 +129,18 @@ workflow CLIPSEQ {
     ch_versions = Channel.empty()
 
     // Prepare manditory params
-    ch_input = file(params.input)
+    ch_input       = file(params.input)
     ch_fasta       = file(params.fasta)
-    // ch_smrna_fasta = file(params.smrna_fasta, checkIfExists: true)
+    ch_smrna_fasta = file(params.smrna_fasta)
     ch_gtf         = file(params.gtf)
 
     // Prepare non-manditory params
-    ch_fasta_fai = []
+    ch_fasta_fai           = []
+    ch_target_genome_index = []
+    ch_smrna_genome_index  = []
     if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
+    if(params.target_genome_index) { ch_target_genome_index = file(params.target_genome_index) }
+    if(params.smrna_genome_index) { ch_smrna_genome_index = file(params.smrna_genome_index) }
 
 
 
@@ -161,7 +167,10 @@ workflow CLIPSEQ {
         PREPARE_GENOME (
             ch_fasta,
             ch_fasta_fai,
-            ch_gtf
+            ch_smrna_fasta,
+            ch_gtf,
+            ch_target_genome_index,
+            ch_smrna_genome_index
         )
         ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
     }
