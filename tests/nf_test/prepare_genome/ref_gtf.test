@@ -1,0 +1,43 @@
+nextflow_pipeline {
+
+    name "prepare_genome_gtf"
+    script "main.nf"
+
+    test("gtf_raw") {
+        tag "gtf_raw"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                gtf = "s3://ngi-igenomes/igenomes/Saccharomyces_cerevisiae/Ensembl/R64-1-1/Annotation/Genes/genes.gtf"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // There is nothing to directly test
+        }
+    }
+
+    test("gtf_gz") {
+        tag "gtf_gz"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                gtf = "/Users/cheshic/dev/test_data/clipseq/genes.gtf.gz"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // There is nothing to directly test
+        }
+    }
+}

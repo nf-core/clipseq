@@ -3,25 +3,6 @@ nextflow_pipeline {
     name "prepare_genome_fasta"
     script "main.nf"
 
-    test("fasta_preset_genome") {
-        tag "fasta_preset_genome"
-        tag "test"
-        when {
-            params {
-                outdir = "$outputDir"
-                only_genome = true
-                save_reference = true
-            }
-        }
-
-        then {
-            assert workflow.success
-
-            // Test fai created as the igenomes file does not have one
-            assert new File("$outputDir/00_genome/genome.fa.fai").exists()
-        }
-    }
-
     test("fasta_raw") {
         tag "fasta_raw"
         tag "test"

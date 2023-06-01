@@ -9,17 +9,28 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowClipseq.initialise(params, log)
 
-// TODO nf-core: Add all file path parameters for the pipeline to the list below
-// Check input path parameters to see if they exist
+// Check manditory input parameters to see if the files exist if they have been specified
+check_param_list = [
+    input: params.input,
+    fasta: params.fasta,
+    // smrna_fasta: params.smrna_fasta,
+    gtf: params.gtf
+]
+for (param in check_param_list) {
+    if (!param.value) {
+        exit 1, "Required parameter not specified: ${param.key}"
+    }
+    else {
+        file(param.value, checkIfExists: true)
+    }
+}
+
+// Check non-manditory input parameters to see if the files exist if they have been specified
 def checkPathParamList = [
     params.multiqc_config,
-    params.fasta,
     params.fasta_fai
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
-
-// Check mandatory parameters
-if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 
 
 // // Check rRNA databases for sortmerna
@@ -115,13 +126,42 @@ workflow CLIPSEQ {
     // Init
     ch_versions = Channel.empty()
 
+    // Prepare manditory params
+    ch_input = file(params.input)
+    ch_fasta       = file(params.fasta)
+    // ch_smrna_fasta = file(params.smrna_fasta, checkIfExists: true)
+    ch_gtf         = file(params.gtf)
+
+    // Prepare non-manditory params
+    ch_fasta_fai = []
+    if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
+
+
+
+    // if(params.filtered_gtf) { ch_filtered_gtf = Channel.of([[:],file(params.filtered_gtf, checkIfExists: true)]) }
+    // if(params.chrom_sizes) { ch_chrom_sizes = Channel.of([[:],file(params.chrom_sizes, checkIfExists: true)]) }
+    // if(params.smrna_fasta_fai) { ch_smrna_fasta_fai = Channel.of([[:],file(params.smrna_fasta_fai, checkIfExists: true)]) }
+    // if(params.smrna_chrom_sizes) { ch_smrna_chrom_sizes = Channel.of([[:],file(params.smrna_chrom_sizes, checkIfExists: true)]) }
+    // if(params.longest_transcript) { ch_longest_transcript = Channel.of([[:],file(params.longest_transcript, checkIfExists: true)]) }
+    // if(params.longest_transcript_fai) { ch_longest_transcript_fai = Channel.of([[:],file(params.longest_transcript_fai, checkIfExists: true)]) }
+    // if(params.longest_transcript_gtf) { ch_longest_transcript_gtf = Channel.of([[:],file(params.longest_transcript_gtf, checkIfExists: true)]) }
+    // if(params.seg_gtf) { ch_seg_gtf = Channel.of([[:],file(params.seg_gtf, checkIfExists: true)]) }
+    // if(params.seg_filt_gtf) { ch_seg_filt_gtf = Channel.of([[:],file(params.seg_filt_gtf, checkIfExists: true)]) }
+    // if(params.seg_resolved_gtf) { ch_seg_resolved_gtf = file(params.seg_resolved_gtf, checkIfExists: true) }
+    // if(params.seg_resolved_gtf_genic) { ch_seg_resolved_gtf_genic= Channel.of([[:],file(params.seg_resolved_gtf_genic, checkIfExists: true)]) }
+    // if(params.regions_gtf) { ch_regions_gtf = Channel.of([[:],file(params.regions_gtf, checkIfExists: true)]) }
+    // if(params.regions_filt_gtf) { ch_regions_filt_gtf = Channel.of([[:],file(params.regions_filt_gtf, checkIfExists: true)]) }
+    // if(params.regions_resolved_gtf) { ch_regions_resolved_gtf = file(params.regions_resolved_gtf, checkIfExists: true) }
+    // if(params.regions_resolved_gtf_genic) { ch_regions_resolved_gtf_genic = Channel.of([[:],file(params.regions_resolved_gtf_genic, checkIfExists: true)]) }
+
     //
     // SUBWORKFLOW: Uncompress and prepare reference genome files
     //
     if(params.run_genome_prep) {
         PREPARE_GENOME (
-            params.fasta,
-            params.fasta_fai
+            ch_fasta,
+            ch_fasta_fai,
+            ch_gtf
         )
         ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
     }

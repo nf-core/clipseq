@@ -2,14 +2,16 @@
 // Uncompress and prepare reference genome files
 //
 
-include { SAMTOOLS_FAIDX         } from '../../modules/nf-core/samtools/faidx/main'
-include { GUNZIP as GUNZIP_FASTA } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_FASTA               } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_GTF                 } from '../../modules/nf-core/gunzip/main'
+include { SAMTOOLS_FAIDX                       } from '../../modules/nf-core/samtools/faidx/main'
+include { LINUX_COMMAND as REMOVE_GTF_BRACKETS } from '../../modules/local/linux_command'
 
 workflow PREPARE_GENOME {
     take:
-    fasta     //      file: /path/to/genome.fasta
-    fasta_fai //      file: /path/to/genome.fasta
-    // gtf          //      file: /path/to/genome.gtf
+    fasta     // file: .fasta
+    fasta_fai // file: .fai
+    gtf       // file: .gtf
 
     main:
 
@@ -20,21 +22,34 @@ workflow PREPARE_GENOME {
     // MODULE: Uncompress genome fasta file if required
     //
     ch_fasta = Channel.empty()
-    if (fasta.endsWith('.gz')) {
-        ch_fasta    = GUNZIP_FASTA ( [ [id:"primary_genome"], fasta ] ).gunzip
+    if (fasta.toString().endsWith(".gz")) {
+        ch_fasta    = GUNZIP_FASTA ( [ [id:fasta.baseName], fasta ] ).gunzip
         ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
     } else {
-        ch_fasta = Channel.value([ [id:"primary_genome"], file(fasta) ])
+        ch_fasta = Channel.of([ [id:fasta.baseName], fasta ])
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fasta]
     //ch_fasta | view
+
+    //
+    // MODULE: Uncompress genome gtf file if required
+    //
+    ch_gtf = Channel.empty()
+    if (gtf.toString().endsWith(".gz")) {
+        ch_gtf      = GUNZIP_GTF ( [ [id:gtf.baseName], gtf ] ).gunzip
+        ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
+    } else {
+        ch_gtf = Channel.of([ [id:gtf.baseName], gtf ])
+    }
+    // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
+    //ch_gtf | view
 
     //
     // MODULE: Create fasta fai if required
     //
     ch_fasta_fai = Channel.empty()
     if (fasta_fai) {
-        ch_fasta_fai = Channel.value(file(fasta_fai))
+        ch_fasta_fai = Channel.of([ [id:fasta_fai.baseName], fasta_fai ])
     } else {
         SAMTOOLS_FAIDX (
             ch_fasta,
@@ -43,24 +58,26 @@ workflow PREPARE_GENOME {
         ch_fasta_fai = SAMTOOLS_FAIDX.out.fai
         ch_versions = ch_versions.mix(SAMTOOLS_FAIDX.out.versions)
     }
+    // EXAMPLE CHANNEL STRUCT: [[meta], fai]
+    //ch_fasta_fai | view
 
     //
-    // MODULE: Uncompress genome GTF file if required
+    // MODULE: Remove brackets from in gene names from GTF as causes UMICollapse to fail.
     //
-    // ch_gtf = Channel.empty()
-    // if (gtf) {
-    //     if (gtf.endsWith('.gz')) {
-    //         ch_gtf      = GUNZIP_GTF ( [ [:], gtf ] ).gunzip.map { it[1] }
-    //         ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
-    //     } else {
-    //         ch_gtf = Channel.value(file(gtf))
-    //     }
-    // } 
-    
+    REMOVE_GTF_BRACKETS ( 
+        ch_gtf,
+        [],
+        false
+    )
+    ch_gtf = REMOVE_GTF_BRACKETS.out.file
+    // EXAMPLE CHANNEL STRUCT: [[meta], fai]
+    //ch_gtf | view
+
+
     emit:
     fasta                      = ch_fasta                  // channel: [ val(meta), [ fasta ] ]
     fasta_fai                  = ch_fasta_fai              // channel: [ val(meta), [ fai ] ]
-    // gtf                        = ch_gtf                    // channel: [ val(meta), [ gtf ] ]
+    gtf                        = ch_gtf                    // channel: [ val(meta), [ gtf ] ]
     // filtered_gtf               = ch_filt_gtf               // channel: [ val(meta), [ gtf ] ]
     // chrom_sizes                = ch_chrom_sizes            // channel: [ val(meta), [ txt ] ]
     // smrna_fasta                = ch_smrna_fasta            // channel: [ val(meta), [ fasta ] ]
@@ -161,11 +178,6 @@ workflow PREPARE_GENOME {
 //     is_aws_igenome       //   boolean: whether the genome files are from AWS iGenomes
 //     biotype              //    string: if additional fasta file is provided biotype value to use when appending entries to GTF file
 //     prepare_tool_indices //      list: tools to prepare indices for
-
-//     main:
-
-//     ch_versions = Channel.empty()
-
 
 
 //     //
