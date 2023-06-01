@@ -1,0 +1,43 @@
+nextflow_pipeline {
+
+    name "prepare_genome"
+    script "main.nf"
+
+    test("star_build_index") {
+        tag "star_build_index"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                target_genome_index = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/index/star/SAindex").exists()
+        }
+    }
+
+    test("bt_build_index") {
+        tag "bt_build_index"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                target_smrna_index = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/index/bowtie/genome.1.ebwt").exists()
+        }
+    }
+}
