@@ -9,7 +9,8 @@ include { UNTAR as UNTAR_BT                    } from '../../modules/nf-core/unt
 include { UNTAR as UNTAR_STAR                  } from '../../modules/nf-core/untar/main'
 include { BOWTIE_BUILD                         } from '../../modules/nf-core/bowtie/build/main'
 include { STAR_GENOMEGENERATE                  } from '../../modules/nf-core/star/genomegenerate/main'
-include { SAMTOOLS_FAIDX                       } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as TARGET_INDEX       } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as SMRNA_INDEX        } from '../../modules/nf-core/samtools/faidx/main'
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS } from '../../modules/local/linux_command'
 
 workflow PREPARE_GENOME {
@@ -17,6 +18,7 @@ workflow PREPARE_GENOME {
     fasta               // file: .fasta
     fasta_fai           // file: .fai
     smrna_fasta         // file: .fasta
+    smrna_fasta_fai     // file: .fai
     gtf                 // file: .gtf
     target_genome_index // folder: index
     smrna_genome_index  // folder: index
@@ -106,12 +108,29 @@ workflow PREPARE_GENOME {
     if (fasta_fai) {
         ch_fasta_fai = Channel.of([ [id:fasta_fai.baseName], fasta_fai ])
     } else {
-        SAMTOOLS_FAIDX (
+        TARGET_INDEX (
             ch_fasta,
             [[],[]]
         )
-        ch_fasta_fai = SAMTOOLS_FAIDX.out.fai
-        ch_versions = ch_versions.mix(SAMTOOLS_FAIDX.out.versions)
+        ch_fasta_fai = TARGET_INDEX.out.fai
+        ch_versions = ch_versions.mix(TARGET_INDEX.out.versions)
+    }
+    // EXAMPLE CHANNEL STRUCT: [[meta], fai]
+    //ch_fasta_fai | view
+
+    //
+    // MODULE: Create fasta fai if required for smrna genome
+    //
+    ch_smrna_fasta_fai = Channel.empty()
+    if (fasta_fai) {
+        ch_smrna_fasta_fai = Channel.of([ [id:smrna_fasta_fai.baseName], fasta_fai ])
+    } else {
+        SMRNA_INDEX (
+            ch_smrna_fasta,
+            [[],[]]
+        )
+        ch_smrna_fasta_fai = SMRNA_INDEX.out.fai
+        ch_versions = ch_versions.mix(SMRNA_INDEX.out.versions)
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fai]
     //ch_fasta_fai | view
@@ -133,7 +152,7 @@ workflow PREPARE_GENOME {
     fasta                      = ch_fasta                  // channel: [ val(meta), [ fasta ] ]
     fasta_fai                  = ch_fasta_fai              // channel: [ val(meta), [ fai ] ]
     smrna_fasta                = ch_smrna_fasta            // channel: [ val(meta), [ fasta ] ]
-    // smrna_fasta_fai            = ch_smrna_fasta_fai        // channel: [ val(meta), [ fai ] ]
+    smrna_fasta_fai            = ch_smrna_fasta_fai        // channel: [ val(meta), [ fai ] ]
     genome_index               = ch_bt_index           // channel: [ val(meta), [ star_index ] ]
     smrna_index                = ch_star_index            // channel: [ val(meta), [ bt2_index ] ]
     gtf                        = ch_gtf                    // channel: [ val(meta), [ gtf ] ]

@@ -29,6 +29,7 @@ for (param in check_param_list) {
 def checkPathParamList = [
     params.multiqc_config,
     params.fasta_fai,
+    params.smrna_fasta_fai,
     params.target_genome_index,
     params.smrna_genome_index
 ]
@@ -136,9 +137,11 @@ workflow CLIPSEQ {
 
     // Prepare non-manditory params
     ch_fasta_fai           = []
+    ch_smrna_fasta_fai     = []
     ch_target_genome_index = []
     ch_smrna_genome_index  = []
     if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
+    if(params.smrna_fasta_fai) { ch_smrna_fasta_fai = file(params.smrna_fasta_fai) }
     if(params.target_genome_index) { ch_target_genome_index = file(params.target_genome_index) }
     if(params.smrna_genome_index) { ch_smrna_genome_index = file(params.smrna_genome_index) }
 
@@ -168,6 +171,7 @@ workflow CLIPSEQ {
             ch_fasta,
             ch_fasta_fai,
             ch_smrna_fasta,
+            ch_smrna_fasta_fai,
             ch_gtf,
             ch_target_genome_index,
             ch_smrna_genome_index

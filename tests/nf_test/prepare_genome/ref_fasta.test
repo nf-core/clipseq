@@ -77,6 +77,8 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
+
+            assert new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
         }
     }
 
@@ -94,6 +96,28 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
+
+            assert new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
+        }
+    }
+
+    test("smrna_fasta_fai") {
+        tag "smrna_fasta_fai"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                fasta_fai = "/Users/cheshic/dev/test_data/clipseq/homosapiens_smallRNA.fa.fai"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Check fai does not exist as the process should not have run to generate it
+            assert !(new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists())
         }
     }
 }
