@@ -2,16 +2,18 @@
 // Uncompress and prepare reference genome files
 //
 
-include { GUNZIP as GUNZIP_FASTA               } from '../../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_SMRNA_FASTA         } from '../../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_GTF                 } from '../../modules/nf-core/gunzip/main'
-include { UNTAR as UNTAR_BT                    } from '../../modules/nf-core/untar/main'
-include { UNTAR as UNTAR_STAR                  } from '../../modules/nf-core/untar/main'
-include { BOWTIE_BUILD                         } from '../../modules/nf-core/bowtie/build/main'
-include { STAR_GENOMEGENERATE                  } from '../../modules/nf-core/star/genomegenerate/main'
-include { SAMTOOLS_FAIDX as TARGET_INDEX       } from '../../modules/nf-core/samtools/faidx/main'
-include { SAMTOOLS_FAIDX as SMRNA_INDEX        } from '../../modules/nf-core/samtools/faidx/main'
-include { LINUX_COMMAND as REMOVE_GTF_BRACKETS } from '../../modules/local/linux_command'
+include { GUNZIP as GUNZIP_FASTA                    } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_SMRNA_FASTA              } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_GTF                      } from '../../modules/nf-core/gunzip/main'
+include { UNTAR as UNTAR_BT                         } from '../../modules/nf-core/untar/main'
+include { UNTAR as UNTAR_STAR                       } from '../../modules/nf-core/untar/main'
+include { BOWTIE_BUILD                              } from '../../modules/nf-core/bowtie/build/main'
+include { STAR_GENOMEGENERATE                       } from '../../modules/nf-core/star/genomegenerate/main'
+include { SAMTOOLS_FAIDX as TARGET_INDEX            } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as SMRNA_INDEX             } from '../../modules/nf-core/samtools/faidx/main'
+include { LINUX_COMMAND as REMOVE_GTF_BRACKETS      } from '../../modules/local/linux_command'
+include { CUSTOM_GETCHROMSIZES as TARGET_CHROM_SIZE } from '../../modules/nf-core/custom/getchromsizes/main'
+include { CUSTOM_GETCHROMSIZES as SMRNA_CHROM_SIZE  } from '../../modules/nf-core/custom/getchromsizes/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -22,6 +24,8 @@ workflow PREPARE_GENOME {
     gtf                 // file: .gtf
     target_genome_index // folder: index
     smrna_genome_index  // folder: index
+    target_chrom_sizes  // file: .txt
+    smrna_chrom_sizes   // file: .txt
 
     main:
 
@@ -136,6 +140,24 @@ workflow PREPARE_GENOME {
     //ch_fasta_fai | view
 
     //
+    // MODULE: Calc target chrom sizes
+    //
+    ch_target_chrom_sizes = target_chrom_sizes
+    if(!target_chrom_sizes) {
+        ch_target_chrom_sizes = TARGET_CHROM_SIZE ( ch_fasta ).sizes
+        ch_versions  = ch_versions.mix(TARGET_CHROM_SIZE.out.versions)
+    }
+
+    //
+    // MODULE: Calc smrna chrom sizes
+    //
+    ch_smrna_chrom_sizes = smrna_chrom_sizes
+    if(!smrna_chrom_sizes) {
+        ch_smrna_chrom_sizes = SMRNA_CHROM_SIZE ( ch_smrna_fasta ).sizes
+        ch_versions  = ch_versions.mix(SMRNA_CHROM_SIZE.out.versions)
+    }
+
+    //
     // MODULE: Remove brackets from in gene names from GTF as causes UMICollapse to fail.
     //
     REMOVE_GTF_BRACKETS ( 
@@ -155,14 +177,12 @@ workflow PREPARE_GENOME {
     smrna_fasta_fai            = ch_smrna_fasta_fai        // channel: [ val(meta), [ fai ] ]
     genome_index               = ch_bt_index           // channel: [ val(meta), [ star_index ] ]
     smrna_index                = ch_star_index            // channel: [ val(meta), [ bt2_index ] ]
+    chrom_sizes                = ch_target_chrom_sizes            // channel: [ val(meta), [ txt ] ]
+    smrna_chrom_sizes          = ch_smrna_chrom_sizes      // channel: [ val(meta), [ txt ] ]
     gtf                        = ch_gtf                    // channel: [ val(meta), [ gtf ] ]
 
 
-
-
     // filtered_gtf               = ch_filt_gtf               // channel: [ val(meta), [ gtf ] ]
-    // chrom_sizes                = ch_chrom_sizes            // channel: [ val(meta), [ txt ] ]
-    // smrna_chrom_sizes          = ch_smrna_chrom_sizes      // channel: [ val(meta), [ txt ] ]
     // longest_transcript         = ch_longest_transcript     // channel: [ val(meta), [ txt ] ]
     // longest_transcript_fai     = ch_longest_transcript_fai  // channel: [ val(meta), [ fai ] ]
     // longest_transcript_gtf     = ch_longest_transcript_gtf  // channel: [ val(meta), [ fai ] ]

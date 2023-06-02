@@ -1,6 +1,6 @@
 nextflow_pipeline {
 
-    name "prepare_genome"
+    name "prepare_genome_indexes"
     script "main.nf"
 
     test("star_build_index") {
