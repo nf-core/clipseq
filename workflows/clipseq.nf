@@ -36,7 +36,16 @@ def checkPathParamList = [
     params.smrna_chrom_sizes,
     params.longest_transcript,
     params.longest_transcript_fai,
-    params.longest_transcript_gtf
+    params.longest_transcript_gtf,
+    params.filtered_gtf,
+    params.seg_gtf,
+    params.seg_filt_gtf,
+    params.seg_resolved_gtf,
+    params.seg_resolved_gtf_genic,
+    params.regions_gtf,
+    params.regions_filt_gtf,
+    params.regions_resolved_gtf,
+    params.regions_resolved_gtf_genic
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
@@ -141,15 +150,24 @@ workflow CLIPSEQ {
     ch_gtf         = file(params.gtf)
 
     // Prepare non-manditory params
-    ch_fasta_fai              = []
-    ch_smrna_fasta_fai        = []
-    ch_target_genome_index    = []
-    ch_smrna_genome_index     = []
-    ch_target_chrom_sizes     = []
-    ch_smrna_chrom_sizes      = []
-    ch_longest_transcript     = []
-    ch_longest_transcript_fai = []
-    ch_longest_transcript_gtf = []
+    ch_fasta_fai                  = []
+    ch_smrna_fasta_fai            = []
+    ch_target_genome_index        = []
+    ch_smrna_genome_index         = []
+    ch_target_chrom_sizes         = []
+    ch_smrna_chrom_sizes          = []
+    ch_longest_transcript         = []
+    ch_longest_transcript_fai     = []
+    ch_longest_transcript_gtf     = []
+    ch_filtered_gtf               = []
+    ch_seg_gtf                    = []
+    ch_seg_filt_gtf               = []
+    ch_seg_resolved_gtf           = []
+    ch_seg_resolved_gtf_genic     = []
+    ch_regions_gtf                = []
+    ch_regions_filt_gtf           = []
+    ch_regions_resolved_gtf       = []
+    ch_regions_resolved_gtf_genic = []
     if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
     if(params.smrna_fasta_fai) { ch_smrna_fasta_fai = file(params.smrna_fasta_fai) }
     if(params.target_genome_index) { ch_target_genome_index = file(params.target_genome_index) }
@@ -159,19 +177,15 @@ workflow CLIPSEQ {
     if(params.longest_transcript) { ch_longest_transcript = file(params.longest_transcript) }
     if(params.longest_transcript_fai) { ch_longest_transcript_fai = file(params.longest_transcript_fai) }
     if(params.longest_transcript_gtf) { ch_longest_transcript_gtf = file(params.longest_transcript_gtf) }
-
-
-
-
-    // if(params.filtered_gtf) { ch_filtered_gtf = Channel.of([[:],file(params.filtered_gtf, checkIfExists: true)]) }
-    // if(params.seg_gtf) { ch_seg_gtf = Channel.of([[:],file(params.seg_gtf, checkIfExists: true)]) }
-    // if(params.seg_filt_gtf) { ch_seg_filt_gtf = Channel.of([[:],file(params.seg_filt_gtf, checkIfExists: true)]) }
-    // if(params.seg_resolved_gtf) { ch_seg_resolved_gtf = file(params.seg_resolved_gtf, checkIfExists: true) }
-    // if(params.seg_resolved_gtf_genic) { ch_seg_resolved_gtf_genic= Channel.of([[:],file(params.seg_resolved_gtf_genic, checkIfExists: true)]) }
-    // if(params.regions_gtf) { ch_regions_gtf = Channel.of([[:],file(params.regions_gtf, checkIfExists: true)]) }
-    // if(params.regions_filt_gtf) { ch_regions_filt_gtf = Channel.of([[:],file(params.regions_filt_gtf, checkIfExists: true)]) }
-    // if(params.regions_resolved_gtf) { ch_regions_resolved_gtf = file(params.regions_resolved_gtf, checkIfExists: true) }
-    // if(params.regions_resolved_gtf_genic) { ch_regions_resolved_gtf_genic = Channel.of([[:],file(params.regions_resolved_gtf_genic, checkIfExists: true)]) }
+    if(params.filtered_gtf) { ch_filtered_gtf = file(params.filtered_gtf) }
+    if(params.seg_gtf) { ch_seg_gtf = file(params.seg_gtf) }
+    if(params.seg_filt_gtf) { ch_seg_filt_gtf = file(params.seg_filt_gtf) }
+    if(params.seg_resolved_gtf) { ch_seg_resolved_gtf = file(params.seg_resolved_gtf) }
+    if(params.seg_resolved_gtf_genic) { ch_seg_resolved_gtf_genic= file(params.seg_resolved_gtf_genic) }
+    if(params.regions_gtf) { ch_regions_gtf = file(params.regions_gtf) }
+    if(params.regions_filt_gtf) { ch_regions_filt_gtf = file(params.regions_filt_gtf) }
+    if(params.regions_resolved_gtf) { ch_regions_resolved_gtf = file(params.regions_resolved_gtf) }
+    if(params.regions_resolved_gtf_genic) { ch_regions_resolved_gtf_genic = file(params.regions_resolved_gtf_genic) }
 
     //
     // SUBWORKFLOW: Uncompress and prepare reference genome files
@@ -189,7 +203,16 @@ workflow CLIPSEQ {
             ch_smrna_chrom_sizes,
             ch_longest_transcript,
             ch_longest_transcript_fai,
-            ch_longest_transcript_gtf
+            ch_longest_transcript_gtf,
+            ch_filtered_gtf,
+            ch_seg_gtf,
+            ch_seg_filt_gtf,
+            ch_seg_resolved_gtf,
+            ch_seg_resolved_gtf_genic,
+            ch_regions_gtf,
+            ch_regions_filt_gtf,
+            ch_regions_resolved_gtf,
+            ch_regions_resolved_gtf_genic
         )
         ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
     }

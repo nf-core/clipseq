@@ -30,6 +30,11 @@
                         "git_sha": "5c460c5a4736974abde2843294f35307ee2b0e5e",
                         "installed_by": ["modules"]
                     },
+                    "icountmini/segment": {
+                        "branch": "master",
+                        "git_sha": "7bf8bf88ab96273c0ce93db57353d87f48cd2dd4",
+                        "installed_by": ["modules"]
+                    },
                     "samtools/faidx": {
                         "branch": "master",
                         "git_sha": "fd742419940e01ba1c5ecb172c3e32ec840662fe",

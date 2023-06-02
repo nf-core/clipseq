@@ -1,0 +1,50 @@
+name: clipseq_resolve_unannotated
+description: Annotates genome segments that are not annotated by iCount segmentation.
+tools:
+  - pandas:
+      description: |
+        Flexible and powerful data analysis / manipulation library for Python,
+        providing labeled data structures similar to R data.frame objects,
+        statistical functions, and much more.
+      homepage: https://pandas.pydata.org/
+      documentation: https://pandas.pydata.org/docs/
+      licence: ["BSD-3"]
+  - pybedtools:
+      description: |
+        The BEDTools suite of programs is widely used for genomic interval manipulation or “genome algebra”. pybedtools wraps and extends BEDTools and offers feature-level manipulations from within Python.
+      homepage: https://daler.github.io/pybedtools/
+      documentation: https://daler.github.io/pybedtools/
+  - plumbum:
+      description: |
+        Plumbum is a small yet feature-rich library for shell script-like programs in Python.
+      homepage: https://plumbum.readthedocs.io/en/latest/
+      documentation: https://plumbum.readthedocs.io/en/latest/
+input:
+  - segmentation:
+      type: file
+      description: A GTF annotation file segmented by iCount
+      pattern: "*.gtf"
+  - filt_segmentation:
+      type: file
+      description: A GTF filtered annotation file segmented by iCount
+      pattern: "*.gtf"
+  - annotation:
+      type: file
+      description: A genome GTF file
+      pattern: "*.gtf"
+  - fai:
+      type: file
+      description: A genome index file for the genome the other GTF inputs were annotated for
+      pattern: "*.fai"
+output:
+  - gtf:
+      type: file
+      description: A resolved GTF annotation file
+      pattern: "*.gtf"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+authors:
+  - "@marc-jones"
+  - "@chris-cheshire"

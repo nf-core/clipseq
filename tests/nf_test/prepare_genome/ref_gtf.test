@@ -40,4 +40,139 @@ nextflow_pipeline {
             // There is nothing to directly test
         }
     }
+
+    test("gtf_filt") {
+        tag "gtf_filt"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                filtered_gtf = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/yeast_MitoV_filtered.gtf").exists()
+        }
+    }
+
+    test("gtf_filt_seg") {
+        tag "gtf_filt_seg"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                seg_filt_gtf = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_regions.gtf.gz").exists()
+            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_seg.gtf.gz").exists()
+        }
+    }
+
+    test("gtf_seg") {
+        tag "gtf_seg"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                seg_gtf = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/yeast_MitoV_regions.gtf.gz").exists()
+            assert new File("$outputDir/00_genome/yeast_MitoV_seg.gtf.gz").exists()
+        }
+    }
+
+    test("gtf_resolve_unanno") {
+        tag "gtf_resolve_unanno"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                seg_resolved_gtf = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_seg_genicOtherfalse.resolved.gtf").exists()
+        }
+    }
+
+    test("gtf_resolve_unanno_region") {
+        tag "gtf_resolve_unanno_region"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                regions_resolved_gtf = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_regions_genicOtherfalse.resolved.gtf").exists()
+        }
+    }
+
+    test("gtf_resolve_unanno_genic") {
+        tag "gtf_resolve_unanno_genic"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                seg_resolved_gtf_genic = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_seg_genicOthertrue.resolved.gtf").exists()
+        }
+    }
+
+    test("gtf_resolve_unanno_region_genic") {
+        tag "gtf_resolve_unanno_region_genic"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                regions_resolved_gtf_genic = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_regions_genicOthertrue.resolved.gtf").exists()
+        }
+    }
 }
