@@ -1,0 +1,27 @@
+nextflow_pipeline {
+
+    name "prepare_genome_longest_transcript"
+    script "main.nf"
+
+    test("no_longest_transcript") {
+        tag "no_longest_transcript"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                longest_transcript = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/longest_transcript.txt").exists()
+            assert new File("$outputDir/00_genome/longest_transcript.fai").exists()
+            assert new File("$outputDir/00_genome/longest_transcript.gtf").exists()
+        }
+    }
+
+}
