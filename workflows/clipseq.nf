@@ -112,7 +112,8 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { PREPARE_GENOME } from '../subworkflows/local/prepare_genome'
+include { PREPARE_GENOME    } from '../subworkflows/local/prepare_genome'
+include { PARSE_FASTQ_INPUT } from '../subworkflows/local/parse_fastq_input'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,8 +215,43 @@ workflow CLIPSEQ {
             ch_regions_resolved_gtf,
             ch_regions_resolved_gtf_genic
         )
-        ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
+        ch_versions                   = ch_versions.mix(PREPARE_GENOME.out.versions)
+        ch_fasta                      = PREPARE_GENOME.out.fasta
+        ch_fasta_fai                  = PREPARE_GENOME.out.fasta_fai
+        ch_gtf                        = PREPARE_GENOME.out.gtf
+        ch_filtered_gtf               = PREPARE_GENOME.out.filtered_gtf
+        ch_target_chrom_sizes         = PREPARE_GENOME.out.chrom_sizes
+        ch_smrna_fasta                = PREPARE_GENOME.out.smrna_fasta
+        ch_smrna_fasta_fai            = PREPARE_GENOME.out.smrna_fasta_fai
+        ch_smrna_chrom_sizes          = PREPARE_GENOME.out.smrna_chrom_sizes
+        ch_longest_transcript         = PREPARE_GENOME.out.longest_transcript
+        ch_longest_transcript_fai     = PREPARE_GENOME.out.longest_transcript_fai
+        ch_longest_transcript_gtf     = PREPARE_GENOME.out.longest_transcript_gtf
+        ch_seg_gtf                    = PREPARE_GENOME.out.seg_gtf
+        ch_seg_filt_gtf               = PREPARE_GENOME.out.seg_filt_gtf
+        ch_seg_resolved_gtf           = PREPARE_GENOME.out.seg_resolved_gtf
+        ch_seg_resolved_gtf_genic     = PREPARE_GENOME.out.seg_resolved_gtf_genic
+        ch_regions_gtf                = PREPARE_GENOME.out.regions_gtf
+        ch_regions_filt_gtf           = PREPARE_GENOME.out.regions_filt_gtf
+        ch_regions_resolved_gtf       = PREPARE_GENOME.out.regions_resolved_gtf
+        ch_regions_resolved_gtf_genic = PREPARE_GENOME.out.regions_resolved_gtf_genic
+        ch_target_genome_index        = PREPARE_GENOME.out.genome_index
+        ch_smrna_genome_index         = PREPARE_GENOME.out.smrna_index
     }
+
+    ch_fastq = Channel.empty()
+    if(params.run_input_check) {
+        /*
+        * SUBWORKFLOW: Read in samplesheet, validate, stage input files and merge replicates
+        */
+        PARSE_FASTQ_INPUT (
+            ch_input
+        )
+        ch_versions = ch_versions.mix(PARSE_FASTQ_INPUT.out.versions)
+        ch_fastq    = PARSE_FASTQ_INPUT.out.fastq
+    }
+    //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:false], [FASTQ]]
+    //ch_fastq | view
 
 
     // CUSTOM_DUMPSOFTWAREVERSIONS (
