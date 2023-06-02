@@ -33,7 +33,10 @@ def checkPathParamList = [
     params.target_genome_index,
     params.smrna_genome_index,
     params.target_chrom_sizes,
-    params.smrna_chrom_sizes
+    params.smrna_chrom_sizes,
+    params.longest_transcript,
+    params.longest_transcript_fai,
+    params.longest_transcript_gtf
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
@@ -138,26 +141,29 @@ workflow CLIPSEQ {
     ch_gtf         = file(params.gtf)
 
     // Prepare non-manditory params
-    ch_fasta_fai           = []
-    ch_smrna_fasta_fai     = []
-    ch_target_genome_index = []
-    ch_smrna_genome_index  = []
-    ch_target_chrom_sizes  = []
-    ch_smrna_chrom_sizes   = []
+    ch_fasta_fai              = []
+    ch_smrna_fasta_fai        = []
+    ch_target_genome_index    = []
+    ch_smrna_genome_index     = []
+    ch_target_chrom_sizes     = []
+    ch_smrna_chrom_sizes      = []
+    ch_longest_transcript     = []
+    ch_longest_transcript_fai = []
+    ch_longest_transcript_gtf = []
     if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
     if(params.smrna_fasta_fai) { ch_smrna_fasta_fai = file(params.smrna_fasta_fai) }
     if(params.target_genome_index) { ch_target_genome_index = file(params.target_genome_index) }
     if(params.smrna_genome_index) { ch_smrna_genome_index = file(params.smrna_genome_index) }
     if(params.target_chrom_sizes) { ch_target_chrom_sizes = file(params.target_chrom_sizes) }
     if(params.smrna_chrom_sizes) { ch_smrna_chrom_sizes = file(params.smrna_chrom_sizes) }
+    if(params.longest_transcript) { ch_longest_transcript = file(params.longest_transcript) }
+    if(params.longest_transcript_fai) { ch_longest_transcript_fai = file(params.longest_transcript_fai) }
+    if(params.longest_transcript_gtf) { ch_longest_transcript_gtf = file(params.longest_transcript_gtf) }
 
 
 
 
     // if(params.filtered_gtf) { ch_filtered_gtf = Channel.of([[:],file(params.filtered_gtf, checkIfExists: true)]) }
-    // if(params.longest_transcript) { ch_longest_transcript = Channel.of([[:],file(params.longest_transcript, checkIfExists: true)]) }
-    // if(params.longest_transcript_fai) { ch_longest_transcript_fai = Channel.of([[:],file(params.longest_transcript_fai, checkIfExists: true)]) }
-    // if(params.longest_transcript_gtf) { ch_longest_transcript_gtf = Channel.of([[:],file(params.longest_transcript_gtf, checkIfExists: true)]) }
     // if(params.seg_gtf) { ch_seg_gtf = Channel.of([[:],file(params.seg_gtf, checkIfExists: true)]) }
     // if(params.seg_filt_gtf) { ch_seg_filt_gtf = Channel.of([[:],file(params.seg_filt_gtf, checkIfExists: true)]) }
     // if(params.seg_resolved_gtf) { ch_seg_resolved_gtf = file(params.seg_resolved_gtf, checkIfExists: true) }
@@ -180,7 +186,10 @@ workflow CLIPSEQ {
             ch_target_genome_index,
             ch_smrna_genome_index,
             ch_target_chrom_sizes,
-            ch_smrna_chrom_sizes
+            ch_smrna_chrom_sizes,
+            ch_longest_transcript,
+            ch_longest_transcript_fai,
+            ch_longest_transcript_gtf
         )
         ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
     }
