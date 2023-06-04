@@ -125,6 +125,8 @@ include { PARSE_FASTQ_INPUT } from '../subworkflows/local/parse_fastq_input'
 // MODULE: Installed directly from nf-core/modules
 //
 
+include { UMITOOLS_EXTRACT } from '../modules/nf-core/umitools/extract/main'
+
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
 //
@@ -239,11 +241,11 @@ workflow CLIPSEQ {
         ch_smrna_genome_index         = PREPARE_GENOME.out.smrna_index
     }
 
+    //
+    // SUBWORKFLOW: Read in samplesheet, validate, stage input files and merge replicates
+    //
     ch_fastq = Channel.empty()
     if(params.run_input_check) {
-        /*
-        * SUBWORKFLOW: Read in samplesheet, validate, stage input files and merge replicates
-        */
         PARSE_FASTQ_INPUT (
             ch_input
         )
@@ -252,6 +254,33 @@ workflow CLIPSEQ {
     }
     //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:false], [FASTQ]]
     //ch_fastq | view
+
+    //
+    // MODULE: Move umi to header if required
+    //
+    if(params.run_move_umi_to_header){
+        UMITOOLS_EXTRACT (
+            ch_fastq
+        )
+        ch_versions = ch_versions.mix(UMITOOLS_EXTRACT.out.versions)
+        ch_fastq    = UMITOOLS_EXTRACT.out.reads
+    }
+    //UMITOOLS_EXTRACT.out.reads | view
+
+    // if(params.run_trim_galore_fastqc) {
+    //     /*
+    //     * SUBWORKFLOW: Run fastqc and trimming
+    //     */
+    //     FASTQC_TRIMGALORE (
+    //         ch_fastq,
+    //         params.skip_fastqc,
+    //         params.skip_trimming
+    //     )
+    //     ch_versions = ch_versions.mix(FASTQC_TRIMGALORE.out.versions)
+    //     ch_fastq    = FASTQC_TRIMGALORE.out.fastq
+    // }
+    // //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:false], [FASTQ]]
+    // //ch_fastq | view
 
 
     // CUSTOM_DUMPSOFTWAREVERSIONS (
