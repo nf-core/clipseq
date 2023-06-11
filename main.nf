@@ -578,7 +578,6 @@ process cutadapt {
 
     script:
     """
-    ln -s $reads ${name}.fastq.gz
     cutadapt -j $task.cpus -a ${params.adapter} -m 12 -o ${name}.trimmed.fastq.gz ${name}.fastq.gz > ${name}_cutadapt.log
     """
 }
@@ -712,10 +711,12 @@ if (params.deduplicate) {
         """
     }
 } else {
-    ch_dedup = ch_aligned
+    ch_aligned.into{
+        ch_dedup
+        ch_dedup_rseqc
+    }
     ch_dedup_mqc = Channel.empty()
     ch_dedup_qc = Channel.empty()
-    ch_dedup_rseqc = ch_aligned
 }
 
 /*
