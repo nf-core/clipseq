@@ -125,12 +125,11 @@ include { PARSE_FASTQ_INPUT } from '../subworkflows/local/parse_fastq_input'
 // MODULE: Installed directly from nf-core/modules
 //
 
-include { UMITOOLS_EXTRACT } from '../modules/nf-core/umitools/extract/main'
-
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
 //
 
+include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE } from '../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -256,31 +255,21 @@ workflow CLIPSEQ {
     //ch_fastq | view
 
     //
-    // MODULE: Move umi to header if required
+    // SUBWORKFLOW: Extract UMI, trim and run b4 and after fastqc
     //
-    if(params.run_move_umi_to_header){
-        UMITOOLS_EXTRACT (
-            ch_fastq
+    if(params.run_preprocessing) {
+        FASTQ_FASTQC_UMITOOLS_TRIMGALORE (
+            ch_fastq,
+            params.skip_fastqc,
+            true,
+            params.skip_umi_extract,
+            params.skip_trimming,
+            params.umi_discard_read,
+            params.min_trimmed_reads
         )
-        ch_versions = ch_versions.mix(UMITOOLS_EXTRACT.out.versions)
-        ch_fastq    = UMITOOLS_EXTRACT.out.reads
+        ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.versions)
     }
-    //UMITOOLS_EXTRACT.out.reads | view
 
-    // if(params.run_trim_galore_fastqc) {
-    //     /*
-    //     * SUBWORKFLOW: Run fastqc and trimming
-    //     */
-    //     FASTQC_TRIMGALORE (
-    //         ch_fastq,
-    //         params.skip_fastqc,
-    //         params.skip_trimming
-    //     )
-    //     ch_versions = ch_versions.mix(FASTQC_TRIMGALORE.out.versions)
-    //     ch_fastq    = FASTQC_TRIMGALORE.out.fastq
-    // }
-    // //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:false], [FASTQ]]
-    // //ch_fastq | view
 
 
     // CUSTOM_DUMPSOFTWAREVERSIONS (
