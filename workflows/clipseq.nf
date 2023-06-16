@@ -114,6 +114,7 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 //
 include { PREPARE_GENOME    } from '../subworkflows/local/prepare_genome'
 include { PARSE_FASTQ_INPUT } from '../subworkflows/local/parse_fastq_input'
+include { RNA_ALIGN         } from '../subworkflows/local/rna_align'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -251,7 +252,7 @@ workflow CLIPSEQ {
         ch_versions = ch_versions.mix(PARSE_FASTQ_INPUT.out.versions)
         ch_fastq    = PARSE_FASTQ_INPUT.out.fastq
     }
-    //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:false], [FASTQ]]
+    //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:true], [FASTQ]]
     //ch_fastq | view
 
     //
@@ -268,8 +269,27 @@ workflow CLIPSEQ {
             params.min_trimmed_reads
         )
         ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.versions)
+        ch_fastq    = FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads
     }
+    //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:true], [FASTQ]]
+    //ch_fastq | view
 
+    //
+    // SUBWORKFLOW: Align reads to smrna and primary genomes
+    //
+    if(params.run_alignment) {
+        RNA_ALIGN (
+            ch_fastq,
+            ch_smrna_genome_index,
+            ch_target_genome_index,
+            ch_filtered_gtf,
+            ch_fasta
+        )
+        // ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.versions)
+        // ch_fastq    = FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads
+    }
+    //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:true], [FASTQ]]
+    //ch_fastq | view
 
 
     // CUSTOM_DUMPSOFTWAREVERSIONS (
