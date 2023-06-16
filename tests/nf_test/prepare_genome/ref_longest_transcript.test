@@ -1,5 +1,4 @@
 nextflow_pipeline {
-
     name "prepare_genome_longest_transcript"
     script "main.nf"
 
@@ -23,5 +22,4 @@ nextflow_pipeline {
             assert new File("$outputDir/00_genome/longest_transcript.gtf").exists()
         }
     }
-
 }

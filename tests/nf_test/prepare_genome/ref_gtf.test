@@ -1,5 +1,4 @@
 nextflow_pipeline {
-
     name "prepare_genome_gtf"
     script "main.nf"
 

@@ -1,5 +1,4 @@
 nextflow_pipeline {
-
     name "prepare_genome_chrom_sizes"
     script "main.nf"
 
@@ -23,5 +22,4 @@ nextflow_pipeline {
             assert new File("$outputDir/00_genome/yeast_MitoV.fa.sizes").exists()
         }
     }
-
 }
