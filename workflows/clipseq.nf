@@ -253,18 +253,18 @@ workflow CLIPSEQ {
         ch_fastq    = PARSE_FASTQ_INPUT.out.fastq
     }
     //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:false], [FASTQ]]
-    ch_fastq | view
+    //ch_fastq | view
 
     //
     // MODULE: Move umi to header if required
     //
-    // if(params.run_move_umi_to_header){
-    //     UMITOOLS_EXTRACT (
-    //         ch_fastq
-    //     )
-    //     ch_versions = ch_versions.mix(UMITOOLS_EXTRACT.out.versions)
-    //     ch_fastq    = UMITOOLS_EXTRACT.out.reads
-    // }
+    if(params.run_move_umi_to_header){
+        UMITOOLS_EXTRACT (
+            ch_fastq
+        )
+        ch_versions = ch_versions.mix(UMITOOLS_EXTRACT.out.versions)
+        ch_fastq    = UMITOOLS_EXTRACT.out.reads
+    }
     //UMITOOLS_EXTRACT.out.reads | view
 
     // if(params.run_trim_galore_fastqc) {
