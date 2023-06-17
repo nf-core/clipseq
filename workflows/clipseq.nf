@@ -277,6 +277,17 @@ workflow CLIPSEQ {
     //
     // SUBWORKFLOW: Align reads to smrna and primary genomes
     //
+    ch_smrna_bam       = Channel.empty()
+    ch_smrna_bai       = Channel.empty()
+    ch_smrna_log       = Channel.empty()
+    ch_target_log      = Channel.empty()
+    ch_target_bam      = Channel.empty()
+    ch_target_bai      = Channel.empty()
+    ch_target_stats    = Channel.empty()
+    ch_target_flagstat = Channel.empty()
+    ch_target_idxstats = Channel.empty()
+    ch_transcript_bam  = Channel.empty()
+    ch_transcript_bai  = Channel.empty()
     if(params.run_alignment) {
         RNA_ALIGN (
             ch_fastq,
@@ -285,11 +296,20 @@ workflow CLIPSEQ {
             ch_filtered_gtf,
             ch_fasta
         )
-        // ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.versions)
-        // ch_fastq    = FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads
+        ch_versions         = ch_versions.mix(RNA_ALIGN.out.versions)
+        ch_smrna_bam        = RNA_ALIGN.out.smrna_bam
+        ch_smrna_bai        = RNA_ALIGN.out.smrna_bai
+        ch_smrna_log        = RNA_ALIGN.out.smrna_log
+        ch_target_log       = RNA_ALIGN.out.target_log_final
+        ch_target_bam       = RNA_ALIGN.out.target_bam
+        ch_target_bai       = RNA_ALIGN.out.target_bai
+        ch_target_stats     = RNA_ALIGN.out.target_stats
+        ch_target_flagstat  = RNA_ALIGN.out.target_flagstat
+        ch_target_idxstats  = RNA_ALIGN.out.target_idxstats
+        ch_transcript_bam   = RNA_ALIGN.out.transcript_bam
+        ch_transcript_bai   = RNA_ALIGN.out.transcript_bai
     }
-    //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:true], [FASTQ]]
-    //ch_fastq | view
+    //ch_target_bam | view
 
 
     // CUSTOM_DUMPSOFTWAREVERSIONS (
