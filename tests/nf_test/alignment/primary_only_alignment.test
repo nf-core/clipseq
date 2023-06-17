@@ -29,7 +29,7 @@ nextflow_pipeline {
     }
 
     test("only_alignment_false_outputs") {
-        tag "primary_only_alignment_false_outputs"
+        tag "only_alignment_false_outputs"
         tag "test"
         when {
             params {

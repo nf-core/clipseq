@@ -110,6 +110,11 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 */
 
 //
+// MODULE: Local modules
+//
+include { SAMTOOLS_SIMPLE_VIEW as FILTER_TRANSCRIPTS } from '../modules/local/samtools_simple_view'
+
+//
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { PREPARE_GENOME    } from '../subworkflows/local/prepare_genome'
@@ -125,6 +130,8 @@ include { RNA_ALIGN         } from '../subworkflows/local/rna_align'
 //
 // MODULE: Installed directly from nf-core/modules
 //
+include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT   } from '../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT } from '../modules/nf-core/samtools/index/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -310,6 +317,37 @@ workflow CLIPSEQ {
         ch_transcript_bai   = RNA_ALIGN.out.transcript_bai
     }
     //ch_target_bam | view
+
+    if(params.run_filtering) {
+        //
+        // CHANNEL: Combine bam and bai files on id
+        //
+        ch_transcript_bam_bai = ch_transcript_bam
+            .map { row -> [row[0].id, row ].flatten()}
+            .join ( ch_transcript_bai.map { row -> [row[0].id, row ].flatten()} )
+            .map { row -> [row[1], row[2], row[4]] }
+        //ch_transcript_bam_bai | view
+
+        //
+        // MODULE: Filter transcriptome bam on longest transcripts
+        //
+        FILTER_TRANSCRIPTS (
+            ch_transcript_bam_bai,
+            [],
+            ch_longest_transcript
+        )
+        ch_versions = ch_versions.mix(FILTER_TRANSCRIPTS.out.versions)
+
+        //
+        // SUBWORKFLOW: sort, index filtered bam
+        //
+        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam )
+        SAMTOOLS_INDEX_FILT_TRANSCRIPT ( SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam )
+        ch_versions                     = ch_versions.mix(SAMTOOLS_SORT_FILT_TRANSCRIPT.out.versions)
+        ch_versions                     = ch_versions.mix(SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.versions)
+        ch_transcript_bam               = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
+        ch_transcript_bai               = SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.bai
+    }
 
 
     // CUSTOM_DUMPSOFTWAREVERSIONS (
