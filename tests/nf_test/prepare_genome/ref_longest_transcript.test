@@ -2,8 +2,8 @@ nextflow_pipeline {
     name "prepare_genome_longest_transcript"
     script "main.nf"
 
-    test("no_longest_transcript") {
-        tag "no_longest_transcript"
+    test("genome_no_longest_transcript") {
+        tag "genome_no_longest_transcript"
         tag "test"
         when {
             params {

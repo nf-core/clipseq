@@ -156,8 +156,8 @@ nextflow_pipeline {
         }
     }
 
-    test("gtf_resolve_unanno_region_genic") {
-        tag "gtf_resolve_unanno_region_genic"
+    test("genome_gtf_resolve_unanno_region_genic") {
+        tag "genome_gtf_resolve_unanno_region_genic"
         tag "test"
         when {
             params {

@@ -1,9 +1,9 @@
 nextflow_pipeline {
-    name "primary_only_preprocessing"
+    name "only_preprocessing"
     script "main.nf"
 
-    test("primary_only_preprocessing") {
-        tag "primary_only_preprocessing"
+    test("only_preprocessing_primary") {
+        tag "only_preprocessing_primary"
         tag "test"
         when {
             params {
@@ -27,8 +27,8 @@ nextflow_pipeline {
         }
     }
 
-    test("skip_fastqc") {
-        tag "skip_fastqc"
+    test("only_preprocessing_skip_fastqc") {
+        tag "only_preprocessing_skip_fastqc"
         tag "test"
         when {
             params {
@@ -52,8 +52,8 @@ nextflow_pipeline {
         }
     }
 
-    test("skip_umi_extract") {
-        tag "skip_umi_extract"
+    test("only_preprocessing_skip_umi_extract") {
+        tag "only_preprocessing_skip_umi_extract"
         tag "test"
         when {
             params {
@@ -77,8 +77,8 @@ nextflow_pipeline {
         }
     }
 
-    test("skip_trimming") {
-        tag "skip_trimming"
+    test("only_preprocessing_skip_trimming") {
+        tag "only_preprocessing_skip_trimming"
         tag "test"
         when {
             params {

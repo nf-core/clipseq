@@ -2,8 +2,8 @@ nextflow_pipeline {
     name "prepare_genome_chrom_sizes"
     script "main.nf"
 
-    test("no_chrom_sizes") {
-        tag "no_chrom_sizes"
+    test("genome_no_chrom_sizes") {
+        tag "genome_no_chrom_sizes"
         tag "test"
         when {
             params {

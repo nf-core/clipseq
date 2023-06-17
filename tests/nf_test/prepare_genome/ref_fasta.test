@@ -81,8 +81,8 @@ nextflow_pipeline {
         }
     }
 
-    test("smrna_fasta") {
-        tag "smrna_fasta"
+    test("genome_smrna_fasta") {
+        tag "genome_smrna_fasta"
         tag "test"
         when {
             params {
@@ -100,8 +100,8 @@ nextflow_pipeline {
         }
     }
 
-    test("smrna_fasta_fai") {
-        tag "smrna_fasta_fai"
+    test("genome_smrna_fasta_fai") {
+        tag "genome_smrna_fasta_fai"
         tag "test"
         when {
             params {

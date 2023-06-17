@@ -2,8 +2,8 @@ nextflow_pipeline {
     name "prepare_genome_indexes"
     script "main.nf"
 
-    test("star_build_index") {
-        tag "star_build_index"
+    test("genome_star_build_index") {
+        tag "genome_star_build_index"
         tag "test"
         when {
             params {
@@ -21,8 +21,8 @@ nextflow_pipeline {
         }
     }
 
-    test("bt_build_index") {
-        tag "bt_build_index"
+    test("genome_bt_build_index") {
+        tag "genome_bt_build_index"
         tag "test"
         when {
             params {

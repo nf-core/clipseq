@@ -1,9 +1,9 @@
 nextflow_pipeline {
-    name "primary_only_input"
+    name "only_input"
     script "main.nf"
 
-    test("primary_only_input") {
-        tag "primary_only_input"
+    test("only_input_primary") {
+        tag "only_input_primary"
         tag "test"
         when {
             params {

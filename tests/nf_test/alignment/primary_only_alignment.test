@@ -1,9 +1,9 @@
 nextflow_pipeline {
-    name "primary_only_alignment"
+    name "only_alignment"
     script "main.nf"
 
-    test("primary_only_alignment") {
-        tag "primary_only_alignment"
+    test("only_alignment_primary") {
+        tag "only_alignment_primary"
         tag "test"
         when {
             params {
@@ -28,7 +28,7 @@ nextflow_pipeline {
         }
     }
 
-    test("primary_only_alignment_false_outputs") {
+    test("only_alignment_false_outputs") {
         tag "primary_only_alignment_false_outputs"
         tag "test"
         when {
