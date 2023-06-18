@@ -82,6 +82,7 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 include { SAMTOOLS_SIMPLE_VIEW as FILTER_TRANSCRIPTS } from '../modules/local/samtools_simple_view'
 include { DUMP_SOFTWARE_VERSIONS                     } from '../modules/local/dump_software_versions'
+include { CLIPQC                                     } from '../modules/local/clipqc'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -445,7 +446,10 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
         ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect())
         ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect())
-        // ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+        
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]))
 
         MULTIQC (
             ch_multiqc_files.collect(),

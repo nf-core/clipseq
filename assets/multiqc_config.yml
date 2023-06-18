@@ -15,19 +15,23 @@ export_plots: true
 # Run only these modules
 run_modules:
   - custom_content
+  - fastqc
+  - cutadapt
+  - bowtie
+  - star
 
 module_order:
-  # - fastqc:
-  #     name: "FastQC (raw)"
-  #     info: "This section of the report shows FastQC results before adapter trimming."
-  #     path_filters:
-  #       - "./fastqc/*.zip"
-  # - cutadapt
-  # - fastqc:
-  #     name: "FastQC (trimmed)"
-  #     info: "This section of the report shows FastQC results after adapter trimming."
-  #     path_filters:
-  #       - "./trimgalore/fastqc/*.zip"
+  - fastqc:
+      name: "FastQC (raw)"
+      info: "This section of the report shows FastQC results before adapter trimming."
+      path_filters:
+        - "./3/*.zip"
+  - cutadapt
+  - fastqc:
+      name: "FastQC (trimmed)"
+      info: "This section of the report shows FastQC results after adapter trimming."
+      path_filters:
+        - "./5/*.zip"
   # - bowtie
   # - star
   - custom_content
@@ -36,3 +40,14 @@ custom_content:
   order:
     - software-versions-by-process
     - software-versions-unique
+
+# Customise the module search patterns to speed up execution time
+sp:
+  cutadapt:
+    fn: "*trimming_report.txt"
+  samtools/stats:
+    fn: "*.stats"
+  samtools/flagstat:
+    fn: "*.flagstat"
+  samtools/idxstats:
+    fn: "*.idxstats*"
