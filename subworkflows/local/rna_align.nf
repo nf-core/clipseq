@@ -63,7 +63,7 @@ workflow RNA_ALIGN {
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX_COORD.out.versions)
 
     //
-    // MODULE: Merge reads and index
+    // CHANNEL: Merge reads and index
     //
     ch_coord_bam_bai = STAR_ALIGN.out.bam_sorted
         .join(SAMTOOLS_INDEX_COORD.out.bai, by: [0], remainder: true)

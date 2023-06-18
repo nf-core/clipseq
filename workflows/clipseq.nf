@@ -117,9 +117,11 @@ include { SAMTOOLS_SIMPLE_VIEW as FILTER_TRANSCRIPTS } from '../modules/local/sa
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { PREPARE_GENOME    } from '../subworkflows/local/prepare_genome'
-include { PARSE_FASTQ_INPUT } from '../subworkflows/local/parse_fastq_input'
-include { RNA_ALIGN         } from '../subworkflows/local/rna_align'
+include { PREPARE_GENOME                                 } from '../subworkflows/local/prepare_genome'
+include { PARSE_FASTQ_INPUT                              } from '../subworkflows/local/parse_fastq_input'
+include { RNA_ALIGN                                      } from '../subworkflows/local/rna_align'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TARGET_DEDUP } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TRANS_DEDUP  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -342,13 +344,63 @@ workflow CLIPSEQ {
         // SUBWORKFLOW: sort, index filtered bam
         //
         SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam )
+        ch_versions       = ch_versions.mix(SAMTOOLS_SORT_FILT_TRANSCRIPT.out.versions)
+        ch_transcript_bam = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
+
         SAMTOOLS_INDEX_FILT_TRANSCRIPT ( SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam )
-        ch_versions                     = ch_versions.mix(SAMTOOLS_SORT_FILT_TRANSCRIPT.out.versions)
-        ch_versions                     = ch_versions.mix(SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.versions)
-        ch_transcript_bam               = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
-        ch_transcript_bai               = SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.bai
+        ch_versions       = ch_versions.mix(SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.versions)
+        ch_transcript_bai = SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.bai
     }
 
+    ch_trans_stats    = Channel.empty()
+    ch_trans_flagstat = Channel.empty()
+    ch_trans_idxstats = Channel.empty()
+    ch_target_umi_log = Channel.empty()
+    ch_trans_umi_log  = Channel.empty()
+    if(params.run_dedup) {
+        //
+        // CHANNEL: Combine bam and bai files on id
+        //
+        ch_target_bam_bai = ch_target_bam
+            .map { row -> [row[0].id, row ].flatten()}
+            .join ( ch_target_bai.map { row -> [row[0].id, row ].flatten()} )
+            .map { row -> [row[1], row[2], row[4]] }
+
+        ch_transcript_bam_bai = ch_transcript_bam
+            .map { row -> [row[0].id, row ].flatten()}
+            .join ( ch_transcript_bai.map { row -> [row[0].id, row ].flatten()} )
+            .map { row -> [row[1], row[2], row[4]] }
+
+        //
+        // SUBWORKFLOW: Run umi deduplication on genome-level alignments
+        //
+        TARGET_DEDUP (
+            ch_target_bam_bai,
+            ch_fasta
+        )
+        ch_versions        = ch_versions.mix(TARGET_DEDUP.out.versions)
+        ch_target_bam      = TARGET_DEDUP.out.bam
+        ch_target_bai      = TARGET_DEDUP.out.bai
+        ch_target_stats    = TARGET_DEDUP.out.stats
+        ch_target_flagstat = TARGET_DEDUP.out.flagstat
+        ch_target_idxstats = TARGET_DEDUP.out.idxstats
+        ch_target_umi_log  = TARGET_DEDUP.out.umi_log
+
+        //
+        // SUBWORKFLOW: Run umi deduplication on transcript-level alignments
+        //
+        TRANS_DEDUP (
+            ch_transcript_bam_bai,
+            ch_fasta
+        )
+        ch_versions        = ch_versions.mix(TRANS_DEDUP.out.versions)
+        ch_transcript_bam  = TRANS_DEDUP.out.bam
+        ch_transcript_bai  = TRANS_DEDUP.out.bai
+        ch_target_stats    = TRANS_DEDUP.out.stats
+        ch_target_flagstat = TRANS_DEDUP.out.flagstat
+        ch_target_idxstats = TRANS_DEDUP.out.idxstats
+        ch_trans_umi_log   = TRANS_DEDUP.out.umi_log
+    }
 
     // CUSTOM_DUMPSOFTWAREVERSIONS (
     //     ch_versions.unique().collectFile(name: 'collated_versions.yml')
