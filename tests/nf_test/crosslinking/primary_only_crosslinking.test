@@ -1,0 +1,27 @@
+nextflow_pipeline {
+    name "only_crosslinking"
+    script "main.nf"
+
+    test("only_crosslinking_primary") {
+        tag "only_crosslinkingp_primary"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_crosslinking = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/04_filt_crosslinks/sample_1_R1.genome.cmd.bed").exists()
+            assert new File("$outputDir/04_filt_crosslinks/sample_1_R1.genome.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_filt_crosslinks/sample_1_R1.norm.genome.cmd.bedgraph").exists()
+
+            assert new File("$outputDir/04_filt_crosslinks/sample_1_R1.transcript.cmd.bed").exists()
+            assert new File("$outputDir/04_filt_crosslinks/sample_1_R1.transcript.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_filt_crosslinks/sample_1_R1.norm.transcript.cmd.bedgraph").exists()
+        }
+    }
+}

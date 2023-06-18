@@ -122,6 +122,8 @@ include { PARSE_FASTQ_INPUT                              } from '../subworkflows
 include { RNA_ALIGN                                      } from '../subworkflows/local/rna_align'
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TARGET_DEDUP } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TRANS_DEDUP  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { CALC_CROSSLINKS as CALC_GENOME_CROSSLINKS      } from '../subworkflows/local/calc_crosslinks'
+include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows/local/calc_crosslinks'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -400,6 +402,38 @@ workflow CLIPSEQ {
         ch_target_flagstat = TRANS_DEDUP.out.flagstat
         ch_target_idxstats = TRANS_DEDUP.out.idxstats
         ch_trans_umi_log   = TRANS_DEDUP.out.umi_log
+    }
+
+    ch_target_crosslink_bed           = Channel.empty()
+    ch_target_crosslink_coverage      = Channel.empty()
+    ch_target_crosslink_coverage_norm = Channel.empty()
+    ch_trans_crosslink_bed            = Channel.empty()
+    ch_trans_crosslink_coverage       = Channel.empty()
+    ch_trans_crosslink_coverage_norm  = Channel.empty()
+    if(params.run_crosslinking) {
+        //
+        // SUBWORKFLOW: Run crosslink calculation for target genome
+        //
+        CALC_GENOME_CROSSLINKS (
+            ch_target_bam,
+            ch_fasta_fai
+        )
+        ch_versions                       = ch_versions.mix(CALC_GENOME_CROSSLINKS.out.versions)
+        ch_target_crosslink_bed           = CALC_GENOME_CROSSLINKS.out.bed
+        ch_target_crosslink_coverage      = CALC_GENOME_CROSSLINKS.out.coverage
+        ch_target_crosslink_coverage_norm = CALC_GENOME_CROSSLINKS.out.coverage_norm
+
+        //
+        // SUBWORKFLOW: Run crosslink calculation for transcripts
+        //
+        CALC_TRANSCRIPT_CROSSLINKS (
+            ch_transcript_bam,
+            ch_longest_transcript_fai.map{ [[id:it.baseName], it] }
+        )
+        ch_versions                      = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS.out.versions)
+        ch_trans_crosslink_bed           = CALC_TRANSCRIPT_CROSSLINKS.out.bed
+        ch_trans_crosslink_coverage      = CALC_TRANSCRIPT_CROSSLINKS.out.coverage
+        ch_trans_crosslink_coverage_norm = CALC_TRANSCRIPT_CROSSLINKS.out.coverage_norm
     }
 
     // CUSTOM_DUMPSOFTWAREVERSIONS (
