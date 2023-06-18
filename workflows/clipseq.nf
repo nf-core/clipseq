@@ -49,35 +49,6 @@ def checkPathParamList = [
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
-
-// // Check rRNA databases for sortmerna
-// if (params.remove_ribo_rna) {
-//     ch_ribo_db = file(params.ribo_database_manifest, checkIfExists: true)
-//     if (ch_ribo_db.isEmpty()) {exit 1, "File provided with --ribo_database_manifest is empty: ${ch_ribo_db.getName()}!"}
-// }
-
-// // Check if file with list of fastas is provided when running BBSplit
-// if (!params.skip_bbsplit && !params.bbsplit_index && params.bbsplit_fasta_list) {
-//     ch_bbsplit_fasta_list = file(params.bbsplit_fasta_list, checkIfExists: true)
-//     if (ch_bbsplit_fasta_list.isEmpty()) {exit 1, "File provided with --bbsplit_fasta_list is empty: ${ch_bbsplit_fasta_list.getName()}!"}
-// }
-
-// // Check alignment parameters
-// def prepareToolIndices  = []
-// if (!params.skip_bbsplit)   { prepareToolIndices << 'bbsplit'             }
-// if (!params.skip_alignment) { prepareToolIndices << params.aligner        }
-// if (params.pseudo_aligner)  { prepareToolIndices << params.pseudo_aligner }
-
-// // Get RSeqC modules to run
-// def rseqc_modules = params.rseqc_modules ? params.rseqc_modules.split(',').collect{ it.trim().toLowerCase() } : []
-// if (params.bam_csi_index) {
-//     for (rseqc_module in ['read_distribution', 'inner_distance', 'tin']) {
-//         if (rseqc_modules.contains(rseqc_module)) {
-//             rseqc_modules.remove(rseqc_module)
-//         }
-//     }
-// }
-
 // // Stage dummy file to be used as an optional input where required
 // ch_dummy_file = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
 
@@ -89,19 +60,16 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 //     }
 // }
 
-
-
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// ch_multiqc_config          = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
-// ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
-// ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
-// ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
+ch_multiqc_config                     = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+ch_multiqc_custom_config              = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
+ch_multiqc_logo                       = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
+ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,6 +81,7 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 // MODULE: Local modules
 //
 include { SAMTOOLS_SIMPLE_VIEW as FILTER_TRANSCRIPTS } from '../modules/local/samtools_simple_view'
+include { DUMP_SOFTWARE_VERSIONS                     } from '../modules/local/dump_software_versions'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -136,6 +105,7 @@ include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows
 //
 include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT   } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT } from '../modules/nf-core/samtools/index/main'
+include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -436,32 +406,68 @@ workflow CLIPSEQ {
         ch_trans_crosslink_coverage_norm = CALC_TRANSCRIPT_CROSSLINKS.out.coverage_norm
     }
 
-    // CUSTOM_DUMPSOFTWAREVERSIONS (
-    //     ch_versions.unique().collectFile(name: 'collated_versions.yml')
-    // )
+    if(params.run_peakcalling) {
 
-    //
-    // MODULE: MultiQC
-    //
-    // workflow_summary    = WorkflowClipseq.paramsSummaryMultiqc(workflow, summary_params)
-    // ch_workflow_summary = Channel.value(workflow_summary)
+    }
 
-    // methods_description    = WorkflowClipseq.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
-    // ch_methods_description = Channel.value(methods_description)
+    if(params.run_reporting) {
+        //
+        // MODULE: Collect software versions
+        //
+        DUMP_SOFTWARE_VERSIONS (
+            ch_versions.unique().collectFile()
+        )
 
-    // ch_multiqc_files = Channel.empty()
-    // ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    // ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-    // ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    // ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+        //
+        // MODULE: Run clipqc
+        //
+        // CLIPSEQ_CLIPQC (
+        //     ch_bt_log.map{ it[1] },
+        //     ch_star_log.map{ it[1] },
+        //     ch_umi_log.map{ it[1] },
+        //     ch_genome_crosslink_bed.map{ it[1] },
+        //     ICOUNT_ANALYSE.out.bed_peaks.map{ it[1] },
+        //     PARACLU_ANALYSE_GENOME.out.peaks.map{ it[1] },
+        //     CLIPPY_GENOME.out.peaks.map{ it[1] }
+        // )
 
-    // MULTIQC (
-    //     ch_multiqc_files.collect(),
-    //     ch_multiqc_config.toList(),
-    //     ch_multiqc_custom_config.toList(),
-    //     ch_multiqc_logo.toList()
-    // )
-    // multiqc_report = MULTIQC.out.report.toList()
+        //
+        // MODULE: Run multiqc
+        //
+        workflow_summary    = WorkflowClipseq.paramsSummaryMultiqc(workflow, summary_params)
+        ch_workflow_summary = Channel.value(workflow_summary)
+
+        methods_description    = WorkflowClipseq.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
+        ch_methods_description = Channel.value(methods_description)
+
+        ch_multiqc_files = Channel.empty()
+        ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
+        ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect())
+        ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect())
+        // ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+
+        MULTIQC (
+            ch_multiqc_files.collect(),
+            ch_multiqc_config.toList(),
+            ch_multiqc_custom_config.toList(),
+            ch_multiqc_logo.toList()
+        )
+        multiqc_report = MULTIQC.out.report.toList()
+
+        // MULTIQC (
+        //     ch_multiqc_config,
+        //     DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect(),
+        //     DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect(),
+        //     ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yml"),
+        //     FASTQC_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]),
+        //     FASTQC_TRIMGALORE.out.fastqc_trim_zip.collect{it[1]}.ifEmpty([]),
+        //     FASTQC_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]),
+        //     ch_bt_log.collect{it[1]}.ifEmpty([]),
+        //     ch_star_log.collect{it[1]}.ifEmpty([]),
+        //     CLIPSEQ_CLIPQC.out.tsv.collect().ifEmpty([])
+        // )
+    }
 }
 
 /*
@@ -470,15 +476,15 @@ workflow CLIPSEQ {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// workflow.onComplete {
-//     if (params.email || params.email_on_fail) {
-//         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-//     }
-//     NfcoreTemplate.summary(workflow, params, log)
-//     if (params.hook_url) {
-//         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-//     }
-// }
+workflow.onComplete {
+    if (params.email || params.email_on_fail) {
+        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+    }
+    NfcoreTemplate.summary(workflow, params, log)
+    if (params.hook_url) {
+        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
+    }
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
