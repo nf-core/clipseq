@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/clipseq/master/nextflow_schema.json",
     "title": "nf-core/clipseq pipeline parameters",
-    "description": "TODO",
+    "description": "",
     "type": "object",
     "definitions": {
         "input_output_options": {
@@ -287,115 +287,115 @@
     "properties": {
         "fasta_fai": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "smrna_fasta_fai": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "smrna_fasta": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "target_genome_index": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "smrna_genome_index": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "target_chrom_sizes": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "smrna_chrom_sizes": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "longest_transcript": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "longest_transcript_fai": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "longest_transcript_gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "filtered_gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "seg_gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "seg_filt_gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "seg_resolved_gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "seg_resolved_gtf_genic": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "regions_gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "regions_filt_gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "regions_resolved_gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "regions_resolved_gtf_genic": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "debug": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "skip_fastqc": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "skip_umi_extract": {
-            "type": "string",
-            "default": "true"
+            "type": "boolean",
+            "default": true
         },
         "skip_trimming": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "save_reference": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "save_umi_intermeds": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "save_trimmed": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "save_unaligned_output": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "save_align_intermed": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "umitools_extract_method": {
             "type": "string",
@@ -406,16 +406,16 @@
             "default": "directional"
         },
         "umitools_dedup_stats": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "default": false
         },
         "umitools_bc_pattern": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "umitools_bc_pattern2": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "umitools_umi_separator": {
             "type": "string",
@@ -423,7 +423,7 @@
         },
         "umi_discard_read": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "min_trimmed_reads": {
             "type": "integer",
@@ -434,8 +434,8 @@
             "default": "--length 10"
         },
         "save_unaligned": {
-            "type": "string",
-            "default": "true"
+            "type": "boolean",
+            "default": true
         },
         "bowtie_params": {
             "type": "string",
@@ -447,7 +447,7 @@
         },
         "gtf": {
             "type": "string",
-            "default": null
+            "default": "None"
         }
     }
 }
