@@ -27,7 +27,7 @@ jobs:
           - "22.10.1"
           - "latest-everything"
         profile: ["docker"]
-        test: ["test"]
+        test: ["test", "test_full_small"]
         tag:
           - "genome_no_chrom_sizes"
           - "genome_fasta_raw"
@@ -60,9 +60,6 @@ jobs:
           - "only_filtering_false_outputs"
           - "only_dedup_primary"
           - "only_crosslinking_primary"
-        include:
-          - test: test_full_small
-            tag: "full_small_only_input_primary"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
@@ -72,21 +69,13 @@ jobs:
         with:
           version: "${{ matrix.NXF_VER }}"
 
-    #   - name: Install nf-test
-    #     run: |
-    #       wget -qO- https://github.com/askimed/nf-test/releases/download/v0.7.1/nf-test-0.7.1.tar.gz | tar -xz
-    #       APP_HOME=${HOME}/.nf-test
-    #       mkdir -p ${APP_HOME}
-    #       mv -f nf-test.jar ${APP_HOME}/nf-test.jar
-    #       mv nf-test /usr/local/bin/
-
       - name: Install nf-test
         run: |
           wget -qO- https://code.askimed.com/install/nf-test | bash -s $NFTEST_VER
           sudo mv nf-test /usr/local/bin/
 
       - name: Run nf-test
-        run: nf-test test --profile=${{ matrix.test }},${{ matrix.profile }} --tap=test.tap --tag ${{ matrix.test }},${{ matrix.tag }} tests/nf_test/*.test
+        run: nf-test test --profile=${{ matrix.test }},${{ matrix.profile }} --tap=test.tap --tag ${{ matrix.tag }} tests/nf_test/${{ matrix.test }}/*.test
 
       - uses: pcolby/tap-summary@v1
         with:
