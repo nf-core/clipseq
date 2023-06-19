@@ -27,7 +27,7 @@ jobs:
           - "22.10.1"
           - "latest-everything"
         profile: ["docker"]
-        test: ["test", "test_full_small"]
+        test: ["test"]
         tag:
           - "genome_no_chrom_sizes"
           - "genome_fasta_raw"
@@ -60,6 +60,9 @@ jobs:
           - "only_filtering_false_outputs"
           - "only_dedup_primary"
           - "only_crosslinking_primary"
+        include:
+          - test: test_full_small
+            tag: "full_small_only_input_primary"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
