@@ -29,14 +29,14 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                target_smrna_index = null
+                smrna_genome_index = null
             }
         }
 
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/index/bowtie/genome.1.ebwt").exists()
+            assert new File("$outputDir/00_genome/index/bowtie/homosapiens_smallRNA.1.ebwt").exists()
         }
     }
 }
