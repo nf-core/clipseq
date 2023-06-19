@@ -63,6 +63,10 @@
                     "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
                     "fa_icon": "far fa-file-code"
                 },
+                "fasta_fai": {
+                    "type": "string",
+                    "default": "None"
+                },
                 "igenomes_base": {
                     "type": "string",
                     "format": "directory-path",
@@ -285,10 +289,6 @@
         }
     ],
     "properties": {
-        "fasta_fai": {
-            "type": "string",
-            "default": "None"
-        },
         "smrna_fasta_fai": {
             "type": "string",
             "default": "None"
@@ -362,40 +362,32 @@
             "default": "None"
         },
         "debug": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "skip_fastqc": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "skip_umi_extract": {
             "type": "boolean",
             "default": true
         },
         "skip_trimming": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "save_reference": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "save_umi_intermeds": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "save_trimmed": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "save_unaligned_output": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "save_align_intermed": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "umitools_extract_method": {
             "type": "string",
@@ -406,8 +398,7 @@
             "default": "directional"
         },
         "umitools_dedup_stats": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
         },
         "umitools_bc_pattern": {
             "type": "string",
