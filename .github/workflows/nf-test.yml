@@ -9,6 +9,7 @@ on:
 
 env:
   NXF_ANSI_LOG: false
+  NFTEST_VER: "0.7.3"
 
 # Cancel if a newer run is started
 concurrency:
@@ -71,13 +72,18 @@ jobs:
         with:
           version: "${{ matrix.NXF_VER }}"
 
+    #   - name: Install nf-test
+    #     run: |
+    #       wget -qO- https://github.com/askimed/nf-test/releases/download/v0.7.1/nf-test-0.7.1.tar.gz | tar -xz
+    #       APP_HOME=${HOME}/.nf-test
+    #       mkdir -p ${APP_HOME}
+    #       mv -f nf-test.jar ${APP_HOME}/nf-test.jar
+    #       mv nf-test /usr/local/bin/
+
       - name: Install nf-test
         run: |
-          wget -qO- https://github.com/askimed/nf-test/releases/download/v0.7.1/nf-test-0.7.1.tar.gz | tar -xz
-          APP_HOME=${HOME}/.nf-test
-          mkdir -p ${APP_HOME}
-          mv -f nf-test.jar ${APP_HOME}/nf-test.jar
-          mv nf-test /usr/local/bin/
+          wget -qO- https://code.askimed.com/install/nf-test | bash -s $NFTEST_VER
+          sudo mv nf-test /usr/local/bin/
 
       - name: Run nf-test
         run: nf-test test --profile=${{ matrix.test }},${{ matrix.profile }} --tap=test.tap --tag ${{ matrix.test }},${{ matrix.tag }} tests/nf_test/*.test
