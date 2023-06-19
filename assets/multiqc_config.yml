@@ -17,23 +17,32 @@ run_modules:
   - custom_content
   - fastqc
   - cutadapt
-  - bowtie
+  - bowtie1
   - star
 
 module_order:
   - fastqc:
       name: "FastQC (raw)"
+      anchor: "fastqc_raw"
       info: "This section of the report shows FastQC results before adapter trimming."
       path_filters:
-        - "./3/*.zip"
+        - "*_fastqc.zip"
   - cutadapt
   - fastqc:
       name: "FastQC (trimmed)"
+      anchor: "fastqc_trimmed"
       info: "This section of the report shows FastQC results after adapter trimming."
+      target: ""
       path_filters:
-        - "./5/*.zip"
-  # - bowtie
-  # - star
+        - "*_trimmed_fastqc.zip"
+  - bowtie1:
+      name: "BOWTIE smRNA Alignment"
+      path_filters:
+        - "*.out"
+  - star:
+      name: "STAR Target Genome Alignment"
+      path_filters:
+        - "*.final.out"
   - custom_content
 
 custom_content:
@@ -43,8 +52,6 @@ custom_content:
 
 # Customise the module search patterns to speed up execution time
 sp:
-  cutadapt:
-    fn: "*trimming_report.txt"
   samtools/stats:
     fn: "*.stats"
   samtools/flagstat:
