@@ -30,7 +30,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                fasta = "/Users/cheshic/dev/test_data/clipseq/genome.fa.gz"
+                fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/yeast_MitoV.fa.gz"
             }
         }
 
@@ -50,7 +50,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                fasta_fai = "/Users/cheshic/dev/test_data/clipseq/genome.fa.fai"
+                fasta_fai = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/yeast_MitoV.fa.fai"
             }
         }
 
@@ -70,7 +70,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                smrna_fasta = "/Users/cheshic/dev/test_data/clipseq/homosapiens_smallRNA.fa.gz"
+                smrna_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa.gz"
             }
         }
 
@@ -89,7 +89,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                smrna_fasta = "/Users/cheshic/dev/test_data/clipseq/homosapiens_smallRNA.fa"
+                smrna_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa"
             }
         }
 
@@ -108,7 +108,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                fasta_fai = "/Users/cheshic/dev/test_data/clipseq/homosapiens_smallRNA.fa.fai"
+                fasta_fai = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa.fai"
             }
         }
 

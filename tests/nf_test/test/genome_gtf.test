@@ -29,7 +29,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                gtf = "/Users/cheshic/dev/test_data/clipseq/genes.gtf.gz"
+                gtf = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/yeast_MitoV.gtf.gz"
             }
         }
 
