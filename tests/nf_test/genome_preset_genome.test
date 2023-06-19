@@ -3,9 +3,8 @@ nextflow_pipeline {
     script "main.nf"
 
     // Tests for one run only_genome using a preset genome
-
-    test("preset_genome") {
-        tag "preset_genome"
+    test("genome_preset") {
+        tag "genome_preset"
         tag "test"
         when {
             params {

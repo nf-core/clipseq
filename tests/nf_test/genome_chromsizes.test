@@ -1,5 +1,5 @@
 nextflow_pipeline {
-    name "prepare_genome_chrom_sizes"
+    name "genome_chrom_sizes"
     script "main.nf"
 
     test("genome_no_chrom_sizes") {

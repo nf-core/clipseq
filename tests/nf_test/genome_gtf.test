@@ -1,9 +1,9 @@
 nextflow_pipeline {
-    name "prepare_genome_gtf"
+    name "genome_gtf"
     script "main.nf"
 
-    test("gtf_raw") {
-        tag "gtf_raw"
+    test("genome_gtf_raw") {
+        tag "genome_gtf_raw"
         tag "test"
         when {
             params {
@@ -21,8 +21,8 @@ nextflow_pipeline {
         }
     }
 
-    test("gtf_gz") {
-        tag "gtf_gz"
+    test("genome_gtf_gz") {
+        tag "genome_gtf_gz"
         tag "test"
         when {
             params {
@@ -40,8 +40,8 @@ nextflow_pipeline {
         }
     }
 
-    test("gtf_filt") {
-        tag "gtf_filt"
+    test("genome_gtf_filt") {
+        tag "genome_gtf_filt"
         tag "test"
         when {
             params {
@@ -59,8 +59,8 @@ nextflow_pipeline {
         }
     }
 
-    test("gtf_filt_seg") {
-        tag "gtf_filt_seg"
+    test("genome_gtf_filt_seg") {
+        tag "genome_gtf_filt_seg"
         tag "test"
         when {
             params {
@@ -79,8 +79,8 @@ nextflow_pipeline {
         }
     }
 
-    test("gtf_seg") {
-        tag "gtf_seg"
+    test("genome_gtf_seg") {
+        tag "genome_gtf_seg"
         tag "test"
         when {
             params {
@@ -99,8 +99,8 @@ nextflow_pipeline {
         }
     }
 
-    test("gtf_resolve_unanno") {
-        tag "gtf_resolve_unanno"
+    test("genome_gtf_resolve_unanno") {
+        tag "genome_gtf_resolve_unanno"
         tag "test"
         when {
             params {
@@ -118,8 +118,8 @@ nextflow_pipeline {
         }
     }
 
-    test("gtf_resolve_unanno_region") {
-        tag "gtf_resolve_unanno_region"
+    test("genome_gtf_resolve_unanno_region") {
+        tag "genome_gtf_resolve_unanno_region"
         tag "test"
         when {
             params {
@@ -137,8 +137,8 @@ nextflow_pipeline {
         }
     }
 
-    test("gtf_resolve_unanno_genic") {
-        tag "gtf_resolve_unanno_genic"
+    test("genome_gtf_resolve_unanno_genic") {
+        tag "genome_gtf_resolve_unanno_genic"
         tag "test"
         when {
             params {

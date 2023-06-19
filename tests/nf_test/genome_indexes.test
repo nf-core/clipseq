@@ -1,5 +1,5 @@
 nextflow_pipeline {
-    name "prepare_genome_indexes"
+    name "genome_indexes"
     script "main.nf"
 
     test("genome_star_build_index") {

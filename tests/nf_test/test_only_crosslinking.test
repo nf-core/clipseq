@@ -3,7 +3,7 @@ nextflow_pipeline {
     script "main.nf"
 
     test("only_crosslinking_primary") {
-        tag "only_crosslinkingp_primary"
+        tag "only_crosslinking_primary"
         tag "test"
         when {
             params {

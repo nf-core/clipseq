@@ -1,9 +1,9 @@
 nextflow_pipeline {
-    name "prepare_genome_fasta"
+    name "genome_fasta"
     script "main.nf"
 
-    test("fasta_raw") {
-        tag "fasta_raw"
+    test("genome_fasta_raw") {
+        tag "genome_fasta_raw"
         tag "test"
         when {
             params {
@@ -22,8 +22,8 @@ nextflow_pipeline {
         }
     }
 
-    test("fasta_gz") {
-        tag "fasta_gz"
+    test("genome_fasta_gz") {
+        tag "genome_fasta_gz"
         tag "test"
         when {
             params {
@@ -42,8 +42,8 @@ nextflow_pipeline {
         }
     }
 
-    test("fasta_fai") {
-        tag "fasta_fai"
+    test("genome_fasta_fai") {
+        tag "genome_fasta_fai"
         tag "test"
         when {
             params {
@@ -62,8 +62,8 @@ nextflow_pipeline {
         }
     }
 
-    test("smrna_fasta_gz") {
-        tag "smrna_fasta_gz"
+    test("genome_smrna_fasta_gz") {
+        tag "genome_smrna_fasta_gz"
         tag "test"
         when {
             params {
