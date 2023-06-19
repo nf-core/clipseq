@@ -18,7 +18,7 @@ nextflow_pipeline {
             assert workflow.success
 
             // Test fai created as the igenomes file does not have one
-            assert new File("$outputDir/00_genome/genome.fa.fai").exists()
+            assert new File("$outputDir/00_genome/yeast_MitoV.fa.fai").exists()
         }
     }
 }
