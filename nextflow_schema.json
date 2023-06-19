@@ -283,5 +283,171 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "fasta_fai": {
+            "type": "string",
+            "default": null
+        },
+        "smrna_fasta_fai": {
+            "type": "string",
+            "default": null
+        },
+        "smrna_fasta": {
+            "type": "string",
+            "default": null
+        },
+        "target_genome_index": {
+            "type": "string",
+            "default": null
+        },
+        "smrna_genome_index": {
+            "type": "string",
+            "default": null
+        },
+        "target_chrom_sizes": {
+            "type": "string",
+            "default": null
+        },
+        "smrna_chrom_sizes": {
+            "type": "string",
+            "default": null
+        },
+        "longest_transcript": {
+            "type": "string",
+            "default": null
+        },
+        "longest_transcript_fai": {
+            "type": "string",
+            "default": null
+        },
+        "longest_transcript_gtf": {
+            "type": "string",
+            "default": null
+        },
+        "filtered_gtf": {
+            "type": "string",
+            "default": null
+        },
+        "seg_gtf": {
+            "type": "string",
+            "default": null
+        },
+        "seg_filt_gtf": {
+            "type": "string",
+            "default": null
+        },
+        "seg_resolved_gtf": {
+            "type": "string",
+            "default": null
+        },
+        "seg_resolved_gtf_genic": {
+            "type": "string",
+            "default": null
+        },
+        "regions_gtf": {
+            "type": "string",
+            "default": null
+        },
+        "regions_filt_gtf": {
+            "type": "string",
+            "default": null
+        },
+        "regions_resolved_gtf": {
+            "type": "string",
+            "default": null
+        },
+        "regions_resolved_gtf_genic": {
+            "type": "string",
+            "default": null
+        },
+        "debug": {
+            "type": "string",
+            "default": "false"
+        },
+        "skip_fastqc": {
+            "type": "string",
+            "default": "false"
+        },
+        "skip_umi_extract": {
+            "type": "string",
+            "default": "true"
+        },
+        "skip_trimming": {
+            "type": "string",
+            "default": "false"
+        },
+        "save_reference": {
+            "type": "string",
+            "default": "false"
+        },
+        "save_umi_intermeds": {
+            "type": "string",
+            "default": "false"
+        },
+        "save_trimmed": {
+            "type": "string",
+            "default": "false"
+        },
+        "save_unaligned_output": {
+            "type": "string",
+            "default": "false"
+        },
+        "save_align_intermed": {
+            "type": "string",
+            "default": "false"
+        },
+        "umitools_extract_method": {
+            "type": "string",
+            "default": "string"
+        },
+        "umitools_grouping_method": {
+            "type": "string",
+            "default": "directional"
+        },
+        "umitools_dedup_stats": {
+            "type": "string",
+            "default": "false"
+        },
+        "umitools_bc_pattern": {
+            "type": "string",
+            "default": null
+        },
+        "umitools_bc_pattern2": {
+            "type": "string",
+            "default": null
+        },
+        "umitools_umi_separator": {
+            "type": "string",
+            "default": "rbc:"
+        },
+        "umi_discard_read": {
+            "type": "string",
+            "default": null
+        },
+        "min_trimmed_reads": {
+            "type": "integer",
+            "default": 10000
+        },
+        "extra_trimgalore_args": {
+            "type": "string",
+            "default": "--length 10"
+        },
+        "save_unaligned": {
+            "type": "string",
+            "default": "true"
+        },
+        "bowtie_params": {
+            "type": "string",
+            "default": "-v 2 -m 100 --norc --best --strata"
+        },
+        "star_params": {
+            "type": "string",
+            "default": "--outFilterMultimapNmax 1 --outFilterMultimapScoreRange 1 --outSAMattributes All --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterType BySJout --alignIntronMin 20 --alignIntronMax 1000000 --outFilterScoreMin 10 --alignEndsType Extend5pOfRead1 --twopassMode Basic"
+        },
+        "gtf": {
+            "type": "string",
+            "default": null
+        }
+    }
 }
