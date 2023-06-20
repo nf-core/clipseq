@@ -37,6 +37,12 @@ jobs:
         with:
           version: "${{ matrix.NXF_VER }}"
 
+      - name: Set up Singularity
+        if: matrix.profile == 'singularity'
+        uses: eWaterCycle/setup-singularity@v7
+        with:
+          singularity-version: 3.8.3
+
       - name: Run pipeline with test data
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profile }},${{ matrix.test }} --outdir ./results
