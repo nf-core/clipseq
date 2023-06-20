@@ -50,7 +50,6 @@ def check_samplesheet(process_name, file_in, file_out):
     sample_run_dict = {}
 
     with open(file_in, "r") as fin:
-
         ## Check header
         MIN_COLS = 3
         HEADER = ["group", "replicate", "fastq_1", "fastq_2"]
@@ -189,7 +188,6 @@ def check_samplesheet(process_name, file_in, file_out):
 
 
 if __name__ == "__main__":
-
     # Allows switching between nextflow templating and standalone python running using arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--process_name", default="!{process_name}")
