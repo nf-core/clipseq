@@ -62,6 +62,7 @@ jobs:
           - "only_crosslinking_primary"
         include:
           - test: test_full_small
+            profile: docker
             tag: "full_small_only_input_primary"
     steps:
       - name: Check out pipeline code
