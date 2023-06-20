@@ -8,7 +8,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir = "$outputDir"
-                only_crosslinking = true
+                only_crosslinks = true
             }
         }
 
