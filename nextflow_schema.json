@@ -231,11 +231,6 @@
                 "save_align_intermed": {
                     "type": "boolean"
                 },
-                "save_unaligned": {
-                    "type": "boolean",
-                    "default": true,
-                    "hidden": true
-                },
                 "save_unaligned_output": {
                     "type": "boolean"
                 },
