@@ -75,7 +75,7 @@ nextflow_pipeline {
             assert workflow.success
 
             assert new File("$outputDir/00_genome/yeast_MitoV_filtered_regions.gtf.gz").exists()
-            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_seg.gtf.gz").exists()
+            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_seg.gtf").exists()
         }
     }
 
@@ -95,7 +95,7 @@ nextflow_pipeline {
             assert workflow.success
 
             assert new File("$outputDir/00_genome/yeast_MitoV_regions.gtf.gz").exists()
-            assert new File("$outputDir/00_genome/yeast_MitoV_seg.gtf.gz").exists()
+            assert new File("$outputDir/00_genome/yeast_MitoV_seg.gtf").exists()
         }
     }
 
