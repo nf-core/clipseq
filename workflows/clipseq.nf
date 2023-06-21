@@ -114,12 +114,12 @@ include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows
 include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT   } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
-include { CLIPPY as CLIPPY_GENOME                          } from "../modules/nf-core/clippy/main.nf"
-include { ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main.nf"
-include { ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main.nf"
-include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main.nf"
-include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf-core/gunzip/main.nf"
-include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main.nf"
+include { CLIPPY as CLIPPY_GENOME                          } from "../modules/nf-core/clippy/main"
+include { ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main"
+include { ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
+include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
+include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf-core/gunzip/main"
+include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
 // include { PURECLIP } from "../modules/nf-core/pureclip/main.nf"
 
 //

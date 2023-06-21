@@ -75,9 +75,23 @@
                             "modules"
                         ]
                     },
+                    "icountmini/peaks": {
+                        "branch": "master",
+                        "git_sha": "0342d858b8cc2147846ba45220d288516c43a12d",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
                     "icountmini/segment": {
                         "branch": "master",
                         "git_sha": "7bf8bf88ab96273c0ce93db57353d87f48cd2dd4",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "icountmini/sigxls": {
+                        "branch": "master",
+                        "git_sha": "24978a4232c602135097c619f3a15014932bb784",
                         "installed_by": [
                             "modules"
                         ]
