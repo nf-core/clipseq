@@ -49,6 +49,13 @@ def checkPathParamList = [
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
+// Define peak callers and check in list
+caller_list = [ 'icount', 'paraclu', 'pureclip', 'clippy']
+callers = params.peakcaller ? params.peakcaller.split(',').collect{ it.trim().toLowerCase() } : []
+if ((caller_list + callers).unique().size() != caller_list.size()) {
+    exit 1, "Invalid variant caller option: ${params.peakcaller}. Valid options: ${caller_list.join(', ')}"
+}
+
 // // Stage dummy file to be used as an optional input where required
 // ch_dummy_file = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
 
