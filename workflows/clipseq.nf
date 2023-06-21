@@ -13,7 +13,7 @@ WorkflowClipseq.initialise(params, log)
 check_param_list = [
     input: params.input,
     fasta: params.fasta,
-    smrna_fasta: params.smrna_fasta,
+    ncrna_fasta: params.ncrna_fasta,
     gtf: params.gtf
 ]
 for (param in check_param_list) {
@@ -48,6 +48,18 @@ def checkPathParamList = [
     params.regions_resolved_gtf_genic
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
+
+// ncRNA logic
+ncrna_list = ['human', 'mouse', 'rat', 'zebrafish', 'fruitfly', 'yeast']
+
+// Check if ncrna_fasta is a a fasta file, if not check if one of the supplied species names and assign ncRNA from assets
+if (!params.ncrna_fasta =~ '\.fa') {
+    if (params.ncrna_fasta in ncrna_list) {
+        params.smrna_fasta = params.ncrna[params.ncrna_fasta].ncrna_fasta
+    } else {
+        exit 1, "There is no ncRNA available for species '${params.genome}'. Currently available options are: human, mouse, rat, fruitfly, zebrafish, yeast. Alternative you can supply your own ncRNA fasta." 
+    }
+}
 
 // Define peak callers and check in list
 caller_list = [ 'icount', 'paraclu', 'pureclip', 'clippy']
