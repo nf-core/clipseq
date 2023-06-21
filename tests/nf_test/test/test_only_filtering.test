@@ -22,7 +22,7 @@ nextflow_pipeline {
         }
     }
 
-        test("only_filtering_false_outputs") {
+    test("only_filtering_false_outputs") {
         tag "only_filtering_false_outputs"
         tag "test"
         when {
