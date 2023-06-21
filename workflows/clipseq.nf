@@ -431,7 +431,7 @@ workflow CLIPSEQ {
     ch_icountmini_scores_gz           = Channel.empty()
     ch_icountmini_peaks_gz            = Channel.empty()
     ch_icountmini_sigxls              = Channel.empty()
-    ch_paraclu_genome_peaaks          = Channel.empty()
+    ch_paraclu_genome_peaks           = Channel.empty()
 
     if(params.run_peakcalling) {
 
@@ -495,7 +495,7 @@ workflow CLIPSEQ {
 
         }
 
-        ch_paraclu_mincluster = Channel.value(params.paraclu_params)
+        ch_paraclu_mincluster = Channel.value(params.paraclu_genome_params)
 
         if('paraclu' in callers) {
 
