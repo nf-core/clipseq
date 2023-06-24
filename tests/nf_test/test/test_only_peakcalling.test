@@ -15,10 +15,9 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            // // Transcript
-            // assert new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam").exists()
-            // assert new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam.bai").exists()
-
+            // clippy
+            assert new File("$outputDir/05_peakcalling/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
         }
     }
 

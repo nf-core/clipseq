@@ -101,6 +101,7 @@ include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TARGET_DEDUP } from '../subworkflows
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TRANS_DEDUP  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
 include { CALC_CROSSLINKS as CALC_GENOME_CROSSLINKS      } from '../subworkflows/local/calc_crosslinks'
 include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows/local/calc_crosslinks'
+include { CALL_PEAKS                                     } from '../subworkflows/local/call_peaks'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,13 +115,6 @@ include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows
 include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT   } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
-include { CLIPPY as CLIPPY_GENOME                          } from "../modules/nf-core/clippy/main"
-include { ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main"
-include { ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
-include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
-include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf-core/gunzip/main"
-include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
-// include { PURECLIP } from "../modules/nf-core/pureclip/main.nf"
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -424,95 +418,23 @@ workflow CLIPSEQ {
     //
     // SUBWORKFLOW: Run peakcalling on genome
     //
-
-    ch_clippy_genome_peaks            = Channel.empty()
-    ch_clippy_genome_summits          = Channel.empty()
-    ch_icountmini_sigxls_gz           = Channel.empty()
-    ch_icountmini_scores_gz           = Channel.empty()
-    ch_icountmini_peaks_gz            = Channel.empty()
-    ch_icountmini_sigxls              = Channel.empty()
-    ch_paraclu_genome_peaks           = Channel.empty()
-
+    ch_clippy_genome_peaks   = Channel.empty()
+    ch_clippy_genome_summits = Channel.empty()
+    ch_icountmini_sigxls_gz  = Channel.empty()
+    ch_icountmini_scores_gz  = Channel.empty()
+    ch_icountmini_peaks_gz   = Channel.empty()
+    ch_icountmini_sigxls     = Channel.empty()
+    ch_paraclu_genome_peaks  = Channel.empty()
     if(params.run_peakcalling) {
-
-        if('clippy' in callers) {
-
-            CLIPPY_GENOME (
-                ch_target_crosslink_bed,
-                ch_filtered_gtf.collect{ it[1] },
-                ch_fasta_fai.collect{ it[1] }
-            )
-            
-            ch_clippy_genome_peaks           = CLIPPY_GENOME.out.peaks
-            ch_clippy_genome_summits         = CLIPPY_GENOME.out.summits
-            ch_versions                      = ch_versions.mix(CLIPPY_GENOME.out.versions)
-
-        }
-
-        if('icount' in callers) {
-
-            ICOUNTMINI_SIGXLS (
-                ch_target_crosslink_bed,
-                ch_seg_resolved_gtf.collect{ it[1]}
-                
-            )
-
-            ch_versions                      = ch_versions.mix(ICOUNTMINI_SIGXLS.out.versions)
-            ch_icountmini_sigxls_gz          = ICOUNTMINI_SIGXLS.out.sigxls
-            ch_icountmini_scores_gz          = ICOUNTMINI_SIGXLS.out.scores
-
-            // CHANNEL: Create combined channel of input crosslinks and sigxls
-            ch_peaks_input = ch_target_crosslink_bed
-                .map{ [ it[0].id, it[0], it[1] ] }
-                .join( ICOUNTMINI_SIGXLS.out.sigxls.map{ [ it[0].id, it[0], it[1] ] } )
-                .map { [ it[1], it[2], it[4] ] }
-            //EXAMPLE CHANNEL STRUCT: [ [id:test], BED(crosslinks), BED(sigxls) ]
-
-            ICOUNTMINI_PEAKS (
-                ch_peaks_input
-            )
-
-            ch_versions                      = ch_versions.mix(ICOUNTMINI_PEAKS.out.versions)
-            ch_icountmini_peaks_gz           = ICOUNTMINI_PEAKS.out.peaks
-
-            GUNZIP_ICOUNTMINI_SIGXLS (
-
-                ch_icountmini_sigxls_gz
-
-            )
-
-            ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_SIGXLS.out.versions)
-            ch_icountmini_sigxls             = GUNZIP_ICOUNTMINI_SIGXLS.out.gunzip
-
-            GUNZIP_ICOUNTMINI_PEAKS (
-
-                ch_icountmini_peaks_gz
-
-            )
-
-            ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_PEAKS.out.versions)
-            ch_icountmini_peaks              = GUNZIP_ICOUNTMINI_PEAKS.out.gunzip
-
-        }
-
-        ch_paraclu_mincluster = Channel.value(params.paraclu_genome_params)
-
-        if('paraclu' in callers) {
-
-            PARACLU_GENOME (
-                ch_target_crosslink_bed,
-                ch_paraclu_mincluster.collect()
-            )
-
-            ch_versions                      = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS.out.versions)
-            ch_paraclu_genome_peaks          = PARACLU_GENOME.out.bed
-
-        }
-
-        // if('pureclip' in callers) {
-
-        // }
-
+        CALL_PEAKS (
+            callers,
+            ch_target_crosslink_bed,
+            ch_filtered_gtf,
+            ch_fasta_fai
+        )
+        ch_versions = ch_versions.mix(CALL_PEAKS.out.versions)
+        ch_clippy_genome_peaks   = CALL_PEAKS.out.clippy_genome_peaks
+        ch_clippy_genome_summits = CALL_PEAKS.out.clippy_genome_summits
     }
 
     if(params.run_reporting) {
