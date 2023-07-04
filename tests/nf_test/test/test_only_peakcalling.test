@@ -1,0 +1,42 @@
+nextflow_pipeline {
+    name "only_peakcalling"
+    script "main.nf"
+
+    test("only_peakcalling_primary") {
+        tag "only_peakcalling_primary"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_peakcalling = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // clippy
+            assert new File("$outputDir/05_peakcalling/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+        }
+    }
+
+    test("only_peakcalling_caller_param_fail") {
+        tag "only_peakcalling_caller_param_fail"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_input = true
+                peakcaller = 'test'
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.exitStatus == 1
+            assert workflow.trace.succeeded().size() == 0
+            assert workflow.trace.failed().size() == 0
+        }
+    }
+}

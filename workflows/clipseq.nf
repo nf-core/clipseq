@@ -424,15 +424,13 @@ workflow CLIPSEQ {
     //
     // SUBWORKFLOW: Run peakcalling on genome
     //
-
-    ch_clippy_genome_peaks            = Channel.empty()
-    ch_clippy_genome_summits          = Channel.empty()
-    ch_icountmini_sigxls_gz           = Channel.empty()
-    ch_icountmini_scores_gz           = Channel.empty()
-    ch_icountmini_peaks_gz            = Channel.empty()
-    ch_icountmini_sigxls              = Channel.empty()
-    ch_paraclu_genome_peaks           = Channel.empty()
-
+    ch_clippy_genome_peaks   = Channel.empty()
+    ch_clippy_genome_summits = Channel.empty()
+    ch_icountmini_sigxls_gz  = Channel.empty()
+    ch_icountmini_scores_gz  = Channel.empty()
+    ch_icountmini_peaks_gz   = Channel.empty()
+    ch_icountmini_sigxls     = Channel.empty()
+    ch_paraclu_genome_peaks  = Channel.empty()
     if(params.run_peakcalling) {
 
         if('clippy' in callers) {
