@@ -7,10 +7,15 @@
     "items": {
         "type": "object",
         "properties": {
-            "sample": {
+            "group": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces"
+                "errorMessage": "The group name must be provided and cannot contain spaces"
+            },
+            "replicate": {
+                "type": "integer",
+                "pattern": "^[1-9]\\d*$",
+                "errorMessage": "The replicate number. The combination of the group name and replicate number for a unique sample id"
             },
             "fastq_1": {
                 "type": "string",
@@ -31,6 +36,6 @@
                 ]
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["group", "replicate,", "fastq_1"]
     }
 }

@@ -35,6 +35,11 @@
                         "git_sha": "5c460c5a4736974abde2843294f35307ee2b0e5e",
                         "installed_by": ["modules"]
                     },
+                    "clippy": {
+                        "branch": "master",
+                        "git_sha": "25c42a81d5733c982670afe585b067f262b333e2",
+                        "installed_by": ["modules"]
+                    },
                     "custom/getchromsizes": {
                         "branch": "master",
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
@@ -50,12 +55,27 @@
                         "git_sha": "5c460c5a4736974abde2843294f35307ee2b0e5e",
                         "installed_by": ["modules"]
                     },
+                    "icountmini/peaks": {
+                        "branch": "master",
+                        "git_sha": "0342d858b8cc2147846ba45220d288516c43a12d",
+                        "installed_by": ["modules"]
+                    },
                     "icountmini/segment": {
                         "branch": "master",
                         "git_sha": "7bf8bf88ab96273c0ce93db57353d87f48cd2dd4",
                         "installed_by": ["modules"]
                     },
+                    "icountmini/sigxls": {
+                        "branch": "master",
+                        "git_sha": "24978a4232c602135097c619f3a15014932bb784",
+                        "installed_by": ["modules"]
+                    },
                     "multiqc": {
+                        "branch": "master",
+                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "installed_by": ["modules"]
+                    },
+                    "paraclu": {
                         "branch": "master",
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
                         "installed_by": ["modules"]
