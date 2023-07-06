@@ -16,8 +16,16 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert new File("$outputDir/05_peakcalling/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert new File("$outputDir/05_peakcalling/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            // icount
+            assert new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists()
+            assert new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists()
+            // paraclu
+            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists()
         }
     }
 
@@ -37,6 +45,118 @@ nextflow_pipeline {
             assert workflow.exitStatus == 1
             assert workflow.trace.succeeded().size() == 0
             assert workflow.trace.failed().size() == 0
+        }
+    }
+
+    test("only_peakcalling_clippy") {
+        tag "only_peakcalling_clippy"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_peakcalling = true
+                peakcaller = 'clippy'
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // clippy
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            // icount
+            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists())
+            // paraclu
+            assert !(new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists())
+        }
+    }
+
+    test("only_peakcalling_icount") {
+        tag "only_peakcalling_icount"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_peakcalling = true
+                peakcaller = 'icount'
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // clippy
+            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            // icount
+            assert new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists()
+            assert new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists()
+            // paraclu
+            assert !(new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists())
+        }
+    }
+
+    test("only_peakcalling_paraclu") {
+        tag "only_peakcalling_paraclu"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_peakcalling = true
+                peakcaller = 'paraclu'
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // clippy
+            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            // icount
+            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists())
+            // paraclu
+            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists()
+        }
+    }
+
+    test("only_peakcalling_paraclu_clippy") {
+        tag "only_peakcalling_paraclu_clippy"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_peakcalling = true
+                peakcaller = 'paraclu,clippy'
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // clippy
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            // icount
+            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists())
+            // paraclu
+            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists()
         }
     }
 }

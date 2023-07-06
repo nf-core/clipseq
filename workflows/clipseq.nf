@@ -115,12 +115,14 @@ include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT   } from '../modules/nf
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
 include { CLIPPY as CLIPPY_GENOME                          } from "../modules/nf-core/clippy/main"
+include { CLIPPY as CLIPPY_TRANSCRIPTOME                   } from "../modules/nf-core/clippy/main"
 include { ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main"
 include { ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
+include { PARACLU as PARACLU_TRANSCRIPTOME                 } from "../modules/nf-core/paraclu/main"
 // include { PURECLIP } from "../modules/nf-core/pureclip/main.nf"
 
 //
@@ -425,13 +427,14 @@ workflow CLIPSEQ {
     //
     // SUBWORKFLOW: Run peakcalling on genome
     //
-    ch_clippy_genome_peaks   = Channel.empty()
-    ch_clippy_genome_summits = Channel.empty()
-    ch_icountmini_sigxls_gz  = Channel.empty()
-    ch_icountmini_scores_gz  = Channel.empty()
-    ch_icountmini_peaks_gz   = Channel.empty()
-    ch_icountmini_sigxls     = Channel.empty()
-    ch_paraclu_genome_peaks  = Channel.empty()
+    ch_clippy_genome_peaks          = Channel.empty()
+    ch_clippy_transcriptome_peaks   = Channel.empty()
+    ch_icountmini_sigxls_gz         = Channel.empty()
+    ch_icountmini_peaks_gz          = Channel.empty()
+    ch_icountmini_sigxls            = Channel.empty()
+    ch_paraclu_genome_peaks         = Channel.empty()
+    ch_paraclu_transcriptome_peaks  = Channel.empty()
+
     if(params.run_peakcalling) {
 
         if('clippy' in callers) {
@@ -443,7 +446,14 @@ workflow CLIPSEQ {
             )
             
             ch_clippy_genome_peaks           = CLIPPY_GENOME.out.peaks
-            ch_clippy_genome_summits         = CLIPPY_GENOME.out.summits
+
+            CLIPPY_TRANSCRIPTOME (
+                ch_trans_crosslink_bed,
+                ch_longest_transcript_gtf,
+                ch_longest_transcript_fai
+            )
+            
+            ch_clippy_transcriptome_peaks    = CLIPPY_TRANSCRIPTOME.out.peaks
             ch_versions                      = ch_versions.mix(CLIPPY_GENOME.out.versions)
 
         }
@@ -458,7 +468,6 @@ workflow CLIPSEQ {
 
             ch_versions                      = ch_versions.mix(ICOUNTMINI_SIGXLS.out.versions)
             ch_icountmini_sigxls_gz          = ICOUNTMINI_SIGXLS.out.sigxls
-            ch_icountmini_scores_gz          = ICOUNTMINI_SIGXLS.out.scores
 
             // CHANNEL: Create combined channel of input crosslinks and sigxls
             ch_peaks_input = ch_target_crosslink_bed
@@ -505,6 +514,12 @@ workflow CLIPSEQ {
 
             ch_versions                      = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS.out.versions)
             ch_paraclu_genome_peaks          = PARACLU_GENOME.out.bed
+
+            PARACLU_TRANSCRIPTOME (
+                ch_trans_crosslink_bed,
+                ch_paraclu_mincluster
+            )
+            ch_paraclu_transcriptome_peaks          = PARACLU_TRANSCRIPTOME.out.bed
 
         }
 

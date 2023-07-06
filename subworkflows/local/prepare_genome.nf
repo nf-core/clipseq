@@ -196,9 +196,9 @@ workflow PREPARE_GENOME {
     ch_longest_transcript_fai = Channel.empty()
     ch_longest_transcript_gtf = Channel.empty()
     if (longest_transcript && longest_transcript_fai && longest_transcript_gtf){
-        ch_longest_transcript     = longest_transcript
-        ch_longest_transcript_fai = longest_transcript_fai
-        ch_longest_transcript_gtf = longest_transcript_gtf
+        ch_longest_transcript     =  longest_transcript
+        ch_longest_transcript_fai =  longest_transcript_fai
+        ch_longest_transcript_gtf =  longest_transcript_gtf
     } else {
         FIND_LONGEST_TRANSCRIPT (
             ch_gtf

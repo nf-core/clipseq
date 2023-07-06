@@ -60,6 +60,12 @@ jobs:
           - "only_filtering_false_outputs"
           - "only_dedup_primary"
           - "only_crosslinking_primary"
+          - "only_peakcalling_primary"
+          - "only_peakcalling_caller_param_fail"
+          - "only_peakcalling_clippy"
+          - "only_peakcalling_icount"
+          - "only_peakcalling_paraclu"
+          - "only_peakcalling_paraclu_clippy"
         include:
           - test: test_full_small
             profile: docker
