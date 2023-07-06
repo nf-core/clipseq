@@ -36,6 +36,6 @@
                 ]
             }
         },
-        "required": ["group","replicate,","fastq_1"]
+        "required": ["group", "replicate,", "fastq_1"]
     }
 }

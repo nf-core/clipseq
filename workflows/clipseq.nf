@@ -119,6 +119,7 @@ include { ICOUNTMINI_SIGXLS                                } from "../modules/nf
 include { ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf-core/gunzip/main"
+include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
 // include { PURECLIP } from "../modules/nf-core/pureclip/main.nf"
 
