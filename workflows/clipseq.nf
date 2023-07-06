@@ -494,13 +494,13 @@ workflow CLIPSEQ {
 
         }
 
-        ch_paraclu_mincluster = Channel.value(params.paraclu_genome_params)
+        ch_paraclu_mincluster = Channel.value(params.paraclu_minValue)
 
         if('paraclu' in callers) {
 
             PARACLU_GENOME (
                 ch_target_crosslink_bed,
-                ch_paraclu_mincluster.collect()
+                ch_paraclu_mincluster
             )
 
             ch_versions                      = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS.out.versions)
