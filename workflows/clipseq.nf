@@ -123,6 +123,9 @@ include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
 include { PARACLU as PARACLU_TRANSCRIPTOME                 } from "../modules/nf-core/paraclu/main"
+include { PEKA as PEKA_ICOUNT                              } from '../modules/nf-core/peka/main'
+include { PEKA as PEKA_CLIPPY                              } from '../modules/nf-core/peka/main'
+include { PEKA as PEKA_PARACLU                             } from '../modules/nf-core/peka/main' 
 // include { PURECLIP } from "../modules/nf-core/pureclip/main.nf"
 
 //
@@ -456,6 +459,17 @@ workflow CLIPSEQ {
             ch_clippy_transcriptome_peaks    = CLIPPY_TRANSCRIPTOME.out.peaks
             ch_versions                      = ch_versions.mix(CLIPPY_GENOME.out.versions)
 
+            if(params.run_peka) {
+                PEKA_CLIPPY (
+                    ch_clippy_genome_peaks,
+                    ch_target_crosslink_bed,
+                    ch_fasta.collect{ it[1] },
+                    ch_fasta_fai.collect{ it[1] },
+                    ch_regions_resolved_gtf.collect{ it[1] }
+                )
+                ch_versions = ch_versions.mix(PEKA_CLIPPY.out.versions)
+            }
+
         }
 
         if('icount' in callers) {
@@ -501,6 +515,17 @@ workflow CLIPSEQ {
             ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_PEAKS.out.versions)
             ch_icountmini_peaks              = GUNZIP_ICOUNTMINI_PEAKS.out.gunzip
 
+            if(params.run_peka) {
+                PEKA_ICOUNT (
+                    ch_icountmini_peaks,
+                    ch_target_crosslink_bed,
+                    ch_fasta.collect{ it[1] },
+                    ch_fasta_fai.collect{ it[1] },
+                    ch_regions_resolved_gtf.collect{ it[1] }
+                )
+                ch_versions = ch_versions.mix(PEKA_ICOUNT.out.versions)
+            }
+
         }
 
         ch_paraclu_mincluster = Channel.value(params.paraclu_minValue)
@@ -521,6 +546,16 @@ workflow CLIPSEQ {
             )
             ch_paraclu_transcriptome_peaks          = PARACLU_TRANSCRIPTOME.out.bed
 
+            if(params.run_peka) {
+                PEKA_PARACLU(
+                    ch_paraclu_genome_peaks,
+                    ch_target_crosslink_bed,
+                    ch_fasta.collect{ it[1] },
+                    ch_fasta_fai.collect{ it[1] },
+                    ch_regions_resolved_gtf.collect{ it[1] }
+                )
+                ch_versions = ch_versions.mix(PEKA_PARACLU.out.versions)
+            }
         }
 
         // if('pureclip' in callers) {
