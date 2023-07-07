@@ -125,7 +125,8 @@ include { PARACLU as PARACLU_GENOME                        } from "../modules/nf
 include { PARACLU as PARACLU_TRANSCRIPTOME                 } from "../modules/nf-core/paraclu/main"
 include { PEKA as PEKA_ICOUNT                              } from '../modules/nf-core/peka/main'
 include { PEKA as PEKA_CLIPPY                              } from '../modules/nf-core/peka/main'
-include { PEKA as PEKA_PARACLU                             } from '../modules/nf-core/peka/main' 
+include { PEKA as PEKA_PARACLU                             } from '../modules/nf-core/peka/main'
+include { ICOUNTMINI_SUMMARY                               } from '../modules/nf-core/icountmini/summary/main' 
 // include { PURECLIP } from "../modules/nf-core/pureclip/main.nf"
 
 //
@@ -413,6 +414,11 @@ workflow CLIPSEQ {
         ch_target_crosslink_bed           = CALC_GENOME_CROSSLINKS.out.bed
         ch_target_crosslink_coverage      = CALC_GENOME_CROSSLINKS.out.coverage
         ch_target_crosslink_coverage_norm = CALC_GENOME_CROSSLINKS.out.coverage_norm
+
+        ICOUNTMINI_SUMMARY (
+            ch_target_crosslink_bed,
+            ch_regions_resolved_gtf.collect{ it[1] }
+        )
 
         //
         // SUBWORKFLOW: Run crosslink calculation for transcripts

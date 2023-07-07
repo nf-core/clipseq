@@ -70,6 +70,11 @@
                         "git_sha": "24978a4232c602135097c619f3a15014932bb784",
                         "installed_by": ["modules"]
                     },
+                    "icountmini/summary": {
+                        "branch": "master",
+                        "git_sha": "e9f9aa72492e3234f405d7dccf59924ad7e8268d",
+                        "installed_by": ["modules"]
+                    },
                     "multiqc": {
                         "branch": "master",
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",

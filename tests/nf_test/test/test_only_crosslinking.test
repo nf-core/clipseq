@@ -22,6 +22,10 @@ nextflow_pipeline {
             assert new File("$outputDir/04_crosslinks/sample_1_R1.transcript.cmd.bed").exists()
             assert new File("$outputDir/04_crosslinks/sample_1_R1.transcript.cmd.bedgraph").exists()
             assert new File("$outputDir/04_crosslinks/sample_1_R1.norm.transcript.cmd.bedgraph").exists()
+
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_gene.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_subtype.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_type.tsv").exists()
         }
     }
 }
