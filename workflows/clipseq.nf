@@ -56,8 +56,9 @@ if ((caller_list + callers).unique().size() != caller_list.size()) {
     exit 1, "Invalid variant caller option: ${params.peakcaller}. Valid options: ${caller_list.join(', ')}"
 }
 
-// // Stage dummy file to be used as an optional input where required
-// ch_dummy_file = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
+// // Stage dummy files to be used as an optional input where required
+ch_dummy_file  = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
+ch_dummy_file2 = file("$projectDir/assets/dummy_file2.txt", checkIfExists: true)
 
 // // Check if an AWS iGenome has been provided to use the appropriate version of STAR
 // def is_aws_igenome = false
@@ -123,9 +124,11 @@ include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
 include { PARACLU as PARACLU_TRANSCRIPTOME                 } from "../modules/nf-core/paraclu/main"
+include { PURECLIP                                         } from '../modules/nf-core/pureclip/main'
 include { PEKA as PEKA_ICOUNT                              } from '../modules/nf-core/peka/main'
 include { PEKA as PEKA_CLIPPY                              } from '../modules/nf-core/peka/main'
 include { PEKA as PEKA_PARACLU                             } from '../modules/nf-core/peka/main'
+include { PEKA as PEKA_PURECLIP                            } from '../modules/nf-core/peka/main'
 include { ICOUNTMINI_SUMMARY                               } from '../modules/nf-core/icountmini/summary/main' 
 // include { PURECLIP } from "../modules/nf-core/pureclip/main.nf"
 
@@ -564,9 +567,32 @@ workflow CLIPSEQ {
             }
         }
 
-        // if('pureclip' in callers) {
+        if('pureclip' in callers) {
+            ch_pureclip_input_bam = ch_target_bam.combine(Channel.of(ch_dummy_file))
+            ch_pureclip_input_bai = ch_target_bai.combine(Channel.of(ch_dummy_file2))
 
-        // }
+            PURECLIP( 
+                ch_pureclip_input_bam,
+                ch_pureclip_input_bai,
+                ch_fasta,
+                false
+            )
+        }
+
+        ch_versions                        = ch_versions.mix(PURECLIP.out.versions)
+        ch_pureclip_genome_crosslinks      = PURECLIP.out.crosslinks
+        ch_pureclip_genome_peaks           = PURECLIP.out.peaks
+
+        if(params.run_peka) {
+            PEKA_PURECLIP(
+                ch_pureclip_genome_peaks,
+                ch_target_crosslink_bed,
+                ch_fasta.collect{ it[1] },
+                ch_fasta_fai.collect{ it[1] },
+                ch_regions_resolved_gtf.collect{ it[1] }
+            )
+            ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
+        }
 
     }
 

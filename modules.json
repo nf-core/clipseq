@@ -90,6 +90,11 @@
                         "git_sha": "aa447016b1d4a1489447cfedbb6dafc24ac0c610",
                         "installed_by": ["modules"]
                     },
+                    "pureclip": {
+                        "branch": "master",
+                        "git_sha": "3f25680841cc9aea58eba851956da8176cf52e21",
+                        "installed_by": ["modules"]
+                    },
                     "samtools/faidx": {
                         "branch": "master",
                         "git_sha": "fd742419940e01ba1c5ecb172c3e32ec840662fe",
