@@ -112,6 +112,7 @@ include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows
 //
 // MODULE: Installed directly from nf-core/modules
 //
+
 include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT   } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
@@ -129,8 +130,9 @@ include { PEKA as PEKA_ICOUNT                              } from '../modules/nf
 include { PEKA as PEKA_CLIPPY                              } from '../modules/nf-core/peka/main'
 include { PEKA as PEKA_PARACLU                             } from '../modules/nf-core/peka/main'
 include { PEKA as PEKA_PURECLIP                            } from '../modules/nf-core/peka/main'
-include { ICOUNTMINI_SUMMARY                               } from '../modules/nf-core/icountmini/summary/main' 
-// include { PURECLIP } from "../modules/nf-core/pureclip/main.nf"
+include { ICOUNTMINI_SUMMARY                               } from '../modules/nf-core/icountmini/summary/main'
+include { ICOUNTMINI_METAGENE                              } from '../modules/nf-core/icountmini/metagene/main'
+
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -419,6 +421,11 @@ workflow CLIPSEQ {
         ch_target_crosslink_coverage_norm = CALC_GENOME_CROSSLINKS.out.coverage_norm
 
         ICOUNTMINI_SUMMARY (
+            ch_target_crosslink_bed,
+            ch_regions_resolved_gtf.collect{ it[1] }
+        )
+
+        ICOUNTMINI_METAGENE (
             ch_target_crosslink_bed,
             ch_regions_resolved_gtf.collect{ it[1] }
         )

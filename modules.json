@@ -55,6 +55,11 @@
                         "git_sha": "5c460c5a4736974abde2843294f35307ee2b0e5e",
                         "installed_by": ["modules"]
                     },
+                    "icountmini/metagene": {
+                        "branch": "master",
+                        "git_sha": "ae5b64c9ad1464c12976357a1d47d28386b56cdd",
+                        "installed_by": ["modules"]
+                    },
                     "icountmini/peaks": {
                         "branch": "master",
                         "git_sha": "0342d858b8cc2147846ba45220d288516c43a12d",
