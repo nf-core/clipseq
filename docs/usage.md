@@ -101,7 +101,7 @@ By default, peak calling on identified crosslinks is not performed unless specif
 | Peak caller | Argument | Supported protocols                       |
 |-------------|----------|-------------------------------------------|
 | [iCount](https://icount.readthedocs.io/en/latest/) | `--peakcaller icount` | iCLIP                                     |
-| [Paraclu](https://cbrc3.cbrc.pj.aist.go.jp/~martin/paraclu/) | `--peakcaller paraclu` | CAGE-seq                                  |
+| [Paraclu](https://gitlab.com/mcfrith/paraclu) | `--peakcaller paraclu` | CAGE-seq                                  |
 | [PureCLIP](https://pureclip.readthedocs.io/en/latest/) | `--peakcaller pureclip` | iCLIP, eCLIP                              |
 | [Piranha](https://github.com/smithlabcode/piranha) | `--peakcaller piranha` | HITS-CLIP, iCLIP, eCLIP, PAR-CLIP,RIP-seq |
 
