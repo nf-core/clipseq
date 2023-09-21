@@ -24,8 +24,25 @@
      workflows use the "tube map" design for that. See https://nf-co.re/docs/contributing/design_guidelines#examples for examples.   -->
 <!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
 
-1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
-2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+By default, the pipeline currently performs the following:
+
+1. Adapter and quality trimming ([`Cutadapt`]())
+2. Pre-mapping to e.g. rRNA and tRNA sequences (`Bowtie 2`)
+3. Genome mapping (`STAR`)
+4. UMI-based deduplication (`UMI-tools`)
+5. Crosslink identification (`BEDTools`)
+6. Bedgraph coverage track generation (`BEDTools`)
+7. Peak calling (multiple options):
+    - `iCount`
+    - `Paraclu`
+    - `PureCLIP`
+    - `Piranha`
+8. Motif detection (`DREME`)
+9. Quality control:
+    - Sequencing quality control (`FastQC`)
+    - Library complexity (`Preseq`)
+    - Regional distribution (`RSeQC`)
+10. Overall pipeline run and QC summaries and peak calling comparisons (`MultiQC`)
 
 ## Usage
 
@@ -56,7 +73,7 @@ Now, you can run the pipeline using:
 
 ```bash
 nextflow run nf-core/clipseq \
-   -profile <docker/singularity/.../institute> \
+   -profile test, <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
 ```
@@ -76,11 +93,13 @@ For more details about the output files and reports, please refer to the
 
 ## Credits
 
-nf-core/clipseq was originally written by TODO.
+nf-core/clipseq was originally written by Charlotte West ([@charlotte-west](https://github.com/charlotte-west)) and Anob Chakrabarti ([@amchakra](https://github.com/amchakra)) from [Luscombe Lab](https://www.crick.ac.uk/research/labs/nicholas-luscombe) at [The Francis Crick Institute](https://www.crick.ac.uk/), London, UK. It started life in April 2020 as a Nextflow DSL2 Luscombe Lab ([@luslab](https://github.com/luslab)) lockdown hackathon day and we thank all the lab members for their early contributions.
+
+v2.0 was spearheaded by [Ule lab](https://github.com/ulelab) in collaboration with [Goodwright Ltd.](https://goodwright.com/); namely Charlotte Capitanchik ([@CharlotteAnne](https://github.com/charlotteanne)), Chris Cheshire and Sam Ireland.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
+Ira Iosub, Marc Jones, Rupert Faraway, Oscar G. Wilkins, Klara Kuret
 
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
 
 ## Contributions and Support
 
