@@ -10,7 +10,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                target_chrom_sizes = null
+                genome_chrom_sizes = null
                 ncrna_chrom_sizes = null
             }
         }

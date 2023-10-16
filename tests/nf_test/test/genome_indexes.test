@@ -10,7 +10,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                target_genome_index = null
+                genome_index = null
             }
         }
 

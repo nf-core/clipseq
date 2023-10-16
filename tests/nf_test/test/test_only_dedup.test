@@ -15,7 +15,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/03_filt_dedup/sample_1_R1.target.dedup.bam").exists()
+            assert new File("$outputDir/03_filt_dedup/sample_1_R1.genome.dedup.bam").exists()
             assert new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.dedup.bam").exists()
 
         }

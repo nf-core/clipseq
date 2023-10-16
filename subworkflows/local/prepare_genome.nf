@@ -9,10 +9,10 @@ include { UNTAR as UNTAR_BT                                                     
 include { UNTAR as UNTAR_STAR                                                    } from '../../modules/nf-core/untar/main'
 include { BOWTIE_BUILD                                                           } from '../../modules/nf-core/bowtie/build/main'
 include { STAR_GENOMEGENERATE                                                    } from '../../modules/nf-core/star/genomegenerate/main'
-include { SAMTOOLS_FAIDX as TARGET_INDEX                                         } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as GENOME_INDEX                                         } from '../../modules/nf-core/samtools/faidx/main'
 include { SAMTOOLS_FAIDX as NCRNA_INDEX                                          } from '../../modules/nf-core/samtools/faidx/main'
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
-include { CUSTOM_GETCHROMSIZES as TARGET_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
+include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
 include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
 include { FIND_LONGEST_TRANSCRIPT                                                } from '../../modules/local/find_longest_transcript/main'
 include { CLIPSEQ_FILTER_GTF                                                     } from '../../modules/local/filter_gtf/main'
@@ -30,9 +30,9 @@ workflow PREPARE_GENOME {
     ncrna_fasta                // file: .fasta
     ncrna_fasta_fai            // file: .fai
     gtf                        // file: .gtf
-    target_genome_index        // folder: index
+    genome_index               // folder: index
     ncrna_genome_index         // folder: index
-    target_chrom_sizes         // file: .txt
+    genome_chrom_sizes         // file: .txt
     ncrna_chrom_sizes          // file: .txt
     longest_transcript         // file: .txt
     longest_transcript_fai     // file: .fai
@@ -95,12 +95,12 @@ workflow PREPARE_GENOME {
     // MODULES: Uncompress STAR index or generate if required
     //
     ch_star_index = Channel.empty()
-    if (target_genome_index) {
-        if (target_genome_index.toString().endsWith(".tar.gz")) {
-            ch_star_index = UNTAR_STAR ( [ [:], target_genome_index ] ).untar
+    if (genome_index) {
+        if (genome_index.toString().endsWith(".tar.gz")) {
+            ch_star_index = UNTAR_STAR ( [ [:], genome_index ] ).untar
             ch_versions  = ch_versions.mix(UNTAR_STAR.out.versions)
         } else {
-            ch_star_index = Channel.of([ [:] , target_genome_index ])
+            ch_star_index = Channel.of([ [:] , genome_index ])
         }
     }
     else {
@@ -132,12 +132,12 @@ workflow PREPARE_GENOME {
     if (fasta_fai) {
         ch_fasta_fai = Channel.of([ [id:fasta_fai.baseName], fasta_fai ])
     } else {
-        TARGET_INDEX (
+        GENOME_INDEX (
             ch_fasta,
             [[],[]]
         )
-        ch_fasta_fai = TARGET_INDEX.out.fai
-        ch_versions = ch_versions.mix(TARGET_INDEX.out.versions)
+        ch_fasta_fai = GENOME_INDEX.out.fai
+        ch_versions = ch_versions.mix(GENOME_INDEX.out.versions)
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fai]
     //ch_fasta_fai | view
@@ -160,12 +160,12 @@ workflow PREPARE_GENOME {
     //ch_fasta_fai | view
 
     //
-    // MODULE: Calc target chrom sizes
+    // MODULE: Calc genome chrom sizes
     //
-    ch_target_chrom_sizes = target_chrom_sizes
-    if(!target_chrom_sizes) {
-        ch_target_chrom_sizes = TARGET_CHROM_SIZE ( ch_fasta ).sizes
-        ch_versions  = ch_versions.mix(TARGET_CHROM_SIZE.out.versions)
+    ch_genome_chrom_sizes = genome_chrom_sizes
+    if(!genome_chrom_sizes) {
+        ch_genome_chrom_sizes = GENOME_CHROM_SIZE ( ch_fasta ).sizes
+        ch_versions  = ch_versions.mix(GENOME_CHROM_SIZE.out.versions)
     }
 
     //
@@ -333,7 +333,7 @@ workflow PREPARE_GENOME {
     ncrna_fasta_fai            = ch_ncrna_fasta_fai            // channel: [ val(meta), [ fai ] ]
     genome_index               = ch_star_index                 // channel: [ val(meta), [ star_index ] ]
     ncrna_index                = ch_bt_index                   // channel: [ val(meta), [ bt2_index ] ]
-    chrom_sizes                = ch_target_chrom_sizes         // channel: [ val(meta), [ txt ] ]
+    chrom_sizes                = ch_genome_chrom_sizes         // channel: [ val(meta), [ txt ] ]
     ncrna_chrom_sizes          = ch_ncrna_chrom_sizes          // channel: [ val(meta), [ txt ] ]
     gtf                        = ch_gtf                        // channel: [ val(meta), [ gtf ] ]
     longest_transcript         = ch_longest_transcript         // channel: [ val(meta), [ txt ] ]

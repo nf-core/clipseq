@@ -32,7 +32,7 @@ module_order:
       name: "FastQC (trimmed)"
       anchor: "fastqc_trimmed"
       info: "This section of the report shows FastQC results after adapter trimming."
-      target: ""
+      genome: ""
       path_filters:
         - "*_trimmed_fastqc.zip"
   - bowtie1:
@@ -40,7 +40,7 @@ module_order:
       path_filters:
         - "*.out"
   - star:
-      name: "STAR Target Genome Alignment"
+      name: "STAR Genome Alignment"
       path_filters:
         - "*.final.out"
   - custom_content

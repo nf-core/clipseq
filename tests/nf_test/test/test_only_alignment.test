@@ -21,10 +21,10 @@ nextflow_pipeline {
             assert new File("$outputDir/02_alignment/ncrna/samtools_stats/sample_1_R1.flagstat").exists()
             assert new File("$outputDir/02_alignment/ncrna/unmapped/sample_1_R1.unmapped.fastq.gz").exists()
 
-            // TARGET
-            assert new File("$outputDir/02_alignment/target/sample_1_R1.Aligned.sortedByCoord.out.bam").exists()
-            assert new File("$outputDir/02_alignment/target/sample_1_R1.Aligned.sortedByCoord.out.bam.bai").exists()
-            assert new File("$outputDir/02_alignment/target/samtools_stats/sample_1_R1.flagstat").exists()
+            // GENOME
+            assert new File("$outputDir/02_alignment/genome/sample_1_R1.Aligned.sortedByCoord.out.bam").exists()
+            assert new File("$outputDir/02_alignment/genome/sample_1_R1.Aligned.sortedByCoord.out.bam.bai").exists()
+            assert new File("$outputDir/02_alignment/genome/samtools_stats/sample_1_R1.flagstat").exists()
         }
     }
 
@@ -48,10 +48,10 @@ nextflow_pipeline {
             assert new File("$outputDir/02_alignment/ncrna/samtools_stats/sample_1_R1.flagstat").exists()
             assert !(new File("$outputDir/02_alignment/ncrna/unmapped/sample_1_R1.unmapped.fastq.gz").exists())
 
-            // TARGET
-            assert !(new File("$outputDir/02_alignment/target/sample_1_R1.Aligned.sortedByCoord.out.bam").exists())
-            assert !(new File("$outputDir/02_alignment/target/sample_1_R1.Aligned.sortedByCoord.out.bam.bai").exists())
-            assert new File("$outputDir/02_alignment/target/samtools_stats/sample_1_R1.flagstat").exists()
+            // GENOME
+            assert !(new File("$outputDir/02_alignment/genome/sample_1_R1.Aligned.sortedByCoord.out.bam").exists())
+            assert !(new File("$outputDir/02_alignment/genome/sample_1_R1.Aligned.sortedByCoord.out.bam.bai").exists())
+            assert new File("$outputDir/02_alignment/genome/samtools_stats/sample_1_R1.flagstat").exists()
         }
     }
 }
