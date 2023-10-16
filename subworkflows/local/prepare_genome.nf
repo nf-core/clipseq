@@ -3,17 +3,17 @@
 //
 
 include { GUNZIP as GUNZIP_FASTA                                                 } from '../../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_SMRNA_FASTA                                           } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_NCRNA_FASTA                                           } from '../../modules/nf-core/gunzip/main'
 include { GUNZIP as GUNZIP_GTF                                                   } from '../../modules/nf-core/gunzip/main'
 include { UNTAR as UNTAR_BT                                                      } from '../../modules/nf-core/untar/main'
 include { UNTAR as UNTAR_STAR                                                    } from '../../modules/nf-core/untar/main'
 include { BOWTIE_BUILD                                                           } from '../../modules/nf-core/bowtie/build/main'
 include { STAR_GENOMEGENERATE                                                    } from '../../modules/nf-core/star/genomegenerate/main'
 include { SAMTOOLS_FAIDX as TARGET_INDEX                                         } from '../../modules/nf-core/samtools/faidx/main'
-include { SAMTOOLS_FAIDX as SMRNA_INDEX                                          } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as NCRNA_INDEX                                          } from '../../modules/nf-core/samtools/faidx/main'
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
 include { CUSTOM_GETCHROMSIZES as TARGET_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
-include { CUSTOM_GETCHROMSIZES as SMRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
+include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
 include { FIND_LONGEST_TRANSCRIPT                                                } from '../../modules/local/find_longest_transcript/main'
 include { CLIPSEQ_FILTER_GTF                                                     } from '../../modules/local/filter_gtf/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
@@ -27,13 +27,13 @@ workflow PREPARE_GENOME {
     take:
     fasta                      // file: .fasta
     fasta_fai                  // file: .fai
-    smrna_fasta                // file: .fasta
-    smrna_fasta_fai            // file: .fai
+    ncrna_fasta                // file: .fasta
+    ncrna_fasta_fai            // file: .fai
     gtf                        // file: .gtf
     target_genome_index        // folder: index
-    smrna_genome_index         // folder: index
+    ncrna_genome_index         // folder: index
     target_chrom_sizes         // file: .txt
-    smrna_chrom_sizes          // file: .txt
+    ncrna_chrom_sizes          // file: .txt
     longest_transcript         // file: .txt
     longest_transcript_fai     // file: .fai
     longest_transcript_gtf     // file: .gtf
@@ -66,17 +66,17 @@ workflow PREPARE_GENOME {
     //ch_fasta | view
 
     //
-    // MODULE: Uncompress genome smrna_fasta file if required
+    // MODULE: Uncompress genome ncrna_fasta file if required
     //
-    ch_smrna_fasta = Channel.empty()
-    if (smrna_fasta.toString().endsWith(".gz")) {
-        ch_smrna_fasta = GUNZIP_SMRNA_FASTA ( [ [id:smrna_fasta.baseName], smrna_fasta ] ).gunzip
-        ch_versions = ch_versions.mix(GUNZIP_SMRNA_FASTA.out.versions)
+    ch_ncrna_fasta = Channel.empty()
+    if (ncrna_fasta.toString().endsWith(".gz")) {
+        ch_ncrna_fasta = GUNZIP_NCRNA_FASTA ( [ [id:ncrna_fasta.baseName], ncrna_fasta ] ).gunzip
+        ch_versions = ch_versions.mix(GUNZIP_NCRNA_FASTA.out.versions)
     } else {
-        ch_smrna_fasta = Channel.of([ [id:smrna_fasta.baseName], smrna_fasta ])
+        ch_ncrna_fasta = Channel.of([ [id:ncrna_fasta.baseName], ncrna_fasta ])
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fasta]
-    //ch_smrna_fasta | view
+    //ch_ncrna_fasta | view
 
     //
     // MODULE: Uncompress genome gtf file if required
@@ -112,16 +112,16 @@ workflow PREPARE_GENOME {
     // MODULES: Uncompress Bowtie index or generate if required
     //
     ch_bt_index = Channel.empty()
-    if (smrna_genome_index) {
-        if (smrna_genome_index.toString().endsWith(".tar.gz")) {
-            ch_bt_index = UNTAR_BT ( [ [:], smrna_genome_index ] ).untar
+    if (ncrna_genome_index) {
+        if (ncrna_genome_index.toString().endsWith(".tar.gz")) {
+            ch_bt_index = UNTAR_BT ( [ [:], ncrna_genome_index ] ).untar
             ch_versions  = ch_versions.mix(UNTAR_BT.out.versions)
         } else {
-            ch_bt_index = Channel.of([ [:] , smrna_genome_index ])
+            ch_bt_index = Channel.of([ [:] , ncrna_genome_index ])
         }
     }
     else {
-        ch_bt_index = BOWTIE_BUILD ( ch_smrna_fasta.map{it[1]} ).index
+        ch_bt_index = BOWTIE_BUILD ( ch_ncrna_fasta.map{it[1]} ).index
         ch_versions = ch_versions.mix(BOWTIE_BUILD.out.versions)
     }
 
@@ -143,18 +143,18 @@ workflow PREPARE_GENOME {
     //ch_fasta_fai | view
 
     //
-    // MODULE: Create fasta fai if required for smrna genome
+    // MODULE: Create fasta fai if required for ncrna genome
     //
-    ch_smrna_fasta_fai = Channel.empty()
+    ch_ncrna_fasta_fai = Channel.empty()
     if (fasta_fai) {
-        ch_smrna_fasta_fai = Channel.of([ [id:smrna_fasta_fai.baseName], fasta_fai ])
+        ch_ncrna_fasta_fai = Channel.of([ [id:ncrna_fasta_fai.baseName], fasta_fai ])
     } else {
-        SMRNA_INDEX (
-            ch_smrna_fasta,
+        NCRNA_INDEX (
+            ch_ncrna_fasta,
             [[],[]]
         )
-        ch_smrna_fasta_fai = SMRNA_INDEX.out.fai
-        ch_versions = ch_versions.mix(SMRNA_INDEX.out.versions)
+        ch_ncrna_fasta_fai = NCRNA_INDEX.out.fai
+        ch_versions = ch_versions.mix(NCRNA_INDEX.out.versions)
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fai]
     //ch_fasta_fai | view
@@ -169,12 +169,12 @@ workflow PREPARE_GENOME {
     }
 
     //
-    // MODULE: Calc smrna chrom sizes
+    // MODULE: Calc ncrna chrom sizes
     //
-    ch_smrna_chrom_sizes = smrna_chrom_sizes
-    if(!smrna_chrom_sizes) {
-        ch_smrna_chrom_sizes = SMRNA_CHROM_SIZE ( ch_smrna_fasta ).sizes
-        ch_versions  = ch_versions.mix(SMRNA_CHROM_SIZE.out.versions)
+    ch_ncrna_chrom_sizes = ncrna_chrom_sizes
+    if(!ncrna_chrom_sizes) {
+        ch_ncrna_chrom_sizes = NCRNA_CHROM_SIZE ( ch_ncrna_fasta ).sizes
+        ch_versions  = ch_versions.mix(NCRNA_CHROM_SIZE.out.versions)
     }
 
     //
@@ -329,12 +329,12 @@ workflow PREPARE_GENOME {
     emit:
     fasta                      = ch_fasta                      // channel: [ val(meta), [ fasta ] ]
     fasta_fai                  = ch_fasta_fai                  // channel: [ val(meta), [ fai ] ]
-    smrna_fasta                = ch_smrna_fasta                // channel: [ val(meta), [ fasta ] ]
-    smrna_fasta_fai            = ch_smrna_fasta_fai            // channel: [ val(meta), [ fai ] ]
+    ncrna_fasta                = ch_ncrna_fasta                // channel: [ val(meta), [ fasta ] ]
+    ncrna_fasta_fai            = ch_ncrna_fasta_fai            // channel: [ val(meta), [ fai ] ]
     genome_index               = ch_star_index                 // channel: [ val(meta), [ star_index ] ]
-    smrna_index                = ch_bt_index                   // channel: [ val(meta), [ bt2_index ] ]
+    ncrna_index                = ch_bt_index                   // channel: [ val(meta), [ bt2_index ] ]
     chrom_sizes                = ch_target_chrom_sizes         // channel: [ val(meta), [ txt ] ]
-    smrna_chrom_sizes          = ch_smrna_chrom_sizes          // channel: [ val(meta), [ txt ] ]
+    ncrna_chrom_sizes          = ch_ncrna_chrom_sizes          // channel: [ val(meta), [ txt ] ]
     gtf                        = ch_gtf                        // channel: [ val(meta), [ gtf ] ]
     longest_transcript         = ch_longest_transcript         // channel: [ val(meta), [ txt ] ]
     longest_transcript_fai     = ch_longest_transcript_fai     // channel: [ val(meta), [ fai ] ]

@@ -36,7 +36,7 @@ module_order:
       path_filters:
         - "*_trimmed_fastqc.zip"
   - bowtie1:
-      name: "BOWTIE smRNA Alignment"
+      name: "BOWTIE ncRNA Alignment"
       path_filters:
         - "*.out"
   - star:

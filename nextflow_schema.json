@@ -126,7 +126,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "smrna_fasta": {
+                "ncrna_fasta": {
                     "type": "string",
                     "default": "None"
                 },
@@ -150,7 +150,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "smrna_fasta_fai": {
+                "ncrna_fasta_fai": {
                     "type": "string",
                     "default": "None"
                 },
@@ -170,7 +170,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "smrna_chrom_sizes": {
+                "ncrna_chrom_sizes": {
                     "type": "string",
                     "default": "None"
                 },
@@ -186,7 +186,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "smrna_genome_index": {
+                "ncrna_genome_index": {
                     "type": "string",
                     "default": "None"
                 },

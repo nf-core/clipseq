@@ -1,5 +1,5 @@
 //
-// Align to smrna and primary genomes before indexing and sorting
+// Align to ncrna and primary genomes before indexing and sorting
 //
 
 //
@@ -14,7 +14,7 @@ include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_TRANS } from '../../modules/nf-core/s
 //
 // SUBWORKFLOWS
 //
-include { BAM_SORT_STATS_SAMTOOLS as BAM_SORT_STATS_SAMTOOLS_SMRNA } from '../../subworkflows/nf-core/bam_sort_stats_samtools/main'
+include { BAM_SORT_STATS_SAMTOOLS as BAM_SORT_STATS_SAMTOOLS_NCRNA } from '../../subworkflows/nf-core/bam_sort_stats_samtools/main'
 include { BAM_STATS_SAMTOOLS                                       } from '../../subworkflows/nf-core/bam_stats_samtools/main'
 
 workflow RNA_ALIGN {
@@ -29,7 +29,7 @@ workflow RNA_ALIGN {
     ch_versions = Channel.empty()
 
     //
-    // MODULE: Align reads to smrna genome
+    // MODULE: Align reads to ncrna genome
     //
     BOWTIE_ALIGN (
         fastq,
@@ -40,11 +40,11 @@ workflow RNA_ALIGN {
     //
     // SUBWORKFLOW: Sort, index BAM file and run samtools stats, flagstat and idxstats
     //
-    BAM_SORT_STATS_SAMTOOLS_SMRNA ( BOWTIE_ALIGN.out.bam, fasta )
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS_SMRNA.out.versions)
+    BAM_SORT_STATS_SAMTOOLS_NCRNA ( BOWTIE_ALIGN.out.bam, fasta )
+    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS_NCRNA.out.versions)
 
     //
-    // MODULE: Align reads that did not align to the smrna genome to the primary genome
+    // MODULE: Align reads that did not align to the ncrna genome to the primary genome
     //
     STAR_ALIGN (
         BOWTIE_ALIGN.out.fastq,
@@ -90,12 +90,12 @@ workflow RNA_ALIGN {
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX_TRANS.out.versions)
 
     emit:
-    smrna_bam        = BAM_SORT_STATS_SAMTOOLS_SMRNA.out.bam      // channel: [ val(meta), [ bam ] ]
-    smrna_bai        = BAM_SORT_STATS_SAMTOOLS_SMRNA.out.bai      // channel: [ val(meta), [ bai ] ]
-    smrna_stats      = BAM_SORT_STATS_SAMTOOLS_SMRNA.out.stats    // channel: [ val(meta), [ stats ] ]
-    smrna_flagstat   = BAM_SORT_STATS_SAMTOOLS_SMRNA.out.flagstat // channel: [ val(meta), [ flagstat ] ]
-    smrna_idxstats   = BAM_SORT_STATS_SAMTOOLS_SMRNA.out.idxstats // channel: [ val(meta), [ idxstats ] ]
-    smrna_log        = BOWTIE_ALIGN.out.log                       // channel: [ val(meta), [ txt ] ]
+    ncrna_bam        = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.bam      // channel: [ val(meta), [ bam ] ]
+    ncrna_bai        = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.bai      // channel: [ val(meta), [ bai ] ]
+    ncrna_stats      = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.stats    // channel: [ val(meta), [ stats ] ]
+    ncrna_flagstat   = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.flagstat // channel: [ val(meta), [ flagstat ] ]
+    ncrna_idxstats   = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.idxstats // channel: [ val(meta), [ idxstats ] ]
+    ncrna_log        = BOWTIE_ALIGN.out.log                       // channel: [ val(meta), [ txt ] ]
 
     target_log       = STAR_ALIGN.out.log                         // channel: [ val(meta), [ txt ] ]
     target_log_final = STAR_ALIGN.out.log_final                   // channel: [ val(meta), [ txt ] ]

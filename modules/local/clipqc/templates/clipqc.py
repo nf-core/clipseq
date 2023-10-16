@@ -32,7 +32,7 @@ def main(process_name):
     # First get Bowtie2 logs
     bowtie_logs = sorted(["premap/" + f for f in os.listdir("premap") if f.endswith(".out")])
 
-    smrna = dict((key, []) for key in ["exp", "input_reads", "smrna_reads"])
+    ncrna = dict((key, []) for key in ["exp", "input_reads", "ncrna_reads"])
 
     for bowtie_log in bowtie_logs:
         with open(bowtie_log, "r") as logfile:
@@ -44,11 +44,11 @@ def main(process_name):
             output_reads = [i for i in lines if "# reads that failed to align" in i]
             output_reads = int(re.findall(r"\d+", output_reads[0])[0])
 
-            smrna["exp"].append(exp)
-            smrna["input_reads"].append(input_reads)
-            smrna["smrna_reads"].append(input_reads - output_reads)
+            ncrna["exp"].append(exp)
+            ncrna["input_reads"].append(input_reads)
+            ncrna["ncrna_reads"].append(input_reads - output_reads)
 
-    smrna_df = pd.DataFrame(smrna)
+    ncrna_df = pd.DataFrame(ncrna)
 
     # Next get STAR logs
     star_logs = sorted(["mapped/" + f for f in os.listdir("mapped") if f.endswith(".Log.final.out")])
@@ -76,11 +76,11 @@ def main(process_name):
     genome_df = pd.DataFrame(genome)
 
     # Combine the two
-    mapping_df = pd.merge(smrna_df, genome_df, on="exp")
+    mapping_df = pd.merge(ncrna_df, genome_df, on="exp")
     mapping_df.to_csv("mapping_metrics.tsv", sep="\t", index=False)
 
     # Subset for MultiQC plots
-    mapping_df.loc[:, ["exp", "smrna_reads", "genome_reads", "unmapped_reads"]].to_csv(
+    mapping_df.loc[:, ["exp", "ncrna_reads", "genome_reads", "unmapped_reads"]].to_csv(
         "mapping.tsv", sep="\t", index=False
     )
 

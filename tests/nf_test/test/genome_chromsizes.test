@@ -11,7 +11,7 @@ nextflow_pipeline {
                 only_genome = true
                 save_reference = true
                 target_chrom_sizes = null
-                smrna_chrom_sizes = null
+                ncrna_chrom_sizes = null
             }
         }
 

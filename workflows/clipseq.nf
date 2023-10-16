@@ -13,7 +13,7 @@ WorkflowClipseq.initialise(params, log)
 check_param_list = [
     input: params.input,
     fasta: params.fasta,
-    smrna_fasta: params.smrna_fasta,
+    ncrna_fasta: params.ncrna_fasta,
     gtf: params.gtf
 ]
 for (param in check_param_list) {
@@ -29,11 +29,11 @@ for (param in check_param_list) {
 def checkPathParamList = [
     params.multiqc_config,
     params.fasta_fai,
-    params.smrna_fasta_fai,
+    params.ncrna_fasta_fai,
     params.target_genome_index,
-    params.smrna_genome_index,
+    params.ncrna_genome_index,
     params.target_chrom_sizes,
-    params.smrna_chrom_sizes,
+    params.ncrna_chrom_sizes,
     params.longest_transcript,
     params.longest_transcript_fai,
     params.longest_transcript_gtf,
@@ -157,16 +157,16 @@ workflow CLIPSEQ {
     // Prepare manditory params
     ch_input       = file(params.input)
     ch_fasta       = file(params.fasta)
-    ch_smrna_fasta = file(params.smrna_fasta)
+    ch_ncrna_fasta = file(params.ncrna_fasta)
     ch_gtf         = file(params.gtf)
 
     // Prepare non-manditory params
     ch_fasta_fai                  = []
-    ch_smrna_fasta_fai            = []
+    ch_ncrna_fasta_fai            = []
     ch_target_genome_index        = []
-    ch_smrna_genome_index         = []
+    ch_ncrna_genome_index         = []
     ch_target_chrom_sizes         = []
-    ch_smrna_chrom_sizes          = []
+    ch_ncrna_chrom_sizes          = []
     ch_longest_transcript         = []
     ch_longest_transcript_fai     = []
     ch_longest_transcript_gtf     = []
@@ -180,11 +180,11 @@ workflow CLIPSEQ {
     ch_regions_resolved_gtf       = []
     ch_regions_resolved_gtf_genic = []
     if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
-    if(params.smrna_fasta_fai) { ch_smrna_fasta_fai = file(params.smrna_fasta_fai) }
+    if(params.ncrna_fasta_fai) { ch_ncrna_fasta_fai = file(params.ncrna_fasta_fai) }
     if(params.target_genome_index) { ch_target_genome_index = file(params.target_genome_index) }
-    if(params.smrna_genome_index) { ch_smrna_genome_index = file(params.smrna_genome_index) }
+    if(params.ncrna_genome_index) { ch_ncrna_genome_index = file(params.ncrna_genome_index) }
     if(params.target_chrom_sizes) { ch_target_chrom_sizes = file(params.target_chrom_sizes) }
-    if(params.smrna_chrom_sizes) { ch_smrna_chrom_sizes = file(params.smrna_chrom_sizes) }
+    if(params.ncrna_chrom_sizes) { ch_ncrna_chrom_sizes = file(params.ncrna_chrom_sizes) }
     if(params.longest_transcript) { ch_longest_transcript = file(params.longest_transcript) }
     if(params.longest_transcript_fai) { ch_longest_transcript_fai = file(params.longest_transcript_fai) }
     if(params.longest_transcript_gtf) { ch_longest_transcript_gtf = file(params.longest_transcript_gtf) }
@@ -205,13 +205,13 @@ workflow CLIPSEQ {
         PREPARE_GENOME (
             ch_fasta,
             ch_fasta_fai,
-            ch_smrna_fasta,
-            ch_smrna_fasta_fai,
+            ch_ncrna_fasta,
+            ch_ncrna_fasta_fai,
             ch_gtf,
             ch_target_genome_index,
-            ch_smrna_genome_index,
+            ch_ncrna_genome_index,
             ch_target_chrom_sizes,
-            ch_smrna_chrom_sizes,
+            ch_ncrna_chrom_sizes,
             ch_longest_transcript,
             ch_longest_transcript_fai,
             ch_longest_transcript_gtf,
@@ -231,9 +231,9 @@ workflow CLIPSEQ {
         ch_gtf                        = PREPARE_GENOME.out.gtf
         ch_filtered_gtf               = PREPARE_GENOME.out.filtered_gtf
         ch_target_chrom_sizes         = PREPARE_GENOME.out.chrom_sizes
-        ch_smrna_fasta                = PREPARE_GENOME.out.smrna_fasta
-        ch_smrna_fasta_fai            = PREPARE_GENOME.out.smrna_fasta_fai
-        ch_smrna_chrom_sizes          = PREPARE_GENOME.out.smrna_chrom_sizes
+        ch_ncrna_fasta                = PREPARE_GENOME.out.ncrna_fasta
+        ch_ncrna_fasta_fai            = PREPARE_GENOME.out.ncrna_fasta_fai
+        ch_ncrna_chrom_sizes          = PREPARE_GENOME.out.ncrna_chrom_sizes
         ch_longest_transcript         = PREPARE_GENOME.out.longest_transcript
         ch_longest_transcript_fai     = PREPARE_GENOME.out.longest_transcript_fai
         ch_longest_transcript_gtf     = PREPARE_GENOME.out.longest_transcript_gtf
@@ -246,7 +246,7 @@ workflow CLIPSEQ {
         ch_regions_resolved_gtf       = PREPARE_GENOME.out.regions_resolved_gtf
         ch_regions_resolved_gtf_genic = PREPARE_GENOME.out.regions_resolved_gtf_genic
         ch_target_genome_index        = PREPARE_GENOME.out.genome_index
-        ch_smrna_genome_index         = PREPARE_GENOME.out.smrna_index
+        ch_ncrna_genome_index         = PREPARE_GENOME.out.ncrna_index
     }
 
     //
@@ -283,11 +283,11 @@ workflow CLIPSEQ {
     //ch_fastq | view
 
     //
-    // SUBWORKFLOW: Align reads to smrna and primary genomes
+    // SUBWORKFLOW: Align reads to ncrna and primary genomes
     //
-    ch_smrna_bam       = Channel.empty()
-    ch_smrna_bai       = Channel.empty()
-    ch_smrna_log       = Channel.empty()
+    ch_ncrna_bam       = Channel.empty()
+    ch_ncrna_bai       = Channel.empty()
+    ch_ncrna_log       = Channel.empty()
     ch_target_log      = Channel.empty()
     ch_target_bam      = Channel.empty()
     ch_target_bai      = Channel.empty()
@@ -299,15 +299,15 @@ workflow CLIPSEQ {
     if(params.run_alignment) {
         RNA_ALIGN (
             ch_fastq,
-            ch_smrna_genome_index,
+            ch_ncrna_genome_index,
             ch_target_genome_index,
             ch_filtered_gtf,
             ch_fasta
         )
         ch_versions         = ch_versions.mix(RNA_ALIGN.out.versions)
-        ch_smrna_bam        = RNA_ALIGN.out.smrna_bam
-        ch_smrna_bai        = RNA_ALIGN.out.smrna_bai
-        ch_smrna_log        = RNA_ALIGN.out.smrna_log
+        ch_ncrna_bam        = RNA_ALIGN.out.ncrna_bam
+        ch_ncrna_bai        = RNA_ALIGN.out.ncrna_bai
+        ch_ncrna_log        = RNA_ALIGN.out.ncrna_log
         ch_target_log       = RNA_ALIGN.out.target_log_final
         ch_target_bam       = RNA_ALIGN.out.target_bam
         ch_target_bai       = RNA_ALIGN.out.target_bai
@@ -642,7 +642,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(ch_smrna_log.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_ncrna_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_target_log.collect{it[1]}.ifEmpty([]))
 
         MULTIQC (

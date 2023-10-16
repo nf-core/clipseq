@@ -29,7 +29,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                smrna_genome_index = null
+                ncrna_genome_index = null
             }
         }
 

@@ -15,11 +15,11 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            // SMRNA
-            assert new File("$outputDir/02_alignment/smrna/sample_1_R1.sorted.bam").exists()
-            assert new File("$outputDir/02_alignment/smrna/sample_1_R1.sorted.bam.bai").exists()
-            assert new File("$outputDir/02_alignment/smrna/samtools_stats/sample_1_R1.flagstat").exists()
-            assert new File("$outputDir/02_alignment/smrna/unmapped/sample_1_R1.unmapped.fastq.gz").exists()
+            // NCRNA
+            assert new File("$outputDir/02_alignment/ncrna/sample_1_R1.sorted.bam").exists()
+            assert new File("$outputDir/02_alignment/ncrna/sample_1_R1.sorted.bam.bai").exists()
+            assert new File("$outputDir/02_alignment/ncrna/samtools_stats/sample_1_R1.flagstat").exists()
+            assert new File("$outputDir/02_alignment/ncrna/unmapped/sample_1_R1.unmapped.fastq.gz").exists()
 
             // TARGET
             assert new File("$outputDir/02_alignment/target/sample_1_R1.Aligned.sortedByCoord.out.bam").exists()
@@ -42,11 +42,11 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            // SMRNA
-            assert !(new File("$outputDir/02_alignment/smrna/sample_1_R1.sorted.bam").exists())
-            assert !(new File("$outputDir/02_alignment/smrna/sample_1_R1.sorted.bam.bai").exists())
-            assert new File("$outputDir/02_alignment/smrna/samtools_stats/sample_1_R1.flagstat").exists()
-            assert !(new File("$outputDir/02_alignment/smrna/unmapped/sample_1_R1.unmapped.fastq.gz").exists())
+            // NCRNA
+            assert !(new File("$outputDir/02_alignment/ncrna/sample_1_R1.sorted.bam").exists())
+            assert !(new File("$outputDir/02_alignment/ncrna/sample_1_R1.sorted.bam.bai").exists())
+            assert new File("$outputDir/02_alignment/ncrna/samtools_stats/sample_1_R1.flagstat").exists()
+            assert !(new File("$outputDir/02_alignment/ncrna/unmapped/sample_1_R1.unmapped.fastq.gz").exists())
 
             // TARGET
             assert !(new File("$outputDir/02_alignment/target/sample_1_R1.Aligned.sortedByCoord.out.bam").exists())
