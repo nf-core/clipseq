@@ -96,7 +96,7 @@ include { CLIPQC                                     } from '../modules/local/cl
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { PREPARE_GENOME                                 } from '../subworkflows/local/prepare_genome'
-include { PARSE_FASTQ_INPUT                              } from '../subworkflows/local/parse_fastq_input'
+include { INPUT_CHECK                                    } from '../subworkflows/local/input_check'
 include { RNA_ALIGN                                      } from '../subworkflows/local/rna_align'
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_DEDUP } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TRANS_DEDUP  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
@@ -254,11 +254,12 @@ workflow CLIPSEQ {
     //
     ch_fastq = Channel.empty()
     if(params.run_input_check) {
-        PARSE_FASTQ_INPUT (
-            ch_input
+        INPUT_CHECK (
+            ch_input,
+            params.source
         )
-        ch_versions = ch_versions.mix(PARSE_FASTQ_INPUT.out.versions)
-        ch_fastq    = PARSE_FASTQ_INPUT.out.fastq
+        ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+        ch_fastq    = INPUT_CHECK.out.fastq
     }
     //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:true], [FASTQ]]
     //ch_fastq | view
