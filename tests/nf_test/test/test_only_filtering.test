@@ -1,0 +1,43 @@
+nextflow_pipeline {
+    name "only_filtering"
+    script "main.nf"
+
+    test("only_filtering_primary") {
+        tag "only_filtering_primary"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_filtering = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Transcript
+            assert new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam").exists()
+            assert new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam.bai").exists()
+
+        }
+    }
+
+    test("only_filtering_false_outputs") {
+        tag "only_filtering_false_outputs"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                save_align_intermed = false
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Transcript
+            assert !(new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam").exists())
+            assert !(new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam.bai").exists())
+        }
+    }
+}

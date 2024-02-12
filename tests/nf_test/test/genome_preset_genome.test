@@ -1,0 +1,24 @@
+nextflow_pipeline {
+    name "prepare_genome"
+    script "main.nf"
+
+    // Tests for one run only_genome using a preset genome
+    test("genome_preset") {
+        tag "genome_preset"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Test fai created as the igenomes file does not have one
+            assert new File("$outputDir/00_genome/yeast_MitoV.fa.fai").exists()
+        }
+    }
+}

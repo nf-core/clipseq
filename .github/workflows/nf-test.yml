@@ -1,0 +1,93 @@
+name: nf-test
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+  release:
+    types: [published]
+
+env:
+  NXF_ANSI_LOG: false
+  NFTEST_VER: "0.7.3"
+
+# Cancel if a newer run is started
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nf_test:
+    name: nf-test tests
+    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/clipseq') }}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        NXF_VER:
+          - "22.10.1"
+          - "latest-everything"
+        profile: ["docker"]
+        test: ["test"]
+        tag:
+          - "genome_no_chrom_sizes"
+          - "genome_fasta_raw"
+          - "genome_fasta_gz"
+          - "genome_fasta_fai"
+          - "genome_ncrna_fasta_gz"
+          - "genome_ncrna_fasta"
+          - "genome_ncrna_fasta_fai"
+          - "genome_gtf_raw"
+          - "genome_gtf_gz"
+          - "genome_gtf_filt"
+          - "genome_gtf_filt_seg"
+          - "genome_gtf_seg"
+          - "genome_gtf_resolve_unanno"
+          - "genome_gtf_resolve_unanno_region"
+          - "genome_gtf_resolve_unanno_genic"
+          - "genome_gtf_resolve_unanno_region_genic"
+          - "genome_star_build_index"
+          - "genome_bt_build_index"
+          - "genome_no_longest_transcript"
+          - "genome_preset"
+          - "only_input_primary"
+          - "only_preprocessing_primary"
+          - "only_preprocessing_skip_fastqc"
+          - "only_preprocessing_skip_umi_extract"
+          - "only_preprocessing_skip_trimming"
+          - "only_alignment_primary"
+          - "only_alignment_false_outputs"
+          - "only_filtering_primary"
+          - "only_filtering_false_outputs"
+          - "only_dedup_primary"
+          - "only_crosslinking_primary"
+          - "only_peakcalling_primary"
+          - "only_peakcalling_caller_param_fail"
+          - "only_peakcalling_clippy"
+          - "only_peakcalling_icount"
+          - "only_peakcalling_paraclu"
+          - "only_peakcalling_paraclu_clippy"
+        include:
+          - test: test_full_small
+            profile: docker
+            tag: "full_small_only_input_primary"
+    steps:
+      - name: Check out pipeline code
+        uses: actions/checkout@v3
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v1
+        with:
+          version: "${{ matrix.NXF_VER }}"
+
+      - name: Install nf-test
+        run: |
+          wget -qO- https://code.askimed.com/install/nf-test | bash -s $NFTEST_VER
+          sudo mv nf-test /usr/local/bin/
+
+      - name: Run nf-test
+        run: nf-test test --profile=${{ matrix.test }},${{ matrix.profile }} --tap=test.tap --tag ${{ matrix.tag }} tests/nf_test/${{ matrix.test }}/*.test
+
+      - uses: pcolby/tap-summary@v1
+        with:
+          path: >-
+            test.tap

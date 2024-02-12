@@ -1,0 +1,31 @@
+nextflow_pipeline {
+    name "only_crosslinking"
+    script "main.nf"
+
+    test("only_crosslinking_primary") {
+        tag "only_crosslinking_primary"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_crosslinks = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/04_crosslinks/sample_1_R1.genome.cmd.bed").exists()
+            assert new File("$outputDir/04_crosslinks/sample_1_R1.genome.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/sample_1_R1.norm.genome.cmd.bedgraph").exists()
+
+            assert new File("$outputDir/04_crosslinks/sample_1_R1.transcript.cmd.bed").exists()
+            assert new File("$outputDir/04_crosslinks/sample_1_R1.transcript.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/sample_1_R1.norm.transcript.cmd.bedgraph").exists()
+
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_gene.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_subtype.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_type.tsv").exists()
+        }
+    }
+}

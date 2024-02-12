@@ -1,0 +1,23 @@
+nextflow_pipeline {
+    name "only_dedup"
+    script "main.nf"
+
+    test("only_dedup_primary") {
+        tag "only_dedup_primary"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_dedup = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/03_filt_dedup/sample_1_R1.genome.dedup.bam").exists()
+            assert new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.dedup.bam").exists()
+
+        }
+    }
+}

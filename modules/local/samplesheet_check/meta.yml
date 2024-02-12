@@ -1,0 +1,20 @@
+name: sample_base_samplesheet_check
+description: Checks a standard fastq-based samplesheet
+keywords:
+  - samplesheet
+input:
+  - samplesheet:
+      type: file
+      description: Input samplesheet to check
+      pattern: "*.{csv}"
+output:
+  - csv:
+      type: file
+      description: Validated samplesheet file
+      pattern: "*.csv"
+  - version:
+      type: file
+      description: File containing software version
+      pattern: "*.{version.txt}"
+authors:
+  - "@chris-cheshire"

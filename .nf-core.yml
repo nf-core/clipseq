@@ -1,0 +1,5 @@
+repository_type: pipeline
+lint:
+  files_unchanged:
+    - assets/email_template.html
+    - assets/email_template.txt

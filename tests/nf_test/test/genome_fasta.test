@@ -1,0 +1,122 @@
+nextflow_pipeline {
+    name "genome_fasta"
+    script "main.nf"
+
+    test("genome_fasta_raw") {
+        tag "genome_fasta_raw"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                fasta = "s3://ngi-igenomes/igenomes/Saccharomyces_cerevisiae/Ensembl/R64-1-1/Sequence/WholeGenomeFasta/genome.fa"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Test fai created as we did not supply one
+            assert new File("$outputDir/00_genome/genome.fa.fai").exists()
+        }
+    }
+
+    test("genome_fasta_gz") {
+        tag "genome_fasta_gz"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/yeast_MitoV.fa.gz"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Test fai created as we did not supply one
+            assert new File("$outputDir/00_genome/yeast_MitoV.fa.fai").exists()
+        }
+    }
+
+    test("genome_fasta_fai") {
+        tag "genome_fasta_fai"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                fasta_fai = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/yeast_MitoV.fa.fai"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Check fai does not exist as the process should not have run to generate it
+            assert !(new File("$outputDir/00_genome/yeast_MitoV.fa.fai").exists())
+        }
+    }
+
+    test("genome_ncrna_fasta_gz") {
+        tag "genome_ncrna_fasta_gz"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                ncrna_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa.gz"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
+        }
+    }
+
+    test("genome_ncrna_fasta") {
+        tag "genome_ncrna_fasta"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                ncrna_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
+        }
+    }
+
+    test("genome_ncrna_fasta_fai") {
+        tag "genome_ncrna_fasta_fai"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                fasta_fai = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa.fai"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Check fai does not exist as the process should not have run to generate it
+            assert !(new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists())
+        }
+    }
+}

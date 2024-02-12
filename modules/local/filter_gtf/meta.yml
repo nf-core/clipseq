@@ -1,0 +1,26 @@
+name: clipseq_filter_gtf
+description: Filter GTF file for optimal clipseq execution. Filters GENCODE or ENSEMBL genomic annotation in GTF format.
+tools:
+  - pandas:
+      description: |
+        Flexible and powerful data analysis / manipulation library for Python,
+        providing labeled data structures similar to R data.frame objects,
+        statistical functions, and much more.
+      homepage: https://pandas.pydata.org/
+      documentation: https://pandas.pydata.org/docs/
+      licence: ["BSD-3"]
+input:
+  - gtf:
+      type: file
+      description: A GTF annotation file
+output:
+  - gtf:
+      type: file
+      description: A filtered GTF annotation file
+      pattern: "*.gtf"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+authors:
+  - "@chris-cheshire"

@@ -1,0 +1,57 @@
+nextflow_pipeline {
+    name "only_alignment"
+    script "main.nf"
+
+    test("only_alignment_primary") {
+        tag "only_alignment_primary"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_alignment = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // NCRNA
+            assert new File("$outputDir/02_alignment/ncrna/sample_1_R1.sorted.bam").exists()
+            assert new File("$outputDir/02_alignment/ncrna/sample_1_R1.sorted.bam.bai").exists()
+            assert new File("$outputDir/02_alignment/ncrna/samtools_stats/sample_1_R1.flagstat").exists()
+            assert new File("$outputDir/02_alignment/ncrna/unmapped/sample_1_R1.unmapped.fastq.gz").exists()
+
+            // GENOME
+            assert new File("$outputDir/02_alignment/genome/sample_1_R1.Aligned.sortedByCoord.out.bam").exists()
+            assert new File("$outputDir/02_alignment/genome/sample_1_R1.Aligned.sortedByCoord.out.bam.bai").exists()
+            assert new File("$outputDir/02_alignment/genome/samtools_stats/sample_1_R1.flagstat").exists()
+        }
+    }
+
+    test("only_alignment_false_outputs") {
+        tag "only_alignment_false_outputs"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                save_unaligned_output = false
+                save_align_intermed = false
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // NCRNA
+            assert !(new File("$outputDir/02_alignment/ncrna/sample_1_R1.sorted.bam").exists())
+            assert !(new File("$outputDir/02_alignment/ncrna/sample_1_R1.sorted.bam.bai").exists())
+            assert new File("$outputDir/02_alignment/ncrna/samtools_stats/sample_1_R1.flagstat").exists()
+            assert !(new File("$outputDir/02_alignment/ncrna/unmapped/sample_1_R1.unmapped.fastq.gz").exists())
+
+            // GENOME
+            assert !(new File("$outputDir/02_alignment/genome/sample_1_R1.Aligned.sortedByCoord.out.bam").exists())
+            assert !(new File("$outputDir/02_alignment/genome/sample_1_R1.Aligned.sortedByCoord.out.bam.bai").exists())
+            assert new File("$outputDir/02_alignment/genome/samtools_stats/sample_1_R1.flagstat").exists()
+        }
+    }
+}

@@ -1,0 +1,22 @@
+nextflow_pipeline {
+    name "full_small_only_input"
+    script "main.nf"
+
+    test("full_small_only_input_primary") {
+        tag "full_small_only_input_primary"
+        tag "test_full_small"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_input = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/01_prealign/sample_1_R1.merged.fastq.gz").exists()
+            assert new File("$outputDir/01_prealign/sample_2_R1.merged.fastq.gz").exists()
+        }
+    }
+}

@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/nf-core/clipseq/master/assets/schema_input.json",
+    "title": "nf-core/clipseq pipeline - params.input schema",
+    "description": "Schema for the file provided with params.input",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "group": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "The group name must be provided and cannot contain spaces"
+            },
+            "replicate": {
+                "type": "integer",
+                "pattern": "^[1-9]\\d*$",
+                "errorMessage": "The replicate number. The combination of the group name and replicate number for a unique sample id"
+            },
+            "fastq_1": {
+                "type": "string",
+                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
+                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+            },
+            "fastq_2": {
+                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'",
+                "anyOf": [
+                    {
+                        "type": "string",
+                        "pattern": "^\\S+\\.f(ast)?q\\.gz$"
+                    },
+                    {
+                        "type": "string",
+                        "maxLength": 0
+                    }
+                ]
+            }
+        },
+        "required": ["group", "replicate,", "fastq_1"]
+    }
+}

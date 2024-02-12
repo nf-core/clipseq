@@ -1,0 +1,22 @@
+nextflow_pipeline {
+    name "only_input"
+    script "main.nf"
+
+    test("only_input_primary") {
+        tag "only_input_primary"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_input = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert !(new File("$outputDir/01_prealign/umitools/sample_1_R1.merged.fastq.gz").exists())
+            assert !(new File("$outputDir/01_prealign/umitools/sample_2_R1.merged.fastq.gz").exists())
+        }
+    }
+}

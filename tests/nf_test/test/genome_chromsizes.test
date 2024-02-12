@@ -1,0 +1,25 @@
+nextflow_pipeline {
+    name "genome_chrom_sizes"
+    script "main.nf"
+
+    test("genome_no_chrom_sizes") {
+        tag "genome_no_chrom_sizes"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_genome = true
+                save_reference = true
+                genome_chrom_sizes = null
+                ncrna_chrom_sizes = null
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert new File("$outputDir/00_genome/homosapiens_smallRNA.fa.sizes").exists()
+            assert new File("$outputDir/00_genome/yeast_MitoV.fa.sizes").exists()
+        }
+    }
+}

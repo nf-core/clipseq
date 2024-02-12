@@ -1,0 +1,104 @@
+nextflow_pipeline {
+    name "only_preprocessing"
+    script "main.nf"
+
+    test("only_preprocessing_primary") {
+        tag "only_preprocessing_primary"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_preprocessing = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Fastqc
+            assert new File("$outputDir/01_prealign/fastqc/sample_1_R1_fastqc.html").exists()
+            assert new File("$outputDir/01_prealign/fastqc/sample_1_R1_trimmed_fastqc.html").exists()
+
+            // UMI
+            assert new File("$outputDir/01_prealign/umitools/sample_1_R1.umi_extract.fastq.gz").exists()
+
+            // Trimming
+            assert new File("$outputDir/01_prealign/trimmed/sample_1_R1_trimmed.fq.gz").exists()
+        }
+    }
+
+    test("only_preprocessing_skip_fastqc") {
+        tag "only_preprocessing_skip_fastqc"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_preprocessing = true
+                skip_fastqc = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Fastqc
+            assert !(new File("$outputDir/01_prealign/fastqc/sample_1_R1_fastqc.html").exists())
+
+            // UMI
+            assert new File("$outputDir/01_prealign/umitools/sample_1_R1.umi_extract.fastq.gz").exists()
+
+            // Trimming
+            assert new File("$outputDir/01_prealign/trimmed/sample_1_R1_trimmed.fq.gz").exists()
+        }
+    }
+
+    test("only_preprocessing_skip_umi_extract") {
+        tag "only_preprocessing_skip_umi_extract"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_preprocessing = true
+                skip_umi_extract = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Fastqc
+            assert new File("$outputDir/01_prealign/fastqc/sample_1_R1_fastqc.html").exists()
+
+            // UMI
+            assert !(new File("$outputDir/01_prealign/umitools/sample_1_R1.umi_extract.fastq.gz").exists())
+
+            // Trimming
+            assert new File("$outputDir/01_prealign/trimmed/sample_1_R1_trimmed.fq.gz").exists()
+        }
+    }
+
+    test("only_preprocessing_skip_trimming") {
+        tag "only_preprocessing_skip_trimming"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                only_preprocessing = true
+                skip_trimming = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // Fastqc
+            assert new File("$outputDir/01_prealign/fastqc/sample_1_R1_fastqc.html").exists()
+
+            // UMI
+            assert new File("$outputDir/01_prealign/umitools/sample_1_R1.umi_extract.fastq.gz").exists()
+
+            // Trimming
+            assert !(new File("$outputDir/01_prealign/trimmed/sample_1_R1_trimmed.fq.gz").exists())
+        }
+    }
+}
