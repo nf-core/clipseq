@@ -53,6 +53,11 @@ process BindingSiteFinderAnalysis {
         --anno_regions $anno_regions \\
         --sample_sheet $sample_sheet \\
         --output_path . \\
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        \$(Rscript -e "packageVersion('BindingSiteFinder')" |& sed '1!d ; s/[1]  //')
+    END_VERSIONS
     """
 
     stub:
@@ -60,5 +65,10 @@ process BindingSiteFinderAnalysis {
     """
     touch binding_sites.rds
     touch binding_sites.csv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        \$(Rscript -e "packageVersion('BindingSiteFinder')" |& sed '1!d ; s/[1]  //')
+    END_VERSIONS
     """
 }

@@ -23,13 +23,22 @@ process sortAnnotationForBindingSiteFinder {
         $gtf_file \\
         gns.rds \\
         regions.rds
-    """
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        \$(Rscript -e "packageVersion('BindingSiteFinder')" |& sed '1!d ; s/[1]  //')
+    END_VERSIONS
+        """
 
     stub:
-    def args = task.ext.args ?: ''
+    def args = task.ext.a
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch gns.rds
     touch regions.rds
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        \$(Rscript -e "packageVersion('BindingSiteFinder')" |& sed '1!d ; s/[1]  //')
+    END_VERSIONS
     """
 }
