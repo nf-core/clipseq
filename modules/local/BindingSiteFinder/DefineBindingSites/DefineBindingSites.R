@@ -12,6 +12,11 @@ suppressMessages(  library(rtracklayer))
 suppressMessages( library(tidyverse))
 suppressMessages( library(optparse))
 
+# print BSF version
+##################
+cat("BindingSiteFinder version: ", packageVersion("BindingSiteFinder"), "\n")
+
+
 # Input
 ################
 
