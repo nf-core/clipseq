@@ -23,28 +23,35 @@ option_list <- list(
   make_option(c("-r", "--anno_regions"), type = "character"),
   # output paths
   make_option(c("-o", "--output_path"), type = "character", default = "."),
+
   # optional parameters to customize binding sites
-  make_option(c( "--peak_score_global_cuttoff"), type = "numeric"),
-  make_option(c( "--bsWidth"), type = "numeric"),
-  make_option(c( "--peak_score_genewise_cuttoff"), type = "numeric"),
-  make_option(c( "--minWidth"), type = "numeric"),
-  make_option(c( "--minCrosslinks"), type = "numeric"),
-  make_option(c( "--minCLSites"), type = "numeric"),
-  make_option(c( "--maxBsWidth"), type = "numeric"),
+  #--------------------------------
+  # the default values are the ones specified in the Bioconductor package BindingSiteFinder
+  # https://www.bioconductor.org/packages/release/bioc/manuals/BindingSiteFinder/man/BindingSiteFinder.pdf
+  # the default values as specified in BindingSiteFinder 2.4.0 are  given in the comment after the parameter name
+  # optional parameters for binding site defnition
+  make_option(c( "--peak_score_global_cuttoff"), type = "numeric"), # default 0.01
+  make_option(c( "--bsWidth"), type = "numeric"), # default automatic estimation
+  make_option(c( "--peak_score_genewise_cuttoff"), type = "numeric"), # default automatic estimation
+  make_option(c( "--minWidth"), type = "numeric"), # default 2
+  make_option(c( "--minCrosslinks"), type = "numeric"), # default 2
+  make_option(c( "--minCLSites"), type = "numeric"), # default 1
+  make_option(c( "--maxBsWidth"), type = "numeric"), # default 13
   # optional parameters for reproducibility
-  make_option(c( "--reproducibility_cutoff"), type = "numeric"),
-  make_option(c( "--reproducibility_nReps"), type = "numeric"),
+  # make_option(c( "--reproducibility_cutoff"), type = "numeric"),
+  # make_option(c( "--reproducibility_nReps"), type = "numeric"),
   # optional parameters for gene and region assignment
-  make_option(c( "--method_gene_overlaps"), type = "character"),
-  make_option(c( "--rule_gene_overlaps"), type = "character"),
-  make_option(c( "--method_region_overlaps"), type = "character"),
-  make_option(c( "--rule_region_overlaps"), type = "character"),
+  make_option(c( "--method_gene_overlaps"), type = "character"), # default "frequency"
+  make_option(c( "--rule_gene_overlaps"), type = "character"), # default NULL (only needed for --method_gene_overlaps "hierarchy")
+  make_option(c( "--method_region_overlaps"), type = "character"), # default "frequency"
+  make_option(c( "--rule_region_overlaps"), type = "character"), # default NULL (only needed for --method_region_overlaps "hierarchy")
   # optional parameters to fit non-standard genomes
-  make_option(c( "--match_score"), type = "numeric"),
-  make_option(c( "--match_geneID"), type = "character"),
-  make_option(c( "--match_geneName"), type = "character"),
-  make_option(c( "--match_geneType"), type = "character"),
-  make_option(c( "--match_score_option"), type = "character")
+  make_option(c( "--match_geneID"), type = "character"), # default "gene_id"
+  make_option(c( "--match_geneName"), type = "character"), # default "gene_name"
+  make_option(c( "--match_geneType"), type = "character"), # default "gene_type"
+  # optional parameters to fit peakcaller scores
+  make_option(c( "--match_score"), type = "numeric"), # default "score"
+  make_option(c( "--match_score_option"), type = "character") # default "max"
 )
 
 # Parse arguments

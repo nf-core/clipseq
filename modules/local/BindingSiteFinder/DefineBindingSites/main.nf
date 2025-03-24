@@ -27,8 +27,8 @@ process BindingSiteFinderAnalysis {
         --minCrosslinks $params.minCrosslinks \\
         --minCLSites $params.minCLSites \\
         --maxBsWidth $params.maxBsWidth \\
-        --reproducibility_cutoff $params.reproducibility_cutoff \\
-        --reproducibility_nReps $params.reproducibility_nReps \\
+        // --reproducibility_cutoff $params.reproducibility_cutoff \\
+        // --reproducibility_nReps $params.reproducibility_nReps \\
         --method_gene_overlaps $params.method_gene_overlaps \\
         --rule_gene_overlaps $params.rule_gene_overlaps \\
         --method_region_overlaps $params.method_region_overlaps \\
