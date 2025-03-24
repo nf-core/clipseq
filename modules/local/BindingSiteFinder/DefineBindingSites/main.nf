@@ -16,6 +16,7 @@ process BindingSiteFinderAnalysis {
     output:
         tuple val(meta), path("*binding_sites.rds"), emit: binding_sites_rds
         tuple val(meta), path("*binding_sites.csv"), emit: binding_sites_csv
+        path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when

@@ -1,0 +1,57 @@
+---
+title: "Quality Control of binding sites from BindingSiteFinder"
+format: html
+---
+
+```{r}
+library(BindingSiteFinder)
+bds <- readRDS(args[1])
+```
+
+
+# Overview
+
+This document describes the (automatically chosen) parameters of used for biding site definition in BindingSiteFinder and provides multiple plots to check the quality of the binding sites on multiple levels. 
+
+```{r}
+# Flowchart
+processingStepsFlowChart(bds)
+
+```
+
+The flowchart lists all the steps that were performed by BindingSiteFinder. On the left, the number of crosslinks (before the makeBindingSite step) or binding sites (after the makeBindingSite step) is given. On the right, the used parameters from each step are listed.
+
+# Filtering of peak input signal
+
+The peaks obtained in peak calls are filtered by their score, removing the peaks with very low binding scores. The following plot shows the distribution of the scores of the peaks before filtering and the chosen cutoff as a line.
+
+```{r}
+# Filtering peak input
+pureClipGlobalFilterPlot(bdsOut)
+
+```
+
+
+# Estimation of binding sites
+
+BindingSiteFinder estimates the optimal size of the binding sites from a signal to flank ration. In addition, it tests different genewise filters of crosslinks to reduce influences of background signal. The following plot shows the signal to flank ratio across different binding sites width. Each line stands for another genewise filter. The chosen filter setting and binding site width are shown by the read lines and are also given in the top right corner of the plot.
+
+```{r}
+estimateBsWidthPlot(bdsOut)
+
+```
+
+Whether the chosen binding site width is appropriate can be checked by the following plot. It shows some examples of binding site width (grey boxes) and the summed signal in the binding site region. For an optimal binding site width the peak should be completely within the binding site, but the binding site should not spann further into the background signal.
+
+```{r}
+rangeCoveragePlot(l, width = 20, show.samples = TRUE, subset.chromosome = "chr22") 
+
+```
+
+# Reproducibility of crosslink signals from different replicates in binding sites
+
+Coming soon!
+
+
+
+
