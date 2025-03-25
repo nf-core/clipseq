@@ -55,7 +55,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/yeast_MitoV_filtered.gtf").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_filtered.gtf").exists()
         }
     }
 
@@ -74,8 +74,8 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_regions.gtf.gz").exists()
-            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_seg.gtf").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_filtered_regions.gtf.gz").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_filtered_seg.gtf").exists()
         }
     }
 
@@ -94,8 +94,8 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/yeast_MitoV_regions.gtf.gz").exists()
-            assert new File("$outputDir/00_genome/yeast_MitoV_seg.gtf").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_regions.gtf.gz").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_seg.gtf").exists()
         }
     }
 
@@ -114,7 +114,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_seg_genicOtherfalse.resolved.gtf").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_filtered_seg_genicOtherfalse.resolved.gtf").exists()
         }
     }
 
@@ -133,7 +133,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_regions_genicOtherfalse.resolved.gtf").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_filtered_regions_genicOtherfalse.resolved.gtf").exists()
         }
     }
 
@@ -152,7 +152,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_seg_genicOthertrue.resolved.gtf").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_filtered_seg_genicOthertrue.resolved.gtf").exists()
         }
     }
 
@@ -171,7 +171,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/yeast_MitoV_filtered_regions_genicOthertrue.resolved.gtf").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV_filtered_regions_genicOthertrue.resolved.gtf").exists()
         }
     }
 }

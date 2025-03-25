@@ -18,7 +18,7 @@ nextflow_pipeline {
             assert workflow.success
 
             // Test fai created as we did not supply one
-            assert new File("$outputDir/00_genome/genome.fa.fai").exists()
+            assert file("$outputDir/00_genome/genome.fa.fai").exists()
         }
     }
 
@@ -38,7 +38,7 @@ nextflow_pipeline {
             assert workflow.success
 
             // Test fai created as we did not supply one
-            assert new File("$outputDir/00_genome/yeast_MitoV.fa.fai").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV.fa.fai").exists()
         }
     }
 
@@ -58,7 +58,7 @@ nextflow_pipeline {
             assert workflow.success
 
             // Check fai does not exist as the process should not have run to generate it
-            assert !(new File("$outputDir/00_genome/yeast_MitoV.fa.fai").exists())
+            assert !(file("$outputDir/00_genome/yeast_MitoV.fa.fai").exists())
         }
     }
 
@@ -77,7 +77,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
+            assert file("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
         }
     }
 
@@ -96,7 +96,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
+            assert file("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
         }
     }
 
@@ -116,7 +116,7 @@ nextflow_pipeline {
             assert workflow.success
 
             // Check fai does not exist as the process should not have run to generate it
-            assert !(new File("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists())
+            assert !(file("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists())
         }
     }
 }

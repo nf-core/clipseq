@@ -42,7 +42,8 @@ workflow RNA_ALIGN {
     //
     BOWTIE_ALIGN (
         fastq,
-        bt_index.map{ it[1] }
+        bt_index,
+        true
     )
     ch_versions = ch_versions.mix(BOWTIE_ALIGN.out.versions)
 
@@ -62,7 +63,8 @@ workflow RNA_ALIGN {
 
     BOWTIE_ALIGN_K1 (
         fastq,
-        bt_index.collect{it[1]}
+        bt_index,
+        true
     )
     ch_versions = ch_versions.mix(BOWTIE_ALIGN_K1.out.versions)
 
