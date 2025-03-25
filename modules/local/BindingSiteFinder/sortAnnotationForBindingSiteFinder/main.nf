@@ -18,7 +18,7 @@ process sortAnnotationForBindingSiteFinder {
     script:
     """
     sortAnnotationForBindingSiteFinder.R \\
-        $gtf_file \\
+        $gtf \\
         gns.rds \\
         regions.rds
     cat <<-END_VERSIONS > versions.yml

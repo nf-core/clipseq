@@ -16,9 +16,9 @@ process bsfQC {
 
     script:
     """
-    Rscript BindingSiteFinderQC.R \\
+    BindingSiteFinderQC.R \\
         $binding_sites_rds
-		
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         \$(Rscript -e "packageVersion('BindingSiteFinder')" |& sed '1!d ; s/[1]  //')
