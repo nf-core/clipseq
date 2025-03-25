@@ -17,7 +17,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/index/star/SAindex").exists()
+            assert file("$outputDir/00_genome/index/star/SAindex").exists()
         }
     }
 
@@ -36,7 +36,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/index/bowtie/homosapiens_smallRNA.1.ebwt").exists()
+            assert file("$outputDir/00_genome/index/bowtie/homosapiens_smallRNA.fa.1.ebwt").exists()
         }
     }
 }

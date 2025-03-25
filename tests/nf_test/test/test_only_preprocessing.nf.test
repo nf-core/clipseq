@@ -16,14 +16,14 @@ nextflow_pipeline {
             assert workflow.success
 
             // Fastqc
-            assert new File("$outputDir/01_prealign/fastqc/PHO92_A_fastqc.html").exists()
-            assert new File("$outputDir/01_prealign/fastqc/PHO92_A_trimmed_fastqc.html").exists()
+            assert file("$outputDir/01_prealign/fastqc/PHO92_A_fastqc.html").exists()
+            assert file("$outputDir/01_prealign/fastqc/PHO92_A_trimmed_fastqc.html").exists()
 
             // UMI
-            assert new File("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists()
+            assert file("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists()
 
             // Trimming
-            assert new File("$outputDir/01_prealign/trimmed/PHO92_A_trimmed.fq.gz").exists()
+            assert file("$outputDir/01_prealign/trimmed/PHO92_A_trimmed.fq.gz").exists()
         }
     }
 
@@ -42,13 +42,13 @@ nextflow_pipeline {
             assert workflow.success
 
             // Fastqc
-            assert !(new File("$outputDir/01_prealign/fastqc/PHO92_A_fastqc.html").exists())
+            assert !(file("$outputDir/01_prealign/fastqc/PHO92_A_fastqc.html").exists())
 
             // UMI
-            assert new File("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists()
+            assert file("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists()
 
             // Trimming
-            assert new File("$outputDir/01_prealign/trimmed/PHO92_A_trimmed.fq.gz").exists()
+            assert file("$outputDir/01_prealign/trimmed/PHO92_A_trimmed.fq.gz").exists()
         }
     }
 
@@ -67,13 +67,13 @@ nextflow_pipeline {
             assert workflow.success
 
             // Fastqc
-            assert new File("$outputDir/01_prealign/fastqc/PHO92_A_fastqc.html").exists()
+            assert file("$outputDir/01_prealign/fastqc/PHO92_A_fastqc.html").exists()
 
             // UMI
-            assert !(new File("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists())
+            assert !(file("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists())
 
             // Trimming
-            assert new File("$outputDir/01_prealign/trimmed/PHO92_A_trimmed.fq.gz").exists()
+            assert file("$outputDir/01_prealign/trimmed/PHO92_A_trimmed.fq.gz").exists()
         }
     }
 
@@ -92,13 +92,13 @@ nextflow_pipeline {
             assert workflow.success
 
             // Fastqc
-            assert new File("$outputDir/01_prealign/fastqc/PHO92_A_fastqc.html").exists()
+            assert file("$outputDir/01_prealign/fastqc/PHO92_A_fastqc.html").exists()
 
             // UMI
-            assert new File("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists()
+            assert file("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists()
 
             // Trimming
-            assert !(new File("$outputDir/01_prealign/trimmed/PHO92_A_trimmed.fq.gz").exists())
+            assert !(file("$outputDir/01_prealign/trimmed/PHO92_A_trimmed.fq.gz").exists())
         }
     }
 }

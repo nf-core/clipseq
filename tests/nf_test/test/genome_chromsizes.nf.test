@@ -18,8 +18,8 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/homosapiens_smallRNA.fa.sizes").exists()
-            assert new File("$outputDir/00_genome/yeast_MitoV.fa.sizes").exists()
+            assert file("$outputDir/00_genome/homosapiens_smallRNA.fa.sizes").exists()
+            assert file("$outputDir/00_genome/yeast_MitoV.fa.sizes").exists()
         }
     }
 }
