@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 # -----------------------------
 # Module make binding sites
 # -----------------------------
@@ -5,16 +7,16 @@ options(warn = -1)
 
 # libraries
 ################
- # Suppress messages
-suppressMessages( library(BindingSiteFinder))
-suppressMessages(  library(GenomicRanges))
-suppressMessages(  library(rtracklayer))
-suppressMessages( library(tidyverse))
-suppressMessages( library(optparse))
+# Suppress messages
+suppressMessages(library(BindingSiteFinder))
+suppressMessages(library(GenomicRanges))
+suppressMessages(library(rtracklayer))
+suppressMessages(library(tidyverse))
+suppressMessages(library(optparse))
 
 # print BSF version
 ##################
-cat("BindingSiteFinder version: ", packageVersion("BindingSiteFinder"), "\n")
+cat("BindingSiteFinder version: ", as.character(packageVersion("BindingSiteFinder")), "\n")
 
 
 # Input
@@ -119,8 +121,8 @@ params.assignToGenes <- params.assignToGenes[!sapply(params.assignToGenes, is.nu
 params.assignToTranscriptRegions <- params.assignToTranscriptRegions[!sapply(params.assignToTranscriptRegions, is.null)]
 params.annotateWithScore <- params.annotateWithScore[!sapply(params.annotateWithScore, is.null)]
 
-########################
-# BindingSiteFinder 
+#######################
+# BindingSiteFinder
 #######################
 # crosslinks
 bw_files_names <- list.files(params.input.output$bw_files_folder)
@@ -145,7 +147,7 @@ peaks$name = NULL
 meta = data.frame(
   id = c(1:length(clipFilesP)),
   condition = factor(rep("all", length(clipFilesP))), # add option for multiple groups from sample file
-  clPlus = clipFilesP, 
+  clPlus = clipFilesP,
   clMinus = clipFilesM)
 
 
@@ -156,21 +158,21 @@ cat("############################# \n Running BindingSiteFinder \n##############
 bds = BSFDataSetFromBigWig(ranges = peaks, meta = meta, silent =T)
 
 cat("\nGlobal filter on peak sites \n \n")
-bds = do.call(pureClipGlobalFilter, 
-              c(list(bds), 
+bds = do.call(pureClipGlobalFilter,
+              c(list(bds),
                 params.pureClipGlobalFilter)) # param cutoff
 cat("\nEstimate binding site width \n \n")
-bds = do.call(estimateBsWidth, 
-              c(list(bds, anno.genes = gns), 
+bds = do.call(estimateBsWidth,
+              c(list(bds, anno.genes = gns),
                 params.estimateBsWidth)) # optional param: bsWidth
 
 cat("\nGenewise filter on peak sites \n \n")
-bds = do.call(pureClipGeneWiseFilter, 
+bds = do.call(pureClipGeneWiseFilter,
               c(list(bds, anno.genes = gns),
                 params.pureClipGeneWiseFilter)) # param cutoff, overlaps, match score, match geneID
 
 cat("\nMake binding sites \n \n")
-bds = do.call(makeBindingSites, 
+bds = do.call(makeBindingSites,
               c(list(bds),
                 params.makeBindingSites)) # params minWidth, minCrosslinks, minCLSites
 
@@ -182,7 +184,7 @@ bds = do.call(assignToGenes, c(list(bds, anno.genes = gns),
 
 cat("\nAssign binding sites to transcript regions \n \n")
 bds = do.call(assignToTranscriptRegions, c(list(bds,anno.transcriptRegionList = regions),
-                                           params.assignToTranscriptRegions))# params overlaps, overlaps.rule, 
+                                           params.assignToTranscriptRegions))# params overlaps, overlaps.rule,
 
 cat("\nAnotate binding scores \n \n")
 bds = do.call(annotateWithScore, c(list(bds, peaks),params.annotateWithScore)) #match.score, match.option

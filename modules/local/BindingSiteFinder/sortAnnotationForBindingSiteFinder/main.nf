@@ -8,8 +8,8 @@ process sortAnnotationForBindingSiteFinder {
         tuple val(meta), path(gtf)
 
     output:
-        tuple val(meta), path("*gns.rds"), emit: gns_rds
-        tuple val(meta), path("*regions.rds"), emit: regions_rds
+        tuple val(meta), path("gns.rds"), emit: gns_rds
+        tuple val(meta), path("regions.rds"), emit: regions_rds
         path "versions.yml", emit: versions
 
     when:
@@ -17,8 +17,8 @@ process sortAnnotationForBindingSiteFinder {
 
     script:
     """
-    Rscript ~/nfcore-clipseq/clipseq/bin/sortAnnotationForBindingSiteFinder.R \\
-        $gtf \\
+    sortAnnotationForBindingSiteFinder.R \\
+        $gtf_file \\
         gns.rds \\
         regions.rds
     cat <<-END_VERSIONS > versions.yml
