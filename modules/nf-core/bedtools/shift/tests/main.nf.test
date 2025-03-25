@@ -1,23 +1,26 @@
+
 nextflow_process {
 
-    name "Test Process BEDTOOLS_MERGE"
+    name "Test Process BEDTOOLS_SHIFT"
     script "../main.nf"
+    process "BEDTOOLS_SHIFT"
     config "./nextflow.config"
-    process "BEDTOOLS_MERGE"
 
     tag "modules"
     tag "modules_nfcore"
     tag "bedtools"
-    tag "bedtools/merge"
+    tag "bedtools/shift"
 
-    test("test_bedtools_merge") {
+    test("test-bedtools-shift") {
 
         when {
             process {
                 """
                 input[0] = [ [ id:'test'],
-                file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true)
-                ]
+				    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true)
+				]
+				input[1] = [[id:'sizes'],file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.sizes', checkIfExists: true)]
+
                 """
             }
         }
@@ -28,7 +31,6 @@ nextflow_process {
                 { assert snapshot(process.out).match() }
             )
         }
-
     }
 
 }

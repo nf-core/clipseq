@@ -4,4 +4,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - bioconda::bedtools=2.31.1
+  - bioconda::cutadapt=4.9
+  - bioconda::trim-galore=0.6.10
+  - conda-forge::pigz=2.8

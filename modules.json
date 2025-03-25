@@ -7,37 +7,37 @@
                 "nf-core": {
                     "bedtools/bamtobed": {
                         "branch": "master",
-                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "bedtools/genomecov": {
                         "branch": "master",
-                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "bedtools/groupby": {
                         "branch": "master",
-                        "git_sha": "3b248b84694d1939ac4bb33df84bf6233a34d668",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "bedtools/map": {
                         "branch": "master",
-                        "git_sha": "3b248b84694d1939ac4bb33df84bf6233a34d668",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "bedtools/merge": {
                         "branch": "master",
-                        "git_sha": "a5377837fe9013bde89de8689829e83e84086536",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "bedtools/shift": {
                         "branch": "master",
-                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "bedtools/sort": {
                         "branch": "master",
-                        "git_sha": "571a5feac4c9ce0a8df0bc15b94230e7f3e8db47",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "bowtie/align": {
@@ -67,12 +67,12 @@
                     },
                     "custom/getchromsizes": {
                         "branch": "master",
-                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "fastqc": {
                         "branch": "master",
-                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["fastq_fastqc_umitools_trimgalore"]
                     },
                     "gunzip": {
@@ -177,7 +177,7 @@
                     },
                     "trimgalore": {
                         "branch": "master",
-                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["fastq_fastqc_umitools_trimgalore"]
                     },
                     "umicollapse": {
@@ -211,7 +211,7 @@
                     },
                     "fastq_fastqc_umitools_trimgalore": {
                         "branch": "master",
-                        "git_sha": "a9784afdd5dcda23b84e64db75dc591065d64653",
+                        "git_sha": "4c2d06a5e79abf08ba7f04c58e39c7dad75f094d",
                         "installed_by": ["subworkflows"]
                     }
                 }
