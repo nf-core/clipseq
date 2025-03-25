@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 
 # command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -35,10 +36,10 @@ saveRDS(gns, out_gns)
 
 
 # Get regions as Granges
-cdseq = cds(annoDb) 
-intrns = unlist(intronsByTranscript(annoDb)) 
-utrs3 = unlist(threeUTRsByTranscript(annoDb)) 
-utrs5 = unlist(fiveUTRsByTranscript(annoDb)) 
+cdseq = cds(annoDb)
+intrns = unlist(intronsByTranscript(annoDb))
+utrs3 = unlist(threeUTRsByTranscript(annoDb))
+utrs5 = unlist(fiveUTRsByTranscript(annoDb))
 regions = GRangesList(CDS = cdseq, Intron = intrns, UTR3 = utrs3, UTR5 = utrs5)
 
 saveRDS(regions, out_regions)

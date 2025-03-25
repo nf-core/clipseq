@@ -10,8 +10,8 @@ process sortAnnotationForBindingSiteFinder {
         tuple val(meta), path(gtf_file)
 
     output:
-        tuple val(meta), path("*gns.rds"), emit: gns_rds
-        tuple val(meta), path("*regions.rds"), emit: regions_rds
+        tuple val(meta), path("gns.rds"), emit: gns_rds
+        tuple val(meta), path("regions.rds"), emit: regions_rds
         path "versions.yml", emit: versions
 
     when:
@@ -19,7 +19,7 @@ process sortAnnotationForBindingSiteFinder {
 
     script:
     """
-    Rscript /home/mek24iv/nfcore-clipseq/devel_BindingSiteFinder/modules/local/sortAnnotationForBindingSiteFinder/sortAnnotationForBindingSiteFinder.R \\
+    sortAnnotationForBindingSiteFinder.R \\
         $gtf_file \\
         gns.rds \\
         regions.rds
