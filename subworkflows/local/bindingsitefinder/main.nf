@@ -33,9 +33,9 @@ workflow BINDINGSITEFINDER {
     ch_versions = ch_versions.mix(bsfQC.out.versions.first())
 
     emit:
-    csv      = DefineBindingSites.out.csv      // channel: [ val(meta), [ csv ] ]
-    rds      = DefineBindingSites.out.rds      // channel: [ val(meta), [ rds ] ]
-    html     = bsfQC.out.html                  // channel: [ val(meta), [ html ] ]
+    csv      = defineBindingSites.out.binding_sites_csv      // channel: [ val(meta), [ csv ] ]
+    rds      = defineBindingSites.out.binding_sites_rds      // channel: [ val(meta), [ rds ] ]
+    html     = bsfQC.out.bindingSiteFinderQC                 // channel: [ val(meta), [ html ] ]
 
     versions = ch_versions                     // channel: [ versions.yml ]
 }

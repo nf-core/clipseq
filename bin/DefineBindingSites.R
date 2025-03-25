@@ -7,7 +7,7 @@ options(warn = -1)
 
 # libraries
 ################
- # Suppress messages
+# Suppress messages
 suppressMessages(library(BindingSiteFinder))
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(rtracklayer))
@@ -121,7 +121,7 @@ params.assignToGenes <- params.assignToGenes[!sapply(params.assignToGenes, is.nu
 params.assignToTranscriptRegions <- params.assignToTranscriptRegions[!sapply(params.assignToTranscriptRegions, is.null)]
 params.annotateWithScore <- params.annotateWithScore[!sapply(params.annotateWithScore, is.null)]
 
-########################
+#######################
 # BindingSiteFinder
 #######################
 # crosslinks
@@ -129,8 +129,6 @@ bw_files_names <- list.files(params.input.output$bw_files_folder)
 
 clipFilesP <- list.files(params.input.output$bw_files_folder, pattern = "plus.bw$", full.names = TRUE)
 clipFilesM <- list.files(params.input.output$bw_files_folder, pattern = "minus.bw$", full.names = TRUE)
-cat(clipFilesP)
-cat(clipFilesM)
 
 
 # annotation
