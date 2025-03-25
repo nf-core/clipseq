@@ -47,12 +47,11 @@ process defineBindingSites {
     // --match_score_option $params.match_score_option \\
 
     """
-    Rscript DefineBindingSites.R \\
+    DefineBindingSites.R \\
         --bw_files_folder $bw_files_folder \\
         --peaks $peaks \\
         --anno_genes $anno_gns \\
         --anno_regions $anno_regions \\
-        --sample_sheet $sample_sheet \\
         --output_path . \\
 
     cat <<-END_VERSIONS > versions.yml
