@@ -16,7 +16,7 @@ process bsfQC {
 
     script:
     """
-    Rscript clipseq/modules/local/BindingSiteFinder/bsfQC/BindingSiteFinderQC.R \\
+    Rscript BindingSiteFinderQC.R \\
         $binding_sites_rds
 		
     cat <<-END_VERSIONS > versions.yml

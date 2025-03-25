@@ -49,7 +49,6 @@ process defineBindingSites {
         --peaks $peaks \\
         --anno_genes $anno_gns \\
         --anno_regions $anno_regions \\
-        --sample_sheet $sample_sheet \\
         --output_path . \\
 
     cat <<-END_VERSIONS > versions.yml

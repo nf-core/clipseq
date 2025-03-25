@@ -5,7 +5,7 @@ process sortAnnotationForBindingSiteFinder {
     container "${'melinak/bindingsitefinder:1.1'}"
 
     input:
-        tuple val(meta), path(gtf_file)
+        tuple val(meta), path(gtf)
 
     output:
         tuple val(meta), path("*gns.rds"), emit: gns_rds
@@ -17,8 +17,8 @@ process sortAnnotationForBindingSiteFinder {
 
     script:
     """
-    Rscript /home/mek24iv/nfcore-clipseq/devel_BindingSiteFinder/modules/local/sortAnnotationForBindingSiteFinder/sortAnnotationForBindingSiteFinder.R \\
-        $gtf_file \\
+    Rscript ~/nfcore-clipseq/clipseq/bin/sortAnnotationForBindingSiteFinder.R \\
+        $gtf \\
         gns.rds \\
         regions.rds
     cat <<-END_VERSIONS > versions.yml
