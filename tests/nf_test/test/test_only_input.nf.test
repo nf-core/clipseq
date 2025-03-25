@@ -15,7 +15,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert !(new File("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists())
+            assert !(file("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists())
         }
     }
 }
