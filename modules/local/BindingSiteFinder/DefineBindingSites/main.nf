@@ -1,4 +1,4 @@
-process BindingSiteFinderAnalysis {
+process defineBindingSites {
     tag "$meta.id"
     label 'process_single'
 
