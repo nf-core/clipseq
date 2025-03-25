@@ -46,6 +46,7 @@ workflow PREPARE_GENOME {
     regions_filt_gtf           // file: .gtf
     regions_resolved_gtf       // file: .gtf
     regions_resolved_gtf_genic // file: .gtf
+    skip_bowtie                // boolean
 
     main:
 
@@ -111,18 +112,22 @@ workflow PREPARE_GENOME {
     //
     // MODULES: Uncompress Bowtie index or generate if required
     //
+    
     ch_bt_index = Channel.empty()
-    if (ncrna_genome_index) {
-        if (ncrna_genome_index.toString().endsWith(".tar.gz")) {
-            ch_bt_index = UNTAR_BT ( [ [:], ncrna_genome_index ] ).untar
-            ch_versions  = ch_versions.mix(UNTAR_BT.out.versions)
-        } else {
-            ch_bt_index = Channel.of([ [:] , ncrna_genome_index ])
+
+    if (!skip_bowtie) {
+        if (ncrna_genome_index) {
+            if (ncrna_genome_index.toString().endsWith(".tar.gz")) {
+                ch_bt_index = UNTAR_BT ( [ [:], ncrna_genome_index ] ).untar
+                ch_versions  = ch_versions.mix(UNTAR_BT.out.versions)
+            } else {
+                ch_bt_index = Channel.of([ [:] , ncrna_genome_index ])
+            }
         }
-    }
-    else {
-        ch_bt_index = BOWTIE_BUILD ( ch_ncrna_fasta ).index
-        ch_versions = ch_versions.mix(BOWTIE_BUILD.out.versions)
+        else {
+            ch_bt_index = BOWTIE_BUILD ( ch_ncrna_fasta ).index
+            ch_versions = ch_versions.mix(BOWTIE_BUILD.out.versions)
+        }
     }
 
     //

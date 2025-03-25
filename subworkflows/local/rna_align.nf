@@ -47,6 +47,9 @@ workflow RNA_ALIGN {
     premapped_bam = Channel.empty()
     premapped_bai = Channel.empty()
 
+    premapped_k1_bam = Channel.empty()
+    premapped_k1_bai = Channel.empty()
+
     if (!skip_bowtie) {
         BOWTIE_ALIGN (
             fastq,
@@ -69,9 +72,7 @@ workflow RNA_ALIGN {
         premapped_bam = SAMTOOLS_SORT_NCRNA.out.bam
         premapped_bai = SAMTOOLS_INDEX_NCRNA.out.bai
 
-    }
-    
-    /*
+        /*
         * MODULE: Align reads to smrna genome, here allowing 100 multimappers but only reporting one alignment per multimapped read
         * so that we can accurately count it in the crosslink summary later
         */
@@ -88,6 +89,15 @@ workflow RNA_ALIGN {
 
         SAMTOOLS_INDEX_NCRNA_K1 ( SAMTOOLS_SORT_NCRNA_K1.out.bam )
         ch_versions = ch_versions.mix(SAMTOOLS_INDEX_NCRNA_K1.out.versions)
+
+        premapped_k1_bam = SAMTOOLS_SORT_NCRNA_K1.out.bam
+        premapped_k1_bai = SAMTOOLS_INDEX_NCRNA_K1.out.bai  
+
+    }
+    
+
+
+           
     
     //
     // MODULE: Align reads that did not align to the ncrna genome to the primary genome
@@ -229,8 +239,8 @@ workflow RNA_ALIGN {
     ncrna_bam        = premapped_bam      // channel: [ val(meta), [ bam ] ]
     ncrna_bai        = premapped_bai     // channel: [ val(meta), [ bai ] ]
     ncrna_log        = premapping_log             // channel: [ val(meta), [ txt ] ]
-    ncrna_k1_bam     = SAMTOOLS_SORT_NCRNA_K1.out.bam                  // channel: [ val(meta), [ bam ] ]
-    ncrna_k1_bai     = SAMTOOLS_INDEX_NCRNA_K1.out.bai                 // channel: [ val(meta), [ bai ] ]
+    ncrna_k1_bam     = premapped_k1_bam                  // channel: [ val(meta), [ bam ] ]
+    ncrna_k1_bai     = premapped_k1_bai                 // channel: [ val(meta), [ bai ] ]
 
     genome_log             = ch_genome_log                    // channel: [ val(meta), [ txt ] ]
     genome_log_final       = ch_genome_log_final              // channel: [ val(meta), [ txt ] ]

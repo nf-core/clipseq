@@ -243,7 +243,8 @@ workflow CLIPSEQ {
             ch_regions_gtf,
             ch_regions_filt_gtf,
             ch_regions_resolved_gtf,
-            ch_regions_resolved_gtf_genic
+            ch_regions_resolved_gtf_genic,
+            params.skip_bowtie
         )
         ch_versions                   = ch_versions.mix(PREPARE_GENOME.out.versions)
         ch_fasta                      = PREPARE_GENOME.out.fasta
