@@ -2,9 +2,7 @@ process sortAnnotationForBindingSiteFinder {
     tag "$meta.id"
     label 'process_single'
 
-        container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://melinak/bindingsitefinder:latest':
-        'melinak/bindingsitefinder:latest' }"
+    container "${'melinak/bindingsitefinder:1.1'}"
 
     input:
         tuple val(meta), path(gtf_file)

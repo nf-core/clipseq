@@ -2,15 +2,13 @@ process bsfQC {
     tag "$meta.id"
     label 'process_single'
 
-        container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://melinak/bindingsitefinder:latest':
-        'melinak/bindingsitefinder:latest' }"
+    container "${'melinak/bindingsitefinder:1.1'}"
 
     input:
         tuple val(meta), path(binding_sites_rds)
 
     output:
-        tuple val(meta), path("*BindingSiteFinderQC.html"), emit: BindingSiteFinderQC
+        tuple val(meta), path("*BindingSiteFinderQC.html"), emit: bindingSiteFinderQC
         path "versions.yml", emit: versions
 
     when:

@@ -8,3 +8,4 @@ testing*
 *.pyc
 .nf-test/
 *.Rhistory
+*version?current=*
