@@ -162,8 +162,11 @@ bds = do.call(pureClipGlobalFilter,
               c(list(bds),
                 params.pureClipGlobalFilter)) # param cutoff
 cat("\nEstimate binding site width \n \n")
-bds = do.call(estimateBsWidth,
-              c(list(bds, anno.genes = gns),
+chr_names <- unique(seqnames(peaks))
+bds = do.call(estimateBsWidth, 
+              c(list(bds, 
+                     anno.genes = gns,
+                     est.subsetChromosome = as.character(chr_names[1])), 
                 params.estimateBsWidth)) # optional param: bsWidth
 
 cat("\nGenewise filter on peak sites \n \n")

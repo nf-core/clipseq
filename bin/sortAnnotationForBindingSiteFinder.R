@@ -9,7 +9,7 @@ out_gns = args[2]
 out_regions = args[3]
 
 # for local tests
-#annoFile = "/Users/melinaklostermann/Documents/projects/anno/GENCODEv31-p12/gencode.v31.annotation.gtf"
+# annoFile = "/Users/melinaklostermann/Documents/projects/anno/GENCODEv31-p12/gencode.v31.annotation.gtf"
 # out_gns = "/Users/melinaklostermann/Documents/projects/nf-core-clipseq/devel_folder/outputs/gns.rds"
 # out_regions = "/Users/melinaklostermann/Documents/projects/nf-core-clipseq/devel_folder/outputs/regions.rds"
 
