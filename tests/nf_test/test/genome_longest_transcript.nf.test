@@ -17,9 +17,9 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/00_genome/longest_transcript.txt").exists()
-            assert new File("$outputDir/00_genome/longest_transcript.fai").exists()
-            assert new File("$outputDir/00_genome/longest_transcript.gtf").exists()
+            assert file("$outputDir/00_genome/longest_transcript.txt").exists()
+            assert file("$outputDir/00_genome/longest_transcript.fai").exists()
+            assert file("$outputDir/00_genome/longest_transcript.gtf").exists()
         }
     }
 }

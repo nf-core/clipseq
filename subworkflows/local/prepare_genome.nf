@@ -104,7 +104,7 @@ workflow PREPARE_GENOME {
         }
     }
     else {
-        ch_star_index = STAR_GENOMEGENERATE ( ch_fasta.map{it[1]}, ch_gtf.map{it[1]} ).index
+        ch_star_index = STAR_GENOMEGENERATE ( ch_fasta, ch_gtf ).index
         ch_versions = ch_versions.mix(STAR_GENOMEGENERATE.out.versions)
     }
 
@@ -121,7 +121,7 @@ workflow PREPARE_GENOME {
         }
     }
     else {
-        ch_bt_index = BOWTIE_BUILD ( ch_ncrna_fasta.map{it[1]} ).index
+        ch_bt_index = BOWTIE_BUILD ( ch_ncrna_fasta ).index
         ch_versions = ch_versions.mix(BOWTIE_BUILD.out.versions)
     }
 

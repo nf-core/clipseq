@@ -311,7 +311,7 @@ workflow CLIPSEQ {
             ch_fastq,
             ch_ncrna_genome_index,
             ch_genome_index,
-            ch_filtered_gtf,
+            ch_gtf,
             ch_fasta,
             params.skip_transcriptome
         )
