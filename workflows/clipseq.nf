@@ -9,10 +9,10 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowClipseq.initialise(params, log)
 
-// Check manditory input parameters to see if the files exist if they have been specified
+// Check mandatory input parameters to see if the files exist if they have been specified
 check_param_list = [
     input: params.input,
-    fasta: params.fasta,
+    // fasta: params.fasta,
     ncrna_fasta: params.ncrna_fasta,
     gtf: params.gtf
 ]
@@ -25,10 +25,11 @@ for (param in check_param_list) {
     }
 }
 
-// Check non-manditory input parameters to see if the files exist if they have been specified
+
+// Check non-mandatory input parameters to see if the files exist if they have been specified
 def checkPathParamList = [
     params.multiqc_config,
-    params.fasta_fai,
+    // params.fasta_fai,
     params.ncrna_fasta_fai,
     params.genome_index,
     params.ncrna_genome_index,
@@ -49,6 +50,33 @@ def checkPathParamList = [
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
+// Check input source and validate parameters
+def checkInputParamList = []
+println("source: ${params.source}")
+if ((params.source ?: "fastq") == "fastq") {
+    checkInputParamList = [
+        params.fasta
+        // Add more as appropriate, remember to remove them from lists above, if required
+    ]
+    println("fasta: ${params.fasta}")
+} else if (params.source == "bam") {
+    checkInputParamList = [
+        params.genome_bam // Placeholder
+    ]
+} else {
+    exit 1, "Invalid source option: ${params.source}. Valid options: fastq, bam"
+}
+
+for (param in checkInputParamList) {
+    if (!param) {
+        exit 1, "Required parameter not specified: ${param} (input source: ${params.source})"
+    }
+    else {
+        file(param, checkIfExists: true)
+    }
+}
+
+
 // Define peak callers and check in list
 caller_list = [ 'icount', 'paraclu', 'pureclip', 'clippy']
 callers = params.peakcaller ? params.peakcaller.split(',').collect{ it.trim().toLowerCase() } : []
@@ -56,7 +84,7 @@ if ((caller_list + callers).unique().size() != caller_list.size()) {
     exit 1, "Invalid variant caller option: ${params.peakcaller}. Valid options: ${caller_list.join(', ')}"
 }
 
-// // Stage dummy files to be used as an optional input where required
+// Stage dummy files to be used as an optional input where required
 ch_dummy_file  = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
 ch_dummy_file2 = file("$projectDir/assets/dummy_file2.txt", checkIfExists: true)
 
@@ -345,13 +373,13 @@ workflow CLIPSEQ {
         ch_versions                      = ch_versions.mix(TRANSCRIPTOME_PROCESSING.out.versions)
         ch_transcript_bam                = TRANSCRIPTOME_PROCESSING.out.transcript_dedupe_bam
         ch_transcript_bai                = TRANSCRIPTOME_PROCESSING.out.transcript_dedupe_bai
-        ch_trans_crosslink_bed           = TRANSCRIPTOME_PROCESSING.out.crosslink_bed 
+        ch_trans_crosslink_bed           = TRANSCRIPTOME_PROCESSING.out.crosslink_bed
         ch_clippy_transcriptome_peaks    = TRANSCRIPTOME_PROCESSING.out.clippy_peaks
         ch_paraclu_transcriptome_peaks   = TRANSCRIPTOME_PROCESSING.out.paraclu_peaks
     }
 
     //ch_genome_umi_log = Channel.empty()
-  
+
     // DEDUPLICATION //
     if(params.source == "fastq" & params.run_dedup) {
         // PREPARE CHANNELS
@@ -518,7 +546,7 @@ workflow CLIPSEQ {
                     ch_filtered_gtf.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] }
                 )
-        
+
                 CLIPPY_CONSENSUS_PEAK_TABLE (
                     ch_all_crosslinks,
                     CLIPPY_GENOME_CONSENSUS.out.peaks,
@@ -547,7 +575,7 @@ workflow CLIPSEQ {
             ICOUNTMINI_SIGXLS (
                 ch_genome_crosslink_group_resolved_bed,
                 ch_seg_resolved_gtf.collect{ it[1]}
-                
+
             )
 
             ch_versions                      = ch_versions.mix(ICOUNTMINI_SIGXLS.out.versions)
@@ -625,7 +653,7 @@ workflow CLIPSEQ {
 
         }
 
-        
+
 
         if('paraclu' in callers) {
 
@@ -671,9 +699,9 @@ workflow CLIPSEQ {
 
             // Print initial channel contents for debugging
             // ch_genome_peakcalling.view { item -> "Initial ch_genome_peakcalling item: $item" }
-            
+
             ch_genome_peakcalling
-                .branch { meta, bam, bai -> 
+                .branch { meta, bam, bai ->
                     control:     meta.control
                     no_control: !meta.control
                 }
@@ -685,9 +713,9 @@ workflow CLIPSEQ {
 
             result.control
                 .map{ meta, bam, bai -> [meta.control, bam, bai, meta]
-                }.set{ ch_genome_peakcalling_withControlid }   
+                }.set{ ch_genome_peakcalling_withControlid }
 
-            ch_temp_pureclip_input = ch_genome_peakcalling_withControlid.join(ch_genome_peakcalling_withid, by: 0) 
+            ch_temp_pureclip_input = ch_genome_peakcalling_withControlid.join(ch_genome_peakcalling_withid, by: 0)
             // Structure is now [ControlID, IPBam, IPBai, IPMeta, Controlbam, Controlbai]
 
             // Check structure is what we expect
@@ -702,7 +730,7 @@ workflow CLIPSEQ {
             ch_temp_pureclip_input
                 .map{ ControlID, IPBam, IPBai, IPMeta, Controlbam, Controlbai -> [IPMeta, IPBam, Controlbam ]}
                 .set{ ch_pureclip_bams_withcontrol }
-            
+
             ch_temp_pureclip_input
                 .map{ ControlID, IPBam, IPBai, IPMeta, Controlbam, Controlbai -> [IPMeta, IPBai, Controlbai ]}
                 .set{ ch_pureclip_bais_withcontrol }
@@ -713,12 +741,12 @@ workflow CLIPSEQ {
                 ch_fasta,
                 true
             )
-            
+
             // Run PURECLIP for samples without control
             result.no_control
                 .map{ meta, bam, bai -> [meta, bam, [] ]}
                 .set{ ch_pureclip_bams_nocontrol }
-            
+
             result.no_control
                 .map{ meta, bam, bai -> [meta, bai, [] ]}
                 .set{ ch_pureclip_bais_nocontrol }
@@ -741,15 +769,15 @@ workflow CLIPSEQ {
                 // After all the mixing
                 ch_pureclip_genome_peaks.join(ch_genome_crosslink_group_resolved_bed, by: 0)
                     .set{ temp_matched_channel }
-                
+
                 temp_matched_channel
                     .map{ meta, peaks, crosslinks -> [meta, peaks] }
                     .set{ ch_pureclip_genome_peaks_matched }
-                
+
                 temp_matched_channel
                     .map{ meta, peaks, crosslinks -> [meta, crosslinks] }
                     .set{ ch_genome_crosslink_bed_matched }
-            
+
                 PEKA_PURECLIP(
                     ch_pureclip_genome_peaks_matched,
                     ch_genome_crosslink_bed_matched,
@@ -797,7 +825,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
         ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect())
         ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect())
-        
+
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]))
