@@ -37,7 +37,6 @@ workflow RNA_ALIGN {
 
     main:
     ch_versions = Channel.empty()
-    ch_gtf = gtf.first() //for some reason it comes in as a queue channel so need to convert to value channel
     //
     // MODULE: Align reads to ncrna genome
     //
@@ -106,7 +105,7 @@ workflow RNA_ALIGN {
         STAR_ALIGN_GENOME_ONLY (
             unmapped_fastq,
             star_index,
-            ch_gtf,
+            gtf,
             false,
             '',
             ''
@@ -157,7 +156,7 @@ workflow RNA_ALIGN {
         STAR_ALIGN_WITH_TRANSCRIPTOME (
             unmapped_fastq,
             star_index,
-            ch_gtf,
+            gtf,
             false,
             '',
             ''
@@ -187,7 +186,7 @@ workflow RNA_ALIGN {
         //
         // MODULE: Sort and index transcript BAM file
         //
-        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript )
+        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, fasta )
         ch_versions = ch_versions.mix(SAMTOOLS_SORT_TRANS.out.versions)
         SAMTOOLS_INDEX_TRANS( SAMTOOLS_SORT_TRANS.out.bam )
         ch_versions = ch_versions.mix(SAMTOOLS_INDEX_TRANS.out.versions)
