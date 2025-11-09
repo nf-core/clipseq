@@ -44,7 +44,9 @@ def adjust_summary_file(file_path, number_cdnas_premapped):
     df.to_csv(output_file, sep="\t", index=False)
 
 
-def main(processname, subtype, type, gene, cdna):
+def main(processname, summaries):
+    type, subtype, gene, cdna = summaries.split(" ")
+    
     # Dump version file
     dump_versions(processname)
 
@@ -61,10 +63,10 @@ if __name__ == "__main__":
     # Allows switching between nextflow templating and standalone python running using arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--processname", default="!{process_name}")
-    parser.add_argument("--subtype", default="!{summary_subtype}")
-    parser.add_argument("--type", default="!{summary_type}")
-    parser.add_argument("--gene", default="!{summary_gene}")
-    parser.add_argument("--cdna", default="!{smrna_premapped_k1_cDNA}")
+    parser.add_argument("--summaries", default="!{summaries}")
     args = parser.parse_args()
 
-    main(args.processname, args.subtype, args.type, args.gene, args.cdna)
+    print("Process name: " + args.processname)
+    print("Summaries: " + args.summaries)
+    main(args.processname, args.summaries)
+    

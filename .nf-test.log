@@ -1,0 +1,8 @@
+Mar-25 12:30:41.801 [main] INFO  com.askimed.nf.test.App - nf-test 0.9.2
+Mar-25 12:30:41.832 [main] INFO  com.askimed.nf.test.App - Arguments: [test, --profile=test,docker, --tap=test.tap, --tag, only_crosslinking_primary, tests/nf_test/test/genome_chromsizes.test, tests/nf_test/test/genome_fasta.test, tests/nf_test/test/genome_gtf.test, tests/nf_test/test/genome_indexes.test, tests/nf_test/test/genome_longest_transcript.test, tests/nf_test/test/genome_preset_genome.test, tests/nf_test/test/test_only_alignment.test, tests/nf_test/test/test_only_crosslinking.test, tests/nf_test/test/test_only_dedup.test, tests/nf_test/test/test_only_input.test, tests/nf_test/test/test_only_peakcalling.test, tests/nf_test/test/test_only_preprocessing.test]
+Mar-25 12:30:43.484 [main] INFO  com.askimed.nf.test.App - Nextflow Version: 24.10.5
+Mar-25 12:30:43.487 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Load config from file /Users/capitac/repos/nfcore-clipseq/nf-test.config...
+Mar-25 12:30:44.396 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Loaded 93 files from directory /Users/capitac/repos/nfcore-clipseq in 0.275 sec
+Mar-25 12:30:44.417 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Found 0 files containing tests.
+Mar-25 12:30:44.420 [main] DEBUG com.askimed.nf.test.lang.dependencies.DependencyResolver - Found files: []
+Mar-25 12:30:44.427 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Found 0 tests to execute.

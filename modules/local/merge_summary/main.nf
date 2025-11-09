@@ -8,10 +8,7 @@ process MERGE_SUMMARY {
         'biocontainers/pandas:1.4.3' }"
 
     input:
-    tuple val(meta), path(summary_type)
-    tuple val(meta), path(summary_subtype)
-    tuple val(meta), path(summary_gene)
-    tuple val(meta), path(smrna_premapped_k1_cDNA)
+    tuple val(meta), path(summaries)
 
     output:
     tuple val(meta), path("*summary_type_premapadjusted.tsv")   , emit: summary_type_adjusted
