@@ -38,11 +38,11 @@ nextflow_process {
                 // TODO nf-core: define inputs of the process here. Example:
                 input[0] = [
                     [ id:'test' ], // meta map
-                    file('/Users/hdash/code/public/clipseq/tests/bigwigs', checkIfExists: true),
+                    file('${projectDir}/tests/bigwigs', checkIfExists: true),
                 ]
                 input[1] = [
                     [ id:'test' ], // meta map
-                    file('/Users/hdash/code/public/clipseq/results/05_peakcalling/pureclip/HNRNPC_pureclip_crosslinks.bed', checkIfExists: true),
+                    file('${projectDir}/tests/peaks/HNRNPC_pureclip_peaks.bed', checkIfExists: true),
                 ]
                 input[2] = ANNOTATIONS.out[0]
                 input[3] = ANNOTATIONS.out[1]

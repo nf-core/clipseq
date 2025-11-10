@@ -2,7 +2,7 @@ process defineBindingSites {
     tag "$meta.id"
     label 'process_single'
 
-    container "${'melinak/bindingsitefinder:1.1'}"
+    container "${'docker.io/melinak/bindingsitefinder:1.1'}"
 
     input:
         tuple val(meta), path(bw_files_folder)
