@@ -38,6 +38,8 @@ process STAR_ALIGN {
     when:
     task.ext.when == null || task.ext.when
 
+# pushing changes to trigger test
+
     script:
     def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
