@@ -1,5 +1,15 @@
-repository_type: pipeline
 lint:
   files_unchanged:
     - assets/email_template.html
     - assets/email_template.txt
+nf_core_version: 3.2.0
+repository_type: pipeline
+template:
+  author: Anob Chakrabarti, Charlotte Capitanchik, Charlotte West, Chris Cheshire, Simon Murray
+  description: CLIP analysis pipeline
+  force: false
+  is_nfcore: true
+  name: clipseq
+  org: nf-core
+  outdir: .
+  version: 2.0dev

@@ -16,9 +16,9 @@ workflow TRANSCRIPTOME_PROCESSING {
     take:
     ch_transcript_bam          // channel: [ val(meta), [ bam ] ]
     ch_transcript_bai          // channel: [ val(meta), [ bai ] ]
-    ch_longest_transcript      // channel: []
-    ch_longest_transcript_gtf  // channel: []
-    ch_longest_transcript_fai  // channel: []
+    ch_representative_transcript      // channel: []
+    ch_representative_transcript_gtf  // channel: []
+    ch_representative_transcript_fai  // channel: []
     callers
     ch_paraclu_mincluster
 
@@ -40,7 +40,7 @@ workflow TRANSCRIPTOME_PROCESSING {
         FILTER_TRANSCRIPTS (
             ch_transcript_bam_bai,
             [],
-            ch_longest_transcript
+            ch_representative_transcript
         )
         ch_versions = ch_versions.mix(FILTER_TRANSCRIPTS.out.versions)
 
@@ -148,21 +148,21 @@ workflow TRANSCRIPTOME_PROCESSING {
         //
         CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL (
             ch_bam_branches.noGroup.join(ch_bai_branches.noGroup),
-            ch_longest_transcript_fai.map{ [[id:it.baseName], it] }
+            ch_representative_transcript_fai.map{ [[id:it.baseName], it] }
         )
         ch_versions                       = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL.out.versions)
         ch_trans_crosslink_INDIVIDUAL_bed = CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL.out.bed
 
         CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP (
             ch_bam_branches.hasGroup.join(ch_bai_branches.hasGroup),
-            ch_longest_transcript_fai.map{ [[id:it.baseName], it] }
+            ch_representative_transcript_fai.map{ [[id:it.baseName], it] }
         )
         ch_versions                                   = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP.out.versions)
         ch_trans_crosslink_INDIVIDUAL_HASGROUP_bed    = CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed
 
         CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP (
             ch_grouped_transcript_bam.join(ch_transcript_peakcalling_bai),
-            ch_longest_transcript_fai.map{ [[id:it.baseName], it] }
+            ch_representative_transcript_fai.map{ [[id:it.baseName], it] }
         )
         ch_versions                            = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP.out.versions)
         ch_trans_crosslink_GROUP_HASGROUP_bed  = CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP.out.bed
@@ -171,7 +171,7 @@ workflow TRANSCRIPTOME_PROCESSING {
         // Combine crosslinking results for moving forwards
         //
         ch_trans_crosslink_bed = ch_trans_crosslink_INDIVIDUAL_bed.mix(ch_trans_crosslink_GROUP_HASGROUP_bed)
-        
+
     }
 
 
@@ -181,10 +181,10 @@ workflow TRANSCRIPTOME_PROCESSING {
         if('clippy' in callers) {
             CLIPPY_TRANSCRIPTOME (
                 ch_trans_crosslink_bed,
-                ch_longest_transcript_gtf,
-                ch_longest_transcript_fai
+                ch_representative_transcript_gtf,
+                ch_representative_transcript_fai
             )
-            
+
             ch_clippy_transcriptome_peaks    = CLIPPY_TRANSCRIPTOME.out.peaks
             ch_versions                      = ch_versions.mix(CLIPPY_TRANSCRIPTOME.out.versions)
         }

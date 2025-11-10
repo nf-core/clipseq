@@ -1,3 +1,6 @@
+// Import the log object
+import nextflow.util.LoggerHelper
+
 //
 // Uncompress and prepare reference genome files
 //
@@ -14,44 +17,37 @@ include { SAMTOOLS_FAIDX as NCRNA_INDEX                                         
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
 include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
 include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
-include { FIND_LONGEST_TRANSCRIPT                                                } from '../../modules/local/find_longest_transcript/main'
-include { CLIPSEQ_FILTER_GTF                                                     } from '../../modules/local/filter_gtf/main'
+include { FILTER_GTF_BY_TRANSCRIPT                                               } from '../../modules/local/filter_gtf_by_transcript/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED                     } from '../../modules/local/resolve_unannotated/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER         } from '../../modules/local/resolve_unannotated/main'
 include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS             } from '../../modules/local/resolve_unannotated/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS } from '../../modules/local/resolve_unannotated/main'
 
 workflow PREPARE_GENOME {
     take:
-    fasta                      // file: .fasta
-    fasta_fai                  // file: .fai
-    ncrna_fasta                // file: .fasta
-    ncrna_fasta_fai            // file: .fai
-    gtf                        // file: .gtf
-    genome_index               // folder: index
-    ncrna_genome_index         // folder: index
-    genome_chrom_sizes         // file: .txt
-    ncrna_chrom_sizes          // file: .txt
-    longest_transcript         // file: .txt
-    longest_transcript_fai     // file: .fai
-    longest_transcript_gtf     // file: .gtf
-    filtered_gtf               // file: .gtf
-    seg_gtf                    // file: .gtf
-    seg_filt_gtf               // file: .gtf
-    seg_resolved_gtf           // file: .gtf
-    seg_resolved_gtf_genic     // file: .gtf
-    regions_gtf                // file: .gtf
-    regions_filt_gtf           // file: .gtf
-    regions_resolved_gtf       // file: .gtf
-    regions_resolved_gtf_genic // file: .gtf
+    fasta                          // file: .fasta
+    fasta_fai                      // file: .fai
+    ncrna_fasta                    // file: .fasta
+    ncrna_fasta_fai                // file: .fai
+    gtf                            // file: .gtf
+    genome_index                   // folder: index
+    ncrna_genome_index             // folder: index
+    genome_chrom_sizes             // file: .txt
+    ncrna_chrom_sizes              // file: .txt
+    representative_transcript      // file: .txt
+    representative_transcript_fai  // file: .fai
+    representative_transcript_gtf  // file: .gtf
+    filtered_gtf                   // file: .gtf
+    seg_gtf                        // file: .gtf
+    regions_gtf                    // file: .gtf
+    regions_filt_gtf               // file: .gtf
+    regions_resolved_gtf           // file: .gtf
+    skip_filter_gtf                // value: boolean
+    skip_transcriptome             // value: boolean
 
     main:
 
     // Init
     ch_versions = Channel.empty()
-
     //
     // MODULE: Uncompress genome fasta file if required
     //
@@ -134,7 +130,8 @@ workflow PREPARE_GENOME {
     } else {
         GENOME_INDEX (
             ch_fasta,
-            [[],[]]
+            [[],[]],
+	    false
         )
         ch_fasta_fai = GENOME_INDEX.out.fai
         ch_versions = ch_versions.mix(GENOME_INDEX.out.versions)
@@ -151,7 +148,8 @@ workflow PREPARE_GENOME {
     } else {
         NCRNA_INDEX (
             ch_ncrna_fasta,
-            [[],[]]
+            [[],[]],
+            false
         )
         ch_ncrna_fasta_fai = NCRNA_INDEX.out.fai
         ch_versions = ch_versions.mix(NCRNA_INDEX.out.versions)
@@ -162,8 +160,10 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Calc genome chrom sizes
     //
-    ch_genome_chrom_sizes = genome_chrom_sizes
-    if(!genome_chrom_sizes) {
+    ch_genome_chrom_sizes = Channel.empty()
+    if(genome_chrom_sizes) {
+        ch_genome_chrom_sizes = Channel.of([ [id:genome_chrom_sizes.baseName], genome_chrom_sizes ])
+    } else {
         ch_genome_chrom_sizes = GENOME_CHROM_SIZE ( ch_fasta ).sizes
         ch_versions  = ch_versions.mix(GENOME_CHROM_SIZE.out.versions)
     }
@@ -171,8 +171,10 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Calc ncrna chrom sizes
     //
-    ch_ncrna_chrom_sizes = ncrna_chrom_sizes
-    if(!ncrna_chrom_sizes) {
+    ch_ncrna_chrom_sizes = Channel.empty()
+    if(ncrna_chrom_sizes) {
+        ch_ncrna_chrom_sizes = Channel.of([ [id:ncrna_chrom_sizes.baseName], ncrna_chrom_sizes ])
+    } else {
         ch_ncrna_chrom_sizes = NCRNA_CHROM_SIZE ( ch_ncrna_fasta ).sizes
         ch_versions  = ch_versions.mix(NCRNA_CHROM_SIZE.out.versions)
     }
@@ -180,7 +182,7 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Remove brackets from in gene names from GTF as causes UMICollapse to fail.
     //
-    REMOVE_GTF_BRACKETS ( 
+    REMOVE_GTF_BRACKETS (
         ch_gtf,
         [],
         false
@@ -190,45 +192,60 @@ workflow PREPARE_GENOME {
     //ch_gtf | view
 
     //
-    // MODULE: Find the longest transcript from the primary genome
+    // MODULE: Filter GTF by transcripts, validate GTF and transcripts (if provided), and generate auxiliary files (FAI, GTF) for provided or auto-selected transcripts
     //
-    ch_longest_transcript     = Channel.empty()
-    ch_longest_transcript_fai = Channel.empty()
-    ch_longest_transcript_gtf = Channel.empty()
-    if (longest_transcript && longest_transcript_fai && longest_transcript_gtf){
-        ch_longest_transcript     =  longest_transcript
-        ch_longest_transcript_fai =  longest_transcript_fai
-        ch_longest_transcript_gtf =  longest_transcript_gtf
-    } else {
-        FIND_LONGEST_TRANSCRIPT (
-            ch_gtf
-        )
-        ch_longest_transcript     = FIND_LONGEST_TRANSCRIPT.out.longest_transcript
-        ch_longest_transcript_fai = FIND_LONGEST_TRANSCRIPT.out.longest_transcript_fai
-        ch_longest_transcript_gtf = FIND_LONGEST_TRANSCRIPT.out.longest_transcript_gtf
-        ch_versions               = ch_versions.mix(FIND_LONGEST_TRANSCRIPT.out.versions)
-    }
 
-    //
-    // MODULE: Filter the GTF file
-    //
-    ch_filt_gtf = Channel.of( [ [id:filtered_gtf.baseName], filtered_gtf ] )
-    if (!filtered_gtf){
-        CLIPSEQ_FILTER_GTF (
-            ch_gtf
-        )
-        ch_filt_gtf = CLIPSEQ_FILTER_GTF.out.gtf
-        ch_versions = ch_versions.mix(CLIPSEQ_FILTER_GTF.out.versions)
+    // Channels for representative_transcript
+    ch_representative_transcript = representative_transcript ?
+        Channel.of([ [id: representative_transcript.baseName], representative_transcript ]) :
+        Channel.of([[], []])
+
+    ch_representative_transcript_fai = representative_transcript_fai ?
+        Channel.of([[id: representative_transcript_fai.baseName], representative_transcript_fai]) :
+        Channel.empty()
+
+    ch_representative_transcript_gtf = representative_transcript_gtf ?
+        Channel.of([[id: representative_transcript_gtf.baseName], representative_transcript_gtf]) :
+        Channel.empty()
+
+    ch_filt_gtf = filtered_gtf ?
+        Channel.of([[id: filtered_gtf.baseName], filtered_gtf]) :
+        Channel.empty()
+
+    // Run FILTER_GTF_BY_TRANSCRIPT if skip_filter_gtf disabled and filtered GTF missing,
+    // OR any required transcript file (.txt, .fai, .gtf) is missing and skip_transcriptome false,
+    // OR to validate the GTF and transcripts provided when representative_transcript provided and skip_transcriptome false, even when skip_filter_gtf is true.
+    if (
+        (!skip_filter_gtf && !filtered_gtf) ||
+        ((!representative_transcript || !representative_transcript_fai || !representative_transcript_gtf) && !skip_transcriptome) ||
+        ((representative_transcript && !skip_transcriptome && skip_filter_gtf))
+    ) {
+        if (representative_transcript && !skip_transcriptome && skip_filter_gtf) {
+            log.info "INFO: You provided a representative_transcript file and enabled transcriptome analysis but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPT process will still run, only to validate your transcripts against the GTF."
+        }
+        FILTER_GTF_BY_TRANSCRIPT(ch_gtf, ch_representative_transcript, skip_filter_gtf)
+
+        ch_representative_transcript     = FILTER_GTF_BY_TRANSCRIPT.out.representative_transcript
+        ch_representative_transcript_fai = FILTER_GTF_BY_TRANSCRIPT.out.representative_transcript_fai
+        ch_representative_transcript_gtf = FILTER_GTF_BY_TRANSCRIPT.out.representative_transcript_gtf
+        if (!skip_filter_gtf && !filtered_gtf) {
+            ch_filt_gtf                  = FILTER_GTF_BY_TRANSCRIPT.out.gtf
+        }
+        ch_versions                      = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPT.out.versions)
     }
-    // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    // CLIPSEQ_FILTER_GTF.out.gtf | view
 
     //
     // MODULE: Segment GTF file using icount
     //
-    ch_seg_gtf     = Channel.of( [ [id:seg_gtf.baseName], seg_gtf ] )
-    ch_regions_gtf = Channel.of( [ [id:regions_gtf.baseName], regions_gtf ] )
-   if (!seg_gtf || !regions_gtf){
+    ch_seg_gtf = seg_gtf ?
+        Channel.of([[id: seg_gtf.baseName], seg_gtf]) :
+        Channel.empty()
+
+    ch_regions_gtf = regions_gtf ?
+        Channel.of([[id: regions_gtf.baseName], regions_gtf]) :
+        Channel.empty()
+
+    if (!seg_gtf || !regions_gtf) {
         ICOUNT_SEG_GTF (
             ch_gtf,
             ch_fasta_fai.map{ it[1] }
@@ -243,110 +260,59 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Segment the filtered GTF file using icount
     //
-    ch_seg_filt_gtf     = Channel.of( [ [id:seg_filt_gtf.baseName], seg_filt_gtf ] )
-    ch_regions_filt_gtf = Channel.of( [ [id:regions_filt_gtf.baseName], regions_filt_gtf ] )
-    if (!seg_filt_gtf || !regions_filt_gtf) {
+    ch_regions_filt_gtf = regions_filt_gtf ?
+        Channel.of([[id: regions_filt_gtf.baseName], regions_filt_gtf]) :
+        Channel.empty()
+
+    if (!skip_filter_gtf && !regions_filt_gtf) {
         ICOUNT_SEG_FILTGTF (
             ch_filt_gtf,
             ch_fasta_fai.map{ it[1] }
         )
-        ch_seg_filt_gtf     = ICOUNT_SEG_FILTGTF.out.gtf
+
         ch_regions_filt_gtf = ICOUNT_SEG_FILTGTF.out.regions
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
     //ICOUNT_SEG_FILTGTF.out.gtf | view
 
-    //
-    // MODULE: Resolve the GTF regions that iCount did not annotate
-    //
-    ch_seg_resolved_gtf = Channel.of( [ [id:seg_resolved_gtf.baseName], seg_resolved_gtf ] )
-    if (!params.seg_resolved_gtf) {
-        RESOLVE_UNANNOTATED (
-            ch_seg_gtf.map{ it[1] },
-            ch_seg_filt_gtf.map{ it[1] },
-            ch_gtf.map{ it[1] },
-            ch_fasta_fai.map{ it[1] },
-            false
-        )
-        ch_seg_resolved_gtf = RESOLVE_UNANNOTATED.out.gtf
-        ch_versions         = ch_versions.mix(RESOLVE_UNANNOTATED.out.versions)
-    }
-    // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    //RESOLVE_UNANNOTATED.out.gtf | view
 
     //
     // MODULE: Resolve the GTF regions that iCount did not annotate REGIONS FILE
     //
-    ch_regions_resolved_gtf = Channel.of( [ [id:regions_resolved_gtf.baseName], regions_resolved_gtf ] )
-    if (!regions_resolved_gtf) {
+    ch_regions_resolved_gtf = regions_resolved_gtf ?
+        Channel.of([[id: regions_resolved_gtf.baseName], regions_resolved_gtf]) :
+        Channel.empty()
+
+    if (!skip_filter_gtf && !regions_resolved_gtf) {
         RESOLVE_UNANNOTATED_REGIONS (
-            ch_regions_gtf.map{ it[1] },
-            ch_regions_filt_gtf.map{ it[1] },
-            ch_gtf.map{ it[1] },
-            ch_fasta_fai.map{ it[1] },
-            false
+            ch_regions_gtf,
+            ch_regions_filt_gtf,
+            ch_fasta_fai
         )
         ch_regions_resolved_gtf = RESOLVE_UNANNOTATED_REGIONS.out.gtf
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
     //RESOLVE_UNANNOTATED_REGIONS.out.gtf | view
 
-    //
-    // MODULE: Resolve the GTF regions that iCount did not annotate with genic_other flag
-    //
-    ch_seg_resolved_gtf_genic = Channel.of( [ [id:seg_resolved_gtf_genic.baseName], seg_resolved_gtf_genic ] )
-    if (!params.seg_resolved_gtf_genic) {
-        RESOLVE_UNANNOTATED_GENIC_OTHER (
-            ch_seg_gtf.map{ it[1] },
-            ch_seg_filt_gtf.map{ it[1] },
-            ch_gtf.map{ it[1] },
-            ch_fasta_fai.map{ it[1] },
-            true
-        )
-        ch_seg_resolved_gtf_genic = RESOLVE_UNANNOTATED_GENIC_OTHER.out.gtf
-    }
-    // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    //RESOLVE_UNANNOTATED_GENIC_OTHER.out.gtf | view
-
-    //
-    // MODULE: Resolve the GTF regions that iCount did not annotate with genic_other flag REGIONS FILE
-    //
-    ch_regions_resolved_gtf_genic = Channel.of( [ [id:regions_resolved_gtf_genic.baseName], regions_resolved_gtf_genic ] )
-    if (!params.regions_resolved_gtf_genic) {
-        RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS (
-            ch_regions_gtf.map{ it[1] },
-            ch_regions_filt_gtf.map{ it[1] },
-            ch_gtf.map{ it[1] },
-            ch_fasta_fai.map{ it[1] },
-            true
-        )
-        ch_regions_resolved_gtf_genic = RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS.out.gtf
-    }
-    // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    //RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS.out.gtf | view
 
 
     emit:
-    fasta                      = ch_fasta                      // channel: [ val(meta), [ fasta ] ]
-    fasta_fai                  = ch_fasta_fai                  // channel: [ val(meta), [ fai ] ]
-    ncrna_fasta                = ch_ncrna_fasta                // channel: [ val(meta), [ fasta ] ]
-    ncrna_fasta_fai            = ch_ncrna_fasta_fai            // channel: [ val(meta), [ fai ] ]
-    genome_index               = ch_star_index                 // channel: [ val(meta), [ star_index ] ]
-    ncrna_index                = ch_bt_index                   // channel: [ val(meta), [ bt2_index ] ]
-    chrom_sizes                = ch_genome_chrom_sizes         // channel: [ val(meta), [ txt ] ]
-    ncrna_chrom_sizes          = ch_ncrna_chrom_sizes          // channel: [ val(meta), [ txt ] ]
-    gtf                        = ch_gtf                        // channel: [ val(meta), [ gtf ] ]
-    longest_transcript         = ch_longest_transcript         // channel: [ val(meta), [ txt ] ]
-    longest_transcript_fai     = ch_longest_transcript_fai     // channel: [ val(meta), [ fai ] ]
-    longest_transcript_gtf     = ch_longest_transcript_gtf     // channel: [ val(meta), [ fai ] ]
-    filtered_gtf               = ch_filt_gtf                   // channel: [ val(meta), [ gtf ] ]
-    seg_gtf                    = ch_seg_gtf                    // channel: [ val(meta), [ gtf ] ]
-    seg_filt_gtf               = ch_seg_filt_gtf               // channel: [ val(meta), [ gtf ] ]
-    seg_resolved_gtf           = ch_seg_resolved_gtf           // channel: [ val(meta), [ gtf ] ]
-    seg_resolved_gtf_genic     = ch_seg_resolved_gtf_genic     // channel: [ val(meta), [ gtf ] ]
-    regions_gtf                = ch_regions_gtf                // channel: [ val(meta), [ gtf ] ]
-    regions_filt_gtf           = ch_regions_filt_gtf           // channel: [ val(meta), [ gtf ] ]
-    regions_resolved_gtf       = ch_regions_resolved_gtf       // channel: [ val(meta), [ gtf ] ]
-    regions_resolved_gtf_genic = ch_regions_resolved_gtf_genic // channel: [ val(meta), [ gtf ] ]
-    versions                   = ch_versions                   // channel: [ versions.yml ]
+    fasta                             = ch_fasta                             // channel: [ val(meta), [ fasta ] ]
+    fasta_fai                         = ch_fasta_fai                         // channel: [ val(meta), [ fai ] ]
+    ncrna_fasta                       = ch_ncrna_fasta                       // channel: [ val(meta), [ fasta ] ]
+    ncrna_fasta_fai                   = ch_ncrna_fasta_fai                   // channel: [ val(meta), [ fai ] ]
+    genome_index                      = ch_star_index                        // channel: [ val(meta), [ star_index ] ]
+    ncrna_index                       = ch_bt_index                          // channel: [ val(meta), [ bt2_index ] ]
+    chrom_sizes                       = ch_genome_chrom_sizes                // channel: [ val(meta), [ txt ] ]
+    ncrna_chrom_sizes                 = ch_ncrna_chrom_sizes                 // channel: [ val(meta), [ txt ] ]
+    gtf                               = ch_gtf                               // channel: [ val(meta), [ gtf ] ]
+    representative_transcript         = ch_representative_transcript         // channel: [ val(meta), [ txt ] ] or Channel.empty()
+    representative_transcript_fai     = ch_representative_transcript_fai     // channel: [ val(meta), [ fai ] ] or Channel.empty()
+    representative_transcript_gtf     = ch_representative_transcript_gtf     // channel: [ val(meta), [ fai ] ] or Channel.empty()
+    filtered_gtf                      = ch_filt_gtf                          // channel: [ val(meta), [ gtf ] ] or Channel.empty()
+    seg_gtf                           = ch_seg_gtf                           // channel: [ val(meta), [ gtf ] ]
+    regions_gtf                       = ch_regions_gtf                       // channel: [ val(meta), [ gtf ] ]
+    regions_filt_gtf                  = ch_regions_filt_gtf                  // channel: [ val(meta), [ gtf ] ] or Channel.empty()
+    regions_resolved_gtf              = ch_regions_resolved_gtf              // channel: [ val(meta), [ gtf ] ] or Channel.empty()
+    versions                          = ch_versions                          // channel: [ versions.yml ]
 }

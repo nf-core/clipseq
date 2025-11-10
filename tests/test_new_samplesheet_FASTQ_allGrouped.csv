@@ -1,5 +1,5 @@
 sample_name,group_name,input_name,fastq
-PHO92_A,PHO,,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
-PHO92_B,PHO,,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
-PHO92_C,PHO,,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
-HNRNPC,HNRNP,,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
+PHO92_A,PHO,,https://github.com/ulelab/flowAPIscripts/raw/main/test-datasets/clipseq/PHO92_A.fastq.gz
+PHO92_B,PHO,,https://github.com/ulelab/flowAPIscripts/raw/main/test-datasets/clipseq/PHO92_B.fastq.gz
+PHO92_C,PHO,,https://github.com/ulelab/flowAPIscripts/raw/main/test-datasets/clipseq/PHO92_C.fastq.gz
+HNRNPC,HNRNP,,https://github.com/ulelab/flowAPIscripts/raw/main/test-datasets/clipseq/HNRNPC.fastq.gz
