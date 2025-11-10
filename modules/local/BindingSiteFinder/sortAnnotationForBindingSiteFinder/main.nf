@@ -1,4 +1,4 @@
-process sortAnnotationForBindingSiteFinder {
+process SORT_ANNOTATION_FOR_BINDING_SITE_FINDER {
     tag "$meta.id"
     label 'process_single'
 

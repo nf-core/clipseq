@@ -267,6 +267,8 @@ workflow CLIPSEQ {
         ch_regions_resolved_gtf_genic = PREPARE_GENOME.out.regions_resolved_gtf_genic
         ch_genome_index               = PREPARE_GENOME.out.genome_index
         ch_ncrna_genome_index         = PREPARE_GENOME.out.ncrna_index
+        ch_gns_rds                    = PREPARE_GENOME.out.gns_rds
+        ch_regions_rds                = PREPARE_GENOME.out.regions_rds
     }
 
     //

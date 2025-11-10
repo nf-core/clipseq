@@ -2,26 +2,27 @@
 // Uncompress and prepare reference genome files
 //
 
-include { GUNZIP as GUNZIP_FASTA                                                 } from '../../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_NCRNA_FASTA                                           } from '../../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_GTF                                                   } from '../../modules/nf-core/gunzip/main'
-include { UNTAR as UNTAR_BT                                                      } from '../../modules/nf-core/untar/main'
-include { UNTAR as UNTAR_STAR                                                    } from '../../modules/nf-core/untar/main'
-include { BOWTIE_BUILD                                                           } from '../../modules/nf-core/bowtie/build/main'
-include { STAR_GENOMEGENERATE                                                    } from '../../modules/nf-core/star/genomegenerate/main'
-include { SAMTOOLS_FAIDX as GENOME_INDEX                                         } from '../../modules/nf-core/samtools/faidx/main'
-include { SAMTOOLS_FAIDX as NCRNA_INDEX                                          } from '../../modules/nf-core/samtools/faidx/main'
-include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
-include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
-include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
-include { FIND_LONGEST_TRANSCRIPT                                                } from '../../modules/local/find_longest_transcript/main'
-include { CLIPSEQ_FILTER_GTF                                                     } from '../../modules/local/filter_gtf/main'
-include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
-include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED                     } from '../../modules/local/resolve_unannotated/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER         } from '../../modules/local/resolve_unannotated/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS             } from '../../modules/local/resolve_unannotated/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS } from '../../modules/local/resolve_unannotated/main'
+include { GUNZIP as GUNZIP_FASTA                                                             } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_NCRNA_FASTA                                                       } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_GTF                                                               } from '../../modules/nf-core/gunzip/main'
+include { UNTAR as UNTAR_BT                                                                  } from '../../modules/nf-core/untar/main'
+include { UNTAR as UNTAR_STAR                                                                } from '../../modules/nf-core/untar/main'
+include { BOWTIE_BUILD                                                                       } from '../../modules/nf-core/bowtie/build/main'
+include { STAR_GENOMEGENERATE                                                                } from '../../modules/nf-core/star/genomegenerate/main'
+include { SAMTOOLS_FAIDX as GENOME_INDEX                                                     } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as NCRNA_INDEX                                                      } from '../../modules/nf-core/samtools/faidx/main'
+include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                               } from '../../modules/local/linux_command'
+include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                                          } from '../../modules/nf-core/custom/getchromsizes/main'
+include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                                           } from '../../modules/nf-core/custom/getchromsizes/main'
+include { FIND_LONGEST_TRANSCRIPT                                                            } from '../../modules/local/find_longest_transcript/main'
+include { CLIPSEQ_FILTER_GTF                                                                 } from '../../modules/local/filter_gtf/main'
+include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                               } from '../../modules/nf-core/icountmini/segment/main'
+include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                                           } from '../../modules/nf-core/icountmini/segment/main'
+include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED                                 } from '../../modules/local/resolve_unannotated/main'
+include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER                     } from '../../modules/local/resolve_unannotated/main'
+include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS                         } from '../../modules/local/resolve_unannotated/main'
+include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS             } from '../../modules/local/resolve_unannotated/main'
+include { SORT_ANNOTATION_FOR_BINDING_SITE_FINDER                                            } from '../../modules/local/BindingSiteFinder/sortAnnotationForBindingSiteFinder/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -324,7 +325,12 @@ workflow PREPARE_GENOME {
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
     //RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS.out.gtf | view
-
+    SORT_ANNOTATION_FOR_BINDING_SITE_FINDER (
+        ch_filt_gtf
+    )
+    ch_versions = ch_versions.mix(SORT_ANNOTATION_FOR_BINDING_SITE_FINDER.out.versions)
+    ch_gns_rds = SORT_ANNOTATION_FOR_BINDING_SITE_FINDER.out.gns_rds
+    ch_regions_rds = SORT_ANNOTATION_FOR_BINDING_SITE_FINDER.out.regions_rds
 
     emit:
     fasta                      = ch_fasta                      // channel: [ val(meta), [ fasta ] ]
@@ -348,5 +354,7 @@ workflow PREPARE_GENOME {
     regions_filt_gtf           = ch_regions_filt_gtf           // channel: [ val(meta), [ gtf ] ]
     regions_resolved_gtf       = ch_regions_resolved_gtf       // channel: [ val(meta), [ gtf ] ]
     regions_resolved_gtf_genic = ch_regions_resolved_gtf_genic // channel: [ val(meta), [ gtf ] ]
+    gns_rds                    = ch_gns_rds                    // channel: [ val(meta), [ rds ] ]
+    regions_rds                = ch_regions_rds                // channel: [ val(meta), [ rds ] ]
     versions                   = ch_versions                   // channel: [ versions.yml ]
 }
