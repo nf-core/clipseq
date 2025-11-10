@@ -42,7 +42,7 @@ nextflow_process {
                 ]
                 input[1] = [
                     [ id:'test' ], // meta map
-                    file('${projectDir}/tests/peaks/HNRNPC_pureclip_peaks.bed', checkIfExists: true),
+                    file('${projectDir}/tests/peaks/HNRNPC_pureclip_crosslinks.bed', checkIfExists: true),
                 ]
                 input[2] = ANNOTATIONS.out[0]
                 input[3] = ANNOTATIONS.out[1]
