@@ -25,7 +25,7 @@ for (param in check_param_list) {
     }
 }
 
-// Check non-mandatory input parameters to see if the files exist if they have been specified
+// Check non-manditory input parameters to see if the files exist if they have been specified
 def checkPathParamList = [
     params.multiqc_config,
     params.fasta_fai,
