@@ -1,32 +1,26 @@
-Nov-10 15:12:43.628 [main] INFO  com.askimed.nf.test.App - nf-test 0.9.2
-Nov-10 15:12:43.662 [main] INFO  com.askimed.nf.test.App - Arguments: [test, modules/local/BindingSiteFinder/DefineBindingSites/tests/main.nf.test, --profile, docker]
-Nov-10 15:12:45.838 [main] INFO  com.askimed.nf.test.App - Nextflow Version: 25.04.2
-Nov-10 15:12:45.843 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Load config from file /Users/capitac/repos/melinas_clipseq/nf-test.config...
-Nov-10 15:12:46.523 [main] WARN  com.askimed.nf.test.nextflow.NextflowScript - Module /Users/capitac/repos/melinas_clipseq/subworkflows/local/BindingSiteFinder.nf: Dependency '/Users/capitac/repos/melinas_clipseq/subworkflows/local/../../modules/local/sortAnnotationForBindingSiteFinder/main.nf.nf' not found.
-Nov-10 15:12:46.524 [main] WARN  com.askimed.nf.test.nextflow.NextflowScript - Module /Users/capitac/repos/melinas_clipseq/subworkflows/local/BindingSiteFinder.nf: Dependency '/Users/capitac/repos/melinas_clipseq/subworkflows/local/../../modules/local/BindingSiteFinder/main.nf.nf' not found.
-Nov-10 15:12:46.700 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Loaded 130 files from directory /Users/capitac/repos/melinas_clipseq in 0.204 sec
-Nov-10 15:12:46.709 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Found 1 files containing tests.
-Nov-10 15:12:46.710 [main] DEBUG com.askimed.nf.test.lang.dependencies.DependencyResolver - Found files: [/Users/capitac/repos/melinas_clipseq/modules/local/BindingSiteFinder/DefineBindingSites/tests/main.nf.test]
-Nov-10 15:12:47.098 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Found 1 tests to execute.
-Nov-10 15:12:47.099 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Started test plan
-Nov-10 15:12:47.099 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Running testsuite 'Test Process CLIPSEQ_DEFINEBINDINGSITES' from file '/Users/capitac/repos/melinas_clipseq/modules/local/BindingSiteFinder/DefineBindingSites/tests/main.nf.test'.
-Nov-10 15:12:47.100 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '795f6278: DefineBindingSites - bw_files_folder, peak_bed, anno_genes_rds, anno_regions_rds'. type: com.askimed.nf.test.lang.process.ProcessTest
-Nov-10 15:13:25.608 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '795f6278: DefineBindingSites - bw_files_folder, peak_bed, anno_genes_rds, anno_regions_rds' finished. status: FAILED
-org.codehaus.groovy.runtime.powerassert.PowerAssertionError: 1 of 1 assertions failed
-	at com.askimed.nf.test.lang.extensions.GlobalMethods.assertAll(GlobalMethods.java:48)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
-	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
-	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
-	at org.codehaus.groovy.runtime.callsite.StaticMetaMethodSite.invoke(StaticMetaMethodSite.java:44)
-	at org.codehaus.groovy.runtime.callsite.StaticMetaMethodSite.callStatic(StaticMetaMethodSite.java:100)
-	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallStatic(CallSiteArray.java:55)
-	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callStatic(AbstractCallSite.java:217)
-	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callStatic(AbstractCallSite.java:231)
-	at main_nf$_run_closure1$_closure3$_closure7.doCall(main.nf.test:54)
-	at main_nf$_run_closure1$_closure3$_closure7.doCall(main.nf.test)
+Nov-10 16:29:20.594 [main] INFO  com.askimed.nf.test.App - nf-test 0.9.2
+Nov-10 16:29:20.619 [main] INFO  com.askimed.nf.test.App - Arguments: [test, --profile, docker]
+Nov-10 16:29:22.592 [main] INFO  com.askimed.nf.test.App - Nextflow Version: 25.04.6
+Nov-10 16:29:22.595 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Load config from file /workspaces/clipseq/nf-test.config...
+Nov-10 16:29:23.118 [main] WARN  com.askimed.nf.test.nextflow.NextflowScript - Module /workspaces/clipseq/subworkflows/local/BindingSiteFinder.nf: Dependency '/workspaces/clipseq/subworkflows/local/../../modules/local/sortAnnotationForBindingSiteFinder/main.nf.nf' not found.
+Nov-10 16:29:23.118 [main] WARN  com.askimed.nf.test.nextflow.NextflowScript - Module /workspaces/clipseq/subworkflows/local/BindingSiteFinder.nf: Dependency '/workspaces/clipseq/subworkflows/local/../../modules/local/BindingSiteFinder/main.nf.nf' not found.
+Nov-10 16:29:23.126 [main] WARN  com.askimed.nf.test.nextflow.NextflowScript - Module /workspaces/clipseq/subworkflows/local/prepare_genome.nf: Dependency '/workspaces/clipseq/subworkflows/local/../../modules/local/find_longest_transcript/main.nf' not found.
+Nov-10 16:29:23.127 [main] WARN  com.askimed.nf.test.nextflow.NextflowScript - Module /workspaces/clipseq/subworkflows/local/prepare_genome.nf: Dependency '/workspaces/clipseq/subworkflows/local/../../modules/local/filter_gtf/main.nf' not found.
+Nov-10 16:29:23.475 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Loaded 155 files from directory /workspaces/clipseq in 0.376 sec
+Nov-10 16:29:23.479 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Found 12 files containing tests.
+Nov-10 16:29:23.480 [main] DEBUG com.askimed.nf.test.lang.dependencies.DependencyResolver - Found files: [/workspaces/clipseq/tests/nf_test/test/genome_preset_genome.nf.test, /workspaces/clipseq/tests/nf_test/test/genome_longest_transcript.nf.test, /workspaces/clipseq/tests/nf_test/test/genome_gtf.nf.test, /workspaces/clipseq/tests/nf_test/test/test_only_crosslinking.nf.test, /workspaces/clipseq/tests/nf_test/test/test_only_preprocessing.nf.test, /workspaces/clipseq/tests/nf_test/test/genome_fasta.nf.test, /workspaces/clipseq/tests/nf_test/test/test_only_input.nf.test, /workspaces/clipseq/tests/nf_test/test/test_only_alignment.nf.test, /workspaces/clipseq/tests/nf_test/test/genome_indexes.nf.test, /workspaces/clipseq/tests/nf_test/test/genome_chromsizes.nf.test, /workspaces/clipseq/tests/nf_test/test/test_only_dedup.nf.test, /workspaces/clipseq/tests/nf_test/test/test_only_peakcalling.nf.test]
+Nov-10 16:29:24.875 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Found 35 tests to execute.
+Nov-10 16:29:24.876 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Started test plan
+Nov-10 16:29:24.877 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Running testsuite 'genome_chrom_sizes' from file '/workspaces/clipseq/tests/nf_test/test/genome_chromsizes.nf.test'.
+Nov-10 16:29:24.877 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '232023aa: genome_no_chrom_sizes'. type: com.askimed.nf.test.lang.pipeline.PipelineTest
+Nov-10 16:29:36.292 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '232023aa: genome_no_chrom_sizes' finished. status: FAILED
+org.codehaus.groovy.runtime.powerassert.PowerAssertionError: assert workflow.success
+       |        |
+       workflow false
+	at org.codehaus.groovy.runtime.InvokerHelper.assertFailed(InvokerHelper.java:432)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.assertFailed(ScriptBytecodeAdapter.java:670)
+	at genome_chromsizes_nf$_run_closure1$_closure2$_closure4.doCall(genome_chromsizes.nf.test:19)
+	at genome_chromsizes_nf$_run_closure1$_closure2$_closure4.doCall(genome_chromsizes.nf.test)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
@@ -38,7 +32,7 @@ org.codehaus.groovy.runtime.powerassert.PowerAssertionError: 1 of 1 assertions f
 	at groovy.lang.Closure.call(Closure.java:427)
 	at groovy.lang.Closure.call(Closure.java:406)
 	at com.askimed.nf.test.lang.TestCode.execute(TestCode.java:16)
-	at com.askimed.nf.test.lang.process.ProcessTest.execute(ProcessTest.java:171)
+	at com.askimed.nf.test.lang.pipeline.PipelineTest.execute(PipelineTest.java:135)
 	at com.askimed.nf.test.core.TestExecutionEngine.execute(TestExecutionEngine.java:165)
 	at com.askimed.nf.test.commands.RunTestsCommand.execute(RunTestsCommand.java:298)
 	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:43)
@@ -52,5 +46,246 @@ org.codehaus.groovy.runtime.powerassert.PowerAssertionError: 1 of 1 assertions f
 	at picocli.CommandLine.execute(CommandLine.java:2078)
 	at com.askimed.nf.test.App.run(App.java:39)
 	at com.askimed.nf.test.App.main(App.java:46)
-Nov-10 15:13:25.622 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Testsuite 'Test Process CLIPSEQ_DEFINEBINDINGSITES' finished. snapshot file: false, skipped tests: false, failed tests: true
-Nov-10 15:13:25.622 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Executed 1 tests. 1 tests failed. Done!
+Nov-10 16:29:36.302 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Testsuite 'genome_chrom_sizes' finished. snapshot file: false, skipped tests: false, failed tests: true
+Nov-10 16:29:36.302 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Running testsuite 'genome_fasta' from file '/workspaces/clipseq/tests/nf_test/test/genome_fasta.nf.test'.
+Nov-10 16:29:36.302 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '27d9e694: genome_fasta_raw'. type: com.askimed.nf.test.lang.pipeline.PipelineTest
+Nov-10 16:29:47.133 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '27d9e694: genome_fasta_raw' finished. status: FAILED
+org.codehaus.groovy.runtime.powerassert.PowerAssertionError: assert workflow.success
+       |        |
+       workflow false
+	at org.codehaus.groovy.runtime.InvokerHelper.assertFailed(InvokerHelper.java:432)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.assertFailed(ScriptBytecodeAdapter.java:670)
+	at genome_fasta_nf$_run_closure1$_closure2$_closure9.doCall(genome_fasta.nf.test:18)
+	at genome_fasta_nf$_run_closure1$_closure2$_closure9.doCall(genome_fasta.nf.test)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1030)
+	at groovy.lang.Closure.call(Closure.java:427)
+	at groovy.lang.Closure.call(Closure.java:406)
+	at com.askimed.nf.test.lang.TestCode.execute(TestCode.java:16)
+	at com.askimed.nf.test.lang.pipeline.PipelineTest.execute(PipelineTest.java:135)
+	at com.askimed.nf.test.core.TestExecutionEngine.execute(TestExecutionEngine.java:165)
+	at com.askimed.nf.test.commands.RunTestsCommand.execute(RunTestsCommand.java:298)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:43)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:18)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:1953)
+	at picocli.CommandLine.access$1300(CommandLine.java:145)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2352)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2346)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2311)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2179)
+	at picocli.CommandLine.execute(CommandLine.java:2078)
+	at com.askimed.nf.test.App.run(App.java:39)
+	at com.askimed.nf.test.App.main(App.java:46)
+Nov-10 16:29:47.134 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '7fbe64f1: genome_fasta_gz'. type: com.askimed.nf.test.lang.pipeline.PipelineTest
+Nov-10 16:29:58.220 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '7fbe64f1: genome_fasta_gz' finished. status: FAILED
+org.codehaus.groovy.runtime.powerassert.PowerAssertionError: assert workflow.success
+       |        |
+       workflow false
+	at org.codehaus.groovy.runtime.InvokerHelper.assertFailed(InvokerHelper.java:432)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.assertFailed(ScriptBytecodeAdapter.java:670)
+	at genome_fasta_nf$_run_closure1$_closure3$_closure12.doCall(genome_fasta.nf.test:38)
+	at genome_fasta_nf$_run_closure1$_closure3$_closure12.doCall(genome_fasta.nf.test)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1030)
+	at groovy.lang.Closure.call(Closure.java:427)
+	at groovy.lang.Closure.call(Closure.java:406)
+	at com.askimed.nf.test.lang.TestCode.execute(TestCode.java:16)
+	at com.askimed.nf.test.lang.pipeline.PipelineTest.execute(PipelineTest.java:135)
+	at com.askimed.nf.test.core.TestExecutionEngine.execute(TestExecutionEngine.java:165)
+	at com.askimed.nf.test.commands.RunTestsCommand.execute(RunTestsCommand.java:298)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:43)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:18)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:1953)
+	at picocli.CommandLine.access$1300(CommandLine.java:145)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2352)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2346)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2311)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2179)
+	at picocli.CommandLine.execute(CommandLine.java:2078)
+	at com.askimed.nf.test.App.run(App.java:39)
+	at com.askimed.nf.test.App.main(App.java:46)
+Nov-10 16:29:58.222 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test 'ad336d3d: genome_fasta_fai'. type: com.askimed.nf.test.lang.pipeline.PipelineTest
+Nov-10 16:30:09.531 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test 'ad336d3d: genome_fasta_fai' finished. status: FAILED
+org.codehaus.groovy.runtime.powerassert.PowerAssertionError: assert workflow.success
+       |        |
+       workflow false
+	at org.codehaus.groovy.runtime.InvokerHelper.assertFailed(InvokerHelper.java:432)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.assertFailed(ScriptBytecodeAdapter.java:670)
+	at genome_fasta_nf$_run_closure1$_closure4$_closure15.doCall(genome_fasta.nf.test:58)
+	at genome_fasta_nf$_run_closure1$_closure4$_closure15.doCall(genome_fasta.nf.test)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1030)
+	at groovy.lang.Closure.call(Closure.java:427)
+	at groovy.lang.Closure.call(Closure.java:406)
+	at com.askimed.nf.test.lang.TestCode.execute(TestCode.java:16)
+	at com.askimed.nf.test.lang.pipeline.PipelineTest.execute(PipelineTest.java:135)
+	at com.askimed.nf.test.core.TestExecutionEngine.execute(TestExecutionEngine.java:165)
+	at com.askimed.nf.test.commands.RunTestsCommand.execute(RunTestsCommand.java:298)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:43)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:18)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:1953)
+	at picocli.CommandLine.access$1300(CommandLine.java:145)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2352)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2346)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2311)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2179)
+	at picocli.CommandLine.execute(CommandLine.java:2078)
+	at com.askimed.nf.test.App.run(App.java:39)
+	at com.askimed.nf.test.App.main(App.java:46)
+Nov-10 16:30:09.532 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '7df948b2: genome_ncrna_fasta_gz'. type: com.askimed.nf.test.lang.pipeline.PipelineTest
+Nov-10 16:30:21.167 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '7df948b2: genome_ncrna_fasta_gz' finished. status: FAILED
+org.codehaus.groovy.runtime.powerassert.PowerAssertionError: assert workflow.success
+       |        |
+       workflow false
+	at org.codehaus.groovy.runtime.InvokerHelper.assertFailed(InvokerHelper.java:432)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.assertFailed(ScriptBytecodeAdapter.java:670)
+	at genome_fasta_nf$_run_closure1$_closure5$_closure18.doCall(genome_fasta.nf.test:78)
+	at genome_fasta_nf$_run_closure1$_closure5$_closure18.doCall(genome_fasta.nf.test)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1030)
+	at groovy.lang.Closure.call(Closure.java:427)
+	at groovy.lang.Closure.call(Closure.java:406)
+	at com.askimed.nf.test.lang.TestCode.execute(TestCode.java:16)
+	at com.askimed.nf.test.lang.pipeline.PipelineTest.execute(PipelineTest.java:135)
+	at com.askimed.nf.test.core.TestExecutionEngine.execute(TestExecutionEngine.java:165)
+	at com.askimed.nf.test.commands.RunTestsCommand.execute(RunTestsCommand.java:298)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:43)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:18)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:1953)
+	at picocli.CommandLine.access$1300(CommandLine.java:145)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2352)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2346)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2311)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2179)
+	at picocli.CommandLine.execute(CommandLine.java:2078)
+	at com.askimed.nf.test.App.run(App.java:39)
+	at com.askimed.nf.test.App.main(App.java:46)
+Nov-10 16:30:21.170 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test 'c3981f66: genome_ncrna_fasta'. type: com.askimed.nf.test.lang.pipeline.PipelineTest
+Nov-10 16:30:32.771 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test 'c3981f66: genome_ncrna_fasta' finished. status: FAILED
+org.codehaus.groovy.runtime.powerassert.PowerAssertionError: assert workflow.success
+       |        |
+       workflow false
+	at org.codehaus.groovy.runtime.InvokerHelper.assertFailed(InvokerHelper.java:432)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.assertFailed(ScriptBytecodeAdapter.java:670)
+	at genome_fasta_nf$_run_closure1$_closure6$_closure21.doCall(genome_fasta.nf.test:97)
+	at genome_fasta_nf$_run_closure1$_closure6$_closure21.doCall(genome_fasta.nf.test)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1030)
+	at groovy.lang.Closure.call(Closure.java:427)
+	at groovy.lang.Closure.call(Closure.java:406)
+	at com.askimed.nf.test.lang.TestCode.execute(TestCode.java:16)
+	at com.askimed.nf.test.lang.pipeline.PipelineTest.execute(PipelineTest.java:135)
+	at com.askimed.nf.test.core.TestExecutionEngine.execute(TestExecutionEngine.java:165)
+	at com.askimed.nf.test.commands.RunTestsCommand.execute(RunTestsCommand.java:298)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:43)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:18)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:1953)
+	at picocli.CommandLine.access$1300(CommandLine.java:145)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2352)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2346)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2311)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2179)
+	at picocli.CommandLine.execute(CommandLine.java:2078)
+	at com.askimed.nf.test.App.run(App.java:39)
+	at com.askimed.nf.test.App.main(App.java:46)
+Nov-10 16:30:32.774 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '15c423dc: genome_ncrna_fasta_fai'. type: com.askimed.nf.test.lang.pipeline.PipelineTest
+Nov-10 16:30:43.876 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '15c423dc: genome_ncrna_fasta_fai' finished. status: FAILED
+org.codehaus.groovy.runtime.powerassert.PowerAssertionError: assert workflow.success
+       |        |
+       workflow false
+	at org.codehaus.groovy.runtime.InvokerHelper.assertFailed(InvokerHelper.java:432)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.assertFailed(ScriptBytecodeAdapter.java:670)
+	at genome_fasta_nf$_run_closure1$_closure7$_closure24.doCall(genome_fasta.nf.test:116)
+	at genome_fasta_nf$_run_closure1$_closure7$_closure24.doCall(genome_fasta.nf.test)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1030)
+	at groovy.lang.Closure.call(Closure.java:427)
+	at groovy.lang.Closure.call(Closure.java:406)
+	at com.askimed.nf.test.lang.TestCode.execute(TestCode.java:16)
+	at com.askimed.nf.test.lang.pipeline.PipelineTest.execute(PipelineTest.java:135)
+	at com.askimed.nf.test.core.TestExecutionEngine.execute(TestExecutionEngine.java:165)
+	at com.askimed.nf.test.commands.RunTestsCommand.execute(RunTestsCommand.java:298)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:43)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:18)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:1953)
+	at picocli.CommandLine.access$1300(CommandLine.java:145)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2352)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2346)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2311)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2179)
+	at picocli.CommandLine.execute(CommandLine.java:2078)
+	at com.askimed.nf.test.App.run(App.java:39)
+	at com.askimed.nf.test.App.main(App.java:46)
+Nov-10 16:30:43.878 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Testsuite 'genome_fasta' finished. snapshot file: false, skipped tests: false, failed tests: true
+Nov-10 16:30:43.878 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Running testsuite 'genome_gtf' from file '/workspaces/clipseq/tests/nf_test/test/genome_gtf.nf.test'.
+Nov-10 16:30:43.879 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '8cad6f6c: genome_gtf_raw'. type: com.askimed.nf.test.lang.pipeline.PipelineTest
+Nov-10 16:30:55.481 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '8cad6f6c: genome_gtf_raw' finished. status: FAILED
+org.codehaus.groovy.runtime.powerassert.PowerAssertionError: assert workflow.success
+       |        |
+       workflow false
+	at org.codehaus.groovy.runtime.InvokerHelper.assertFailed(InvokerHelper.java:432)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.assertFailed(ScriptBytecodeAdapter.java:670)
+	at genome_gtf_nf$_run_closure1$_closure2$_closure12.doCall(genome_gtf.nf.test:18)
+	at genome_gtf_nf$_run_closure1$_closure2$_closure12.doCall(genome_gtf.nf.test)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1030)
+	at groovy.lang.Closure.call(Closure.java:427)
+	at groovy.lang.Closure.call(Closure.java:406)
+	at com.askimed.nf.test.lang.TestCode.execute(TestCode.java:16)
+	at com.askimed.nf.test.lang.pipeline.PipelineTest.execute(PipelineTest.java:135)
+	at com.askimed.nf.test.core.TestExecutionEngine.execute(TestExecutionEngine.java:165)
+	at com.askimed.nf.test.commands.RunTestsCommand.execute(RunTestsCommand.java:298)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:43)
+	at com.askimed.nf.test.commands.AbstractCommand.call(AbstractCommand.java:18)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:1953)
+	at picocli.CommandLine.access$1300(CommandLine.java:145)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2352)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2346)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2311)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2179)
+	at picocli.CommandLine.execute(CommandLine.java:2078)
+	at com.askimed.nf.test.App.run(App.java:39)
+	at com.askimed.nf.test.App.main(App.java:46)
+Nov-10 16:30:55.482 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '12df768f: genome_gtf_gz'. type: com.askimed.nf.test.lang.pipeline.PipelineTest

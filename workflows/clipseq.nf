@@ -231,32 +231,6 @@ workflow CLIPSEQ {
             params.skip_filter_gtf,
             params.skip_transcriptome
         )
-<<<<<<< HEAD
-        ch_versions                   = ch_versions.mix(PREPARE_GENOME.out.versions)
-        ch_fasta                      = PREPARE_GENOME.out.fasta
-        ch_fasta_fai                  = PREPARE_GENOME.out.fasta_fai
-        ch_gtf                        = PREPARE_GENOME.out.gtf
-        ch_filtered_gtf               = PREPARE_GENOME.out.filtered_gtf
-        ch_genome_chrom_sizes         = PREPARE_GENOME.out.chrom_sizes
-        ch_ncrna_fasta                = PREPARE_GENOME.out.ncrna_fasta
-        ch_ncrna_fasta_fai            = PREPARE_GENOME.out.ncrna_fasta_fai
-        ch_ncrna_chrom_sizes          = PREPARE_GENOME.out.ncrna_chrom_sizes
-        ch_longest_transcript         = PREPARE_GENOME.out.longest_transcript
-        ch_longest_transcript_fai     = PREPARE_GENOME.out.longest_transcript_fai
-        ch_longest_transcript_gtf     = PREPARE_GENOME.out.longest_transcript_gtf
-        ch_seg_gtf                    = PREPARE_GENOME.out.seg_gtf
-        ch_seg_filt_gtf               = PREPARE_GENOME.out.seg_filt_gtf
-        ch_seg_resolved_gtf           = PREPARE_GENOME.out.seg_resolved_gtf
-        ch_seg_resolved_gtf_genic     = PREPARE_GENOME.out.seg_resolved_gtf_genic
-        ch_regions_gtf                = PREPARE_GENOME.out.regions_gtf
-        ch_regions_filt_gtf           = PREPARE_GENOME.out.regions_filt_gtf
-        ch_regions_resolved_gtf       = PREPARE_GENOME.out.regions_resolved_gtf
-        ch_regions_resolved_gtf_genic = PREPARE_GENOME.out.regions_resolved_gtf_genic
-        ch_genome_index               = PREPARE_GENOME.out.genome_index
-        ch_ncrna_genome_index         = PREPARE_GENOME.out.ncrna_index
-        ch_gns_rds                    = PREPARE_GENOME.out.gns_rds
-        ch_regions_rds                = PREPARE_GENOME.out.regions_rds
-=======
         ch_versions                          = ch_versions.mix(PREPARE_GENOME.out.versions)
         ch_fasta                             = PREPARE_GENOME.out.fasta.collect()
         ch_fasta_fai                         = PREPARE_GENOME.out.fasta_fai.collect()
@@ -275,7 +249,8 @@ workflow CLIPSEQ {
         ch_regions_resolved_gtf              = PREPARE_GENOME.out.regions_resolved_gtf.collect()
         ch_genome_index                      = PREPARE_GENOME.out.genome_index.collect()
         ch_ncrna_genome_index                = PREPARE_GENOME.out.ncrna_index.collect()
->>>>>>> feat-2-0
+        ch_gns_rds                    = PREPARE_GENOME.out.gns_rds
+        ch_regions_rds                = PREPARE_GENOME.out.regions_rds
     }
 
     //

@@ -5,29 +5,6 @@ import nextflow.util.LoggerHelper
 // Uncompress and prepare reference genome files
 //
 
-<<<<<<< HEAD
-include { GUNZIP as GUNZIP_FASTA                                                             } from '../../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_NCRNA_FASTA                                                       } from '../../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_GTF                                                               } from '../../modules/nf-core/gunzip/main'
-include { UNTAR as UNTAR_BT                                                                  } from '../../modules/nf-core/untar/main'
-include { UNTAR as UNTAR_STAR                                                                } from '../../modules/nf-core/untar/main'
-include { BOWTIE_BUILD                                                                       } from '../../modules/nf-core/bowtie/build/main'
-include { STAR_GENOMEGENERATE                                                                } from '../../modules/nf-core/star/genomegenerate/main'
-include { SAMTOOLS_FAIDX as GENOME_INDEX                                                     } from '../../modules/nf-core/samtools/faidx/main'
-include { SAMTOOLS_FAIDX as NCRNA_INDEX                                                      } from '../../modules/nf-core/samtools/faidx/main'
-include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                               } from '../../modules/local/linux_command'
-include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                                          } from '../../modules/nf-core/custom/getchromsizes/main'
-include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                                           } from '../../modules/nf-core/custom/getchromsizes/main'
-include { FIND_LONGEST_TRANSCRIPT                                                            } from '../../modules/local/find_longest_transcript/main'
-include { CLIPSEQ_FILTER_GTF                                                                 } from '../../modules/local/filter_gtf/main'
-include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                               } from '../../modules/nf-core/icountmini/segment/main'
-include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                                           } from '../../modules/nf-core/icountmini/segment/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED                                 } from '../../modules/local/resolve_unannotated/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER                     } from '../../modules/local/resolve_unannotated/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS                         } from '../../modules/local/resolve_unannotated/main'
-include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS             } from '../../modules/local/resolve_unannotated/main'
-include { SORT_ANNOTATION_FOR_BINDING_SITE_FINDER                                            } from '../../modules/local/BindingSiteFinder/sortAnnotationForBindingSiteFinder/main'
-=======
 include { GUNZIP as GUNZIP_FASTA                                                 } from '../../modules/nf-core/gunzip/main'
 include { GUNZIP as GUNZIP_NCRNA_FASTA                                           } from '../../modules/nf-core/gunzip/main'
 include { GUNZIP as GUNZIP_GTF                                                   } from '../../modules/nf-core/gunzip/main'
@@ -44,7 +21,7 @@ include { FILTER_GTF_BY_TRANSCRIPT                                              
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
 include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS             } from '../../modules/local/resolve_unannotated/main'
->>>>>>> feat-2-0
+include { SORT_ANNOTATION_FOR_BINDING_SITE_FINDER                                            } from '../../modules/local/BindingSiteFinder/sortAnnotationForBindingSiteFinder/main'
 
 workflow PREPARE_GENOME {
     take:
