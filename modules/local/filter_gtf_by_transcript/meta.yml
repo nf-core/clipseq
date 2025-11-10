@@ -1,0 +1,43 @@
+name: filter_gtf_by_transcript
+description: Validates list of provided transcripts if provided, otherwise calculates a table of transcript lengths for each gene and selects the longest one. Filters GTF by transcripts.
+tools:
+input:
+  - gtf:
+      type: file
+      description: A GTF annotation file
+  - transcript:
+      type: file
+      description: A text file with representative transcripts
+  - skip_filter_gtf:
+      types: value
+      description: A boolean value that enables or disables GTF filtering
+output:
+  - representative_transcript:
+      type: file
+      description: File that contains the ID of the representative transcripts
+      pattern: "*.txt"
+  - representative_transcript_fai:
+      type: file
+      description: List of the transcript lengths
+      pattern: "*.fai"
+  - representative_transcript_gtf:
+      type: file
+      description: GTF with transcriptomic coordinates of representative transcripts
+      pattern: "*.gtf"
+  - gtf:
+      type: file
+      description: GTF annotation file with genomic coordinates filtered by representative transcripts
+      pattern: "*.gtf"
+  - log:
+      type: file
+      description: Log file
+      pattern: "*.log"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+authors:
+  - "@chris-cheshire"
+  - "@charlotteanne"
+  - "@iraiosub"
+  - "@kkuret"

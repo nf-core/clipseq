@@ -1,25 +1,25 @@
 nextflow_pipeline {
-    name "prepare_genome_longest_transcript"
+    name "prepare_genome_representative_transcript"
     script "main.nf"
 
-    test("genome_no_longest_transcript") {
-        tag "genome_no_longest_transcript"
+    test("genome_no_representative_transcript") {
+        tag "genome_no_representative_transcript"
         tag "test"
         when {
             params {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                longest_transcript = null
+                representative_transcript = null
             }
         }
 
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/longest_transcript.txt").exists()
-            assert file("$outputDir/00_genome/longest_transcript.fai").exists()
-            assert file("$outputDir/00_genome/longest_transcript.gtf").exists()
+            assert file("$outputDir/00_genome/representative_transcript.txt").exists()
+            assert file("$outputDir/00_genome/representative_transcript.fai").exists()
+            assert file("$outputDir/00_genome/representative_transcript.gtf").exists()
         }
     }
 }

@@ -138,7 +138,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "longest_transcript_fai": {
+                "representative_transcript_fai": {
                     "type": "string",
                     "default": "None"
                 },
@@ -162,11 +162,11 @@
                     "type": "string",
                     "default": "None"
                 },
-                "longest_transcript_gtf": {
+                "representative_transcript_gtf": {
                     "type": "string",
                     "default": "None"
                 },
-                "longest_transcript": {
+                "representative_transcript": {
                     "type": "string",
                     "default": "None"
                 },
