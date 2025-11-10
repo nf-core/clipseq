@@ -2,10 +2,10 @@ process sortAnnotationForBindingSiteFinder {
     tag "$meta.id"
     label 'process_single'
 
-    container "${'melinak/bindingsitefinder:1.1'}"
+    container "${'docker.io/melinak/bindingsitefinder:1.1'}"
 
     input:
-        tuple val(meta), path(gtf)
+        tuple val(meta), path(gtf_file)
 
     output:
         tuple val(meta), path("gns.rds"), emit: gns_rds
