@@ -16,15 +16,15 @@ nextflow_pipeline {
             assert workflow.success
 
             // NCRNA
-            assert file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam").exists()
-            assert file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam.bai").exists()
-            assert file("$outputDir/02_alignment/ncrna/unmapped/PHO92_A_ncrna.unmapped.fastq.gz").exists()
+            assert file("$outputDir/02_alignment/ncrna/HNRNPC_Hs_HeLa_R1_ncrna.sorted.bam").exists()
+            assert file("$outputDir/02_alignment/ncrna/HNRNPC_Hs_HeLa_R1_ncrna.sorted.bam.bai").exists()
+            assert file("$outputDir/02_alignment/ncrna/unmapped/HNRNPC_Hs_HeLa_R1_ncrna.unmapped.fastq.gz").exists()
 
             // GENOME
-            assert file("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam").exists()
-            assert file("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam.bai").exists()
-            assert file("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam").exists()
-            assert file("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam.bai").exists()
+            assert file("$outputDir/02_alignment/genome/HNRNPC_Hs_HeLa_R1_multiMapped.Aligned.sortedByCoord.out.bam").exists()
+            assert file("$outputDir/02_alignment/genome/HNRNPC_Hs_HeLa_R1_multiMapped.Aligned.sortedByCoord.out.bam.bai").exists()
+            assert file("$outputDir/02_alignment/genome/HNRNPC_Hs_HeLa_R1_uniqueMapped.bam").exists()
+            assert file("$outputDir/02_alignment/genome/HNRNPC_Hs_HeLa_R1_uniqueMapped.bam.bai").exists()
         }
     }
 
@@ -43,15 +43,15 @@ nextflow_pipeline {
             assert workflow.success
 
             // NCRNA
-            assert !(file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam").exists())
-            assert !(file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam.bai").exists())
-            assert !(file("$outputDir/02_alignment/ncrna/unmapped/PHO92_A_ncrna.unmapped.fastq.gz").exists())
+            assert !(file("$outputDir/02_alignment/ncrna/HNRNPC_Hs_HeLa_R1_ncrna.sorted.bam").exists())
+            assert !(file("$outputDir/02_alignment/ncrna/HNRNPC_Hs_HeLa_R1_ncrna.sorted.bam.bai").exists())
+            assert !(file("$outputDir/02_alignment/ncrna/unmapped/HNRNPC_Hs_HeLa_R1_ncrna.unmapped.fastq.gz").exists())
 
             // GENOME
-            assert !(file("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam").exists())
-            assert !(file("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam.bai").exists())
-            assert !(file("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam").exists())
-            assert !(file("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam.bai").exists())
+            assert !(file("$outputDir/02_alignment/genome/HNRNPC_Hs_HeLa_R1_multiMapped.Aligned.sortedByCoord.out.bam").exists())
+            assert !(file("$outputDir/02_alignment/genome/HNRNPC_Hs_HeLa_R1_multiMapped.Aligned.sortedByCoord.out.bam.bai").exists())
+            assert !(file("$outputDir/02_alignment/genome/HNRNPC_Hs_HeLa_R1_uniqueMapped.bam").exists())
+            assert !(file("$outputDir/02_alignment/genome/HNRNPC_Hs_HeLa_R1_uniqueMapped.bam.bai").exists())
         }
     }
 }

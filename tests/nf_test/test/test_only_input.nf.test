@@ -15,7 +15,11 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert !(file("$outputDir/01_prealign/umitools/PHO92_A.umi_extract.fastq.gz").exists())
+<<<<<<< Updated upstream:tests/nf_test/test/test_only_input.nf.test
+            assert !(file("$outputDir/01_prealign/umitools/HNRNPC_Hs_HeLa_R1.umi_extract.fastq.gz").exists())
+=======
+            assert !(new File("$outputDir/01_prealign/umitools/HNRNPC_Hs_HeLa_R1.umi_extract.fastq.gz").exists())
+>>>>>>> Stashed changes:tests/nf_test/test/test_only_input.test
         }
     }
 }

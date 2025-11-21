@@ -16,16 +16,16 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
             // icount
-            assert file("$outputDir/05_peakcalling/icountmini/PHO92.sigxls.bed").exists()
-            assert file("$outputDir/05_peakcalling/icountmini/PHO92.peaks.bed").exists()
+            assert file("$outputDir/05_peakcalling/icountmini/HNRNPC.sigxls.bed").exists()
+            assert file("$outputDir/05_peakcalling/icountmini/HNRNPC.peaks.bed").exists()
             // paraclu
-            assert file("$outputDir/05_peakcalling/paraclu/PHO92.genome.peaks.clustered.simplified.bed").exists()
+            assert file("$outputDir/05_peakcalling/paraclu/HNRNPC.genome.peaks.clustered.simplified.bed").exists()
             // pureclip
-            assert file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_crosslinks.bed").exists()
-            assert file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_peaks.bed").exists()
+            assert file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_crosslinks.bed").exists()
+            assert file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_peaks.bed").exists()
         }
     }
 
@@ -63,19 +63,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
-            //assert file("$outputDir/05_peakcalling/clippy/PHO92.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            //assert file("$outputDir/05_peakcalling/clippy/PHO92.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            //assert file("$outputDir/05_peakcalling/clippy/HNRNPC.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            //assert file("$outputDir/05_peakcalling/clippy/HNRNPC.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
             // icount
-            assert !(file("$outputDir/05_peakcalling/icountmini/PHO92.sigxls.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/icountmini/PHO92.peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/icountmini/HNRNPC.sigxls.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/icountmini/HNRNPC.peaks.bed").exists())
             // paraclu
-            assert !(file("$outputDir/05_peakcalling/paraclu/PHO92.genome.peaks.clustered.simplified.bed").exists())
-            //assert !(file("$outputDir/05_peakcalling/paraclu/PHO92.transcriptome.peaks.clustered.simplified.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/paraclu/HNRNPC.genome.peaks.clustered.simplified.bed").exists())
+            //assert !(file("$outputDir/05_peakcalling/paraclu/HNRNPC.transcriptome.peaks.clustered.simplified.bed").exists())
             // pureclip
-            assert !(file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_crosslinks.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_crosslinks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_peaks.bed").exists())
         }
     }
 
@@ -94,19 +94,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert !(file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
-            //assert !(file("$outputDir/05_peakcalling/clippy/PHO92.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
-            //assert !(file("$outputDir/05_peakcalling/clippy/PHO92.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            //assert !(file("$outputDir/05_peakcalling/clippy/HNRNPC.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            //assert !(file("$outputDir/05_peakcalling/clippy/HNRNPC.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
             // icount
-            assert file("$outputDir/05_peakcalling/icountmini/PHO92.sigxls.bed").exists()
-            assert file("$outputDir/05_peakcalling/icountmini/PHO92.peaks.bed").exists()
+            assert file("$outputDir/05_peakcalling/icountmini/HNRNPC.sigxls.bed").exists()
+            assert file("$outputDir/05_peakcalling/icountmini/HNRNPC.peaks.bed").exists()
             // paraclu
-            assert !(file("$outputDir/05_peakcalling/paraclu/PHO92.genome.peaks.clustered.simplified.bed").exists())
-            //assert !(file("$outputDir/05_peakcalling/paraclu/PHO92.transcriptome.peaks.clustered.simplified.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/paraclu/HNRNPC.genome.peaks.clustered.simplified.bed").exists())
+            //assert !(file("$outputDir/05_peakcalling/paraclu/HNRNPC.transcriptome.peaks.clustered.simplified.bed").exists())
             // pureclip
-            assert !(file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_crosslinks.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_crosslinks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_peaks.bed").exists())
         }
     }
 
@@ -125,19 +125,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert !(file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
-            //assert !(file("$outputDir/05_peakcalling/clippy/PHO92.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
-            //assert !(file("$outputDir/05_peakcalling/clippy/PHO92.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            //assert !(file("$outputDir/05_peakcalling/clippy/HNRNPC.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            //assert !(file("$outputDir/05_peakcalling/clippy/HNRNPC.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
             // icount
-            assert !(file("$outputDir/05_peakcalling/icountmini/PHO92.sigxls.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/icountmini/PHO92.peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/icountmini/HNRNPC.sigxls.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/icountmini/HNRNPC.peaks.bed").exists())
             // paraclu
-            assert file("$outputDir/05_peakcalling/paraclu/PHO92.genome.peaks.clustered.simplified.bed").exists()
-            //assert file("$outputDir/05_peakcalling/paraclu/PHO92.transcriptome.peaks.clustered.simplified.bed").exists()
+            assert file("$outputDir/05_peakcalling/paraclu/HNRNPC.genome.peaks.clustered.simplified.bed").exists()
+            //assert file("$outputDir/05_peakcalling/paraclu/HNRNPC.transcriptome.peaks.clustered.simplified.bed").exists()
             // pureclip
-            assert !(file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_crosslinks.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_crosslinks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_peaks.bed").exists())
         }
     }
 
@@ -156,19 +156,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert file("$outputDir/05_peakcalling/clippy/PHO92.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
-            //assert file("$outputDir/05_peakcalling/clippy/PHO92.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            //assert file("$outputDir/05_peakcalling/clippy/PHO92.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert file("$outputDir/05_peakcalling/clippy/HNRNPC.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            //assert file("$outputDir/05_peakcalling/clippy/HNRNPC.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            //assert file("$outputDir/05_peakcalling/clippy/HNRNPC.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
             // icount
-            assert !(file("$outputDir/05_peakcalling/icountmini/PHO92.sigxls.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/icountmini/PHO92.peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/icountmini/HNRNPC.sigxls.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/icountmini/HNRNPC.peaks.bed").exists())
             // paraclu
-            assert file("$outputDir/05_peakcalling/paraclu/PHO92.genome.peaks.clustered.simplified.bed").exists()
-            //assert file("$outputDir/05_peakcalling/paraclu/PHO92.transcriptome.peaks.clustered.simplified.bed").exists()
+            assert file("$outputDir/05_peakcalling/paraclu/HNRNPC.genome.peaks.clustered.simplified.bed").exists()
+            //assert file("$outputDir/05_peakcalling/paraclu/HNRNPC.transcriptome.peaks.clustered.simplified.bed").exists()
             // pureclip
-            assert !(file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_crosslinks.bed").exists())
-            assert !(file("$outputDir/05_peakcalling/pureclip/PHO92_pureclip_peaks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_crosslinks.bed").exists())
+            assert !(file("$outputDir/05_peakcalling/pureclip/HNRNPC_pureclip_peaks.bed").exists())
         }
     }
 }

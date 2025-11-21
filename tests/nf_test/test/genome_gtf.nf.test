@@ -29,7 +29,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                gtf = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/yeast_MitoV.gtf.gz"
+                gtf = "assets/reference/hg38_chr21.gtf"
             }
         }
 
@@ -48,6 +48,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                gtf = "assets/reference/hg38_chr21.gtf"
                 filtered_gtf = null
             }
         }
@@ -55,7 +56,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/yeast_MitoV_filtered.gtf").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_representative_transcript_filtered.gtf").exists()
         }
     }
 
@@ -67,6 +68,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                gtf = "assets/reference/hg38_chr21.gtf"
                 seg_filt_gtf = null
             }
         }
@@ -74,8 +76,8 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/yeast_MitoV_filtered_regions.gtf.gz").exists()
-            assert file("$outputDir/00_genome/yeast_MitoV_filtered_seg.gtf").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_representative_transcript_filtered_regions.gtf.gz").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_representative_transcript_filtered_seg.gtf").exists()
         }
     }
 
@@ -87,6 +89,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                gtf = "assets/reference/hg38_chr21.gtf"
                 seg_gtf = null
             }
         }
@@ -94,8 +97,8 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/yeast_MitoV_regions.gtf.gz").exists()
-            assert file("$outputDir/00_genome/yeast_MitoV_seg.gtf").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_regions.gtf.gz").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_seg.gtf").exists()
         }
     }
 
@@ -107,6 +110,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                gtf = "assets/reference/hg38_chr21.gtf"
                 seg_resolved_gtf = null
             }
         }
@@ -114,7 +118,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/yeast_MitoV_filtered_seg_genicOtherfalse.resolved.gtf").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_representative_transcript_filtered_seg_genicOtherfalse.resolved.gtf").exists()
         }
     }
 
@@ -126,6 +130,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                gtf = "assets/reference/hg38_chr21.gtf"
                 regions_resolved_gtf = null
             }
         }
@@ -133,7 +138,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/yeast_MitoV_filtered_regions_genicOtherfalse.resolved.gtf").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_representative_transcript_filtered_regions_genicOtherfalse.resolved.gtf").exists()
         }
     }
 
@@ -145,6 +150,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                gtf = "assets/reference/hg38_chr21.gtf"
                 seg_resolved_gtf_genic = null
             }
         }
@@ -152,7 +158,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/yeast_MitoV_filtered_seg_genicOthertrue.resolved.gtf").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_representative_transcript_filtered_seg_genicOthertrue.resolved.gtf").exists()
         }
     }
 
@@ -164,6 +170,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                gtf = "assets/reference/hg38_chr21.gtf"
                 regions_resolved_gtf_genic = null
             }
         }
@@ -171,7 +178,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/yeast_MitoV_filtered_regions_genicOthertrue.resolved.gtf").exists()
+            assert file("$outputDir/00_genome/hg38_chr21_representative_transcript_filtered_regions_genicOthertrue.resolved.gtf").exists()
         }
     }
 }

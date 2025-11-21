@@ -15,17 +15,17 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/04_crosslinks/PHO92_A.genome.xl.bed").exists()
-            assert file("$outputDir/04_crosslinks/PHO92_A.genome.xl.bedgraph").exists()
-            assert file("$outputDir/04_crosslinks/PHO92_A.genome.xl.CPMnorm.bedgraph").exists()
+            assert file("$outputDir/04_crosslinks/HNRNPC_Hs_HeLa_R1.genome.xl.bed").exists()
+            assert file("$outputDir/04_crosslinks/HNRNPC_Hs_HeLa_R1.genome.xl.bedgraph").exists()
+            assert file("$outputDir/04_crosslinks/HNRNPC_Hs_HeLa_R1.genome.xl.CPMnorm.bedgraph").exists()
 
-            assert file("$outputDir/04_crosslinks/grouped_crosslinks/PHO92_grouped.genome.xl.bed").exists()
-            assert file("$outputDir/04_crosslinks/grouped_crosslinks/PHO92_grouped.genome.xl.bedgraph").exists()
-            assert file("$outputDir/04_crosslinks/grouped_crosslinks/PHO92_grouped.genome.xl.CPMnorm.bedgraph").exists()
+            assert file("$outputDir/04_crosslinks/grouped_crosslinks/HNRNPC_grouped.genome.xl.bed").exists()
+            assert file("$outputDir/04_crosslinks/grouped_crosslinks/HNRNPC_grouped.genome.xl.bedgraph").exists()
+            assert file("$outputDir/04_crosslinks/grouped_crosslinks/HNRNPC_grouped.genome.xl.CPMnorm.bedgraph").exists()
 
-            assert file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_gene_premapadjusted.tsv").exists()
-            assert file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_subtype_premapadjusted.tsv").exists()
-            assert file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_type_premapadjusted.tsv").exists()
+            assert file("$outputDir/04_crosslinks/icountmini_summaries/HNRNPC.summary_gene_premapadjusted.tsv").exists()
+            assert file("$outputDir/04_crosslinks/icountmini_summaries/HNRNPC.summary_subtype_premapadjusted.tsv").exists()
+            assert file("$outputDir/04_crosslinks/icountmini_summaries/HNRNPC.summary_type_premapadjusted.tsv").exists()
         }
     }
 }

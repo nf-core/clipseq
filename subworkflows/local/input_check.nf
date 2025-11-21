@@ -15,6 +15,13 @@ workflow INPUT_CHECK {
             .map { create_fastq_channel(it) }
             .set { reads }
             break;
+        case 'bam': // bam ready for alignment
+            SAMPLESHEET_CHECK ( samplesheet, source )
+            .csv
+            .splitCsv ( header:true, sep:',' )
+            .map { create_bam_channel(it) }
+            .set { reads }
+            break;
         case 'dedupe_bam': // dedupe bam ready for grouped crosslink/peak analysis
             SAMPLESHEET_CHECK ( samplesheet, source )
             .csv
@@ -50,16 +57,32 @@ def create_fastq_channel(LinkedHashMap row) {
 
 
 // Function to get list of [ meta, bam ]
+def create_bam_channel(LinkedHashMap row) {
+    def meta = [:]
+    meta.id            = row.sample_name
+    meta.group         = row.group_name
+    meta.control       = row.input_name
+
+    // Check bam files exist
+    def array = []
+    if (!file(row.bam).exists()) {
+        exit 1, "ERROR: Please check input samplesheet -> BAM file does not exist!\n${row.bam}"
+    }
+    array = [ meta, [ file(row.bam) ] ]
+    return array
+}
+
+// Function to get list of [ meta, bam ]
 def create_dedupe_bam_channel(LinkedHashMap row) {
     def meta = [:]
     meta.id            = row.sample_name
     meta.group         = row.group_name
     meta.control       = row.input_name
 
-    // Check fastq files exist
+    // Check dedupe_bam files exist
     def array = []
     if (!file(row.dedupe_bam).exists()) {
-        exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq}"
+        exit 1, "ERROR: Please check input samplesheet -> Dedupe BAM file does not exist!\n${row.dedupe_bam}"
     }
     array = [ meta, [ file(row.dedupe_bam) ] ]
     return array

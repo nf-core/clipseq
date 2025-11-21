@@ -29,6 +29,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                ncrna_fasta = "assets/reference/Homo_sapiens.GRCh38.chr21.ncrna.fa"
                 ncrna_genome_index = null
             }
         }
@@ -36,7 +37,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/index/bowtie/homosapiens_smallRNA.fa.1.ebwt").exists()
+            assert file("$outputDir/00_genome/index/bowtie/Homo_sapiens.GRCh38.chr21.ncrna.fa.1.ebwt").exists()
         }
     }
 }

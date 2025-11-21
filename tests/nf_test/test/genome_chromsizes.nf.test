@@ -10,6 +10,8 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                fasta = "assets/reference/Homo_sapiens.GRCh38.chr21.dna.fa.gz"
+                ncrna_fasta = "assets/reference/Homo_sapiens.GRCh38.chr21.ncrna.fa"
                 genome_chrom_sizes = null
                 ncrna_chrom_sizes = null
             }
@@ -18,8 +20,8 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/homosapiens_smallRNA.fa.sizes").exists()
-            assert file("$outputDir/00_genome/yeast_MitoV.fa.sizes").exists()
+            assert file("$outputDir/00_genome/Homo_sapiens.GRCh38.chr21.ncrna.fa.sizes").exists()
+            assert file("$outputDir/00_genome/Homo_sapiens.GRCh38.chr21.dna.fa.sizes").exists()
         }
     }
 }

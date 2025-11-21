@@ -30,7 +30,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/yeast_MitoV.fa.gz"
+                fasta = "assets/reference/Homo_sapiens.GRCh38.chr21.dna.fa.gz"
             }
         }
 
@@ -38,7 +38,7 @@ nextflow_pipeline {
             assert workflow.success
 
             // Test fai created as we did not supply one
-            assert file("$outputDir/00_genome/yeast_MitoV.fa.fai").exists()
+            assert file("$outputDir/00_genome/Homo_sapiens.GRCh38.chr21.dna.fa.fai").exists()
         }
     }
 
@@ -50,7 +50,8 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                fasta_fai = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/yeast_MitoV.fa.fai"
+                fasta = "assets/reference/Homo_sapiens.GRCh38.chr21.dna.fa.gz"
+                fasta_fai = "assets/reference/Homo_sapiens.GRCh38.chr21.dna.fa.gz.fai"
             }
         }
 
@@ -58,7 +59,9 @@ nextflow_pipeline {
             assert workflow.success
 
             // Check fai does not exist as the process should not have run to generate it
-            assert !(file("$outputDir/00_genome/yeast_MitoV.fa.fai").exists())
+            // When fasta_fai is provided, the pipeline uses it internally but doesn't publish
+            // it to the output directory (since the GENOME_INDEX process that would publish it doesn't run)
+            assert !(file("$outputDir/00_genome/Homo_sapiens.GRCh38.chr21.dna.fa.fai").exists())
         }
     }
 
@@ -70,14 +73,14 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                ncrna_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa.gz"
+                ncrna_fasta = "assets/reference/Homo_sapiens.GRCh38.chr21.ncrna.fa"
             }
         }
 
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
+            assert file("$outputDir/00_genome/Homo_sapiens.GRCh38.chr21.ncrna.fa.fai").exists()
         }
     }
 
@@ -89,14 +92,14 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                ncrna_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa"
+                ncrna_fasta = "assets/reference/Homo_sapiens.GRCh38.chr21.ncrna.fa"
             }
         }
 
         then {
             assert workflow.success
 
-            assert file("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists()
+            assert file("$outputDir/00_genome/Homo_sapiens.GRCh38.chr21.ncrna.fa.fai").exists()
         }
     }
 
@@ -108,7 +111,8 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                fasta_fai = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa.fai"
+                ncrna_fasta = "assets/reference/Homo_sapiens.GRCh38.chr21.ncrna.fa"
+                fasta_fai = "assets/reference/Homo_sapiens.GRCh38.chr21.ncrna.fa.gz.fai"
             }
         }
 
@@ -116,7 +120,9 @@ nextflow_pipeline {
             assert workflow.success
 
             // Check fai does not exist as the process should not have run to generate it
-            assert !(file("$outputDir/00_genome/homosapiens_smallRNA.fa.fai").exists())
+            // When fasta_fai is provided, the pipeline uses it internally but doesn't publish
+            // it to the output directory (since the NCRNA_INDEX process that would publish it doesn't run)
+            assert !(file("$outputDir/00_genome/Homo_sapiens.GRCh38.chr21.ncrna.fa.fai").exists())
         }
     }
 }
