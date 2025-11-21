@@ -11,6 +11,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
+                // Uses test.config which points to chr21 dataset
             }
         }
 
@@ -18,7 +19,7 @@ nextflow_pipeline {
             assert workflow.success
 
             // Test fai created as the igenomes file does not have one
-            assert file("$outputDir/00_genome/yeast_MitoV.fa.fai").exists()
+            assert file("$outputDir/00_genome/Homo_sapiens.GRCh38.chr21.dna.fa.fai").exists()
         }
     }
 }

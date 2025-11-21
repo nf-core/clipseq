@@ -103,13 +103,13 @@ def check_samplesheet(process_name, file_in, file_out):
                             f"Group name entry contains '{weirdo}', remove or replace with '_' - line no. {line_no}"
                         )
 
-            ## Check FastQ file extension
+            ## Check BAM file extension
             if bam:
                 if bam.find(" ") != -1:
                     print_error("BAM file name contains spaces!", "Line", line)
-                if not fastq.endswith(".bam"):
+                if not bam.endswith(".bam"):
                     print_error(
-                        "BAM file does not have extension '.bam' or '.bam'!",
+                        "BAM file does not have extension '.bam'!",
                         "Line",
                         line,
                     )

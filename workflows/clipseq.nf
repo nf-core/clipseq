@@ -396,7 +396,8 @@ workflow CLIPSEQ {
             ch_genome_unique_dedupe_bam ,
             ch_genome_unique_dedupe_bai ,
             ch_fasta,
-            ch_fasta_fai
+            ch_fasta_fai,
+            false   // skip_bigwig = false for genome (we want genome bigwigs)
         )
         ch_versions                                  = ch_versions.mix(GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.versions)
         ch_genome_crosslink_group_resolved_bed       = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
@@ -410,7 +411,8 @@ workflow CLIPSEQ {
             ch_ncrna_k1_bam,
             ch_ncrna_k1_bai,
             ch_ncrna_fasta,
-            ch_ncrna_fasta_fai
+            ch_ncrna_fasta_fai,
+            true   // skip_bigwig = true for ncRNA (no ncRNA bigwigs at all)
         )
         ch_versions                                    = ch_versions.mix(NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.versions)
         ch_ncrna_k1_crosslink_group_resolved_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved

@@ -1,5 +1,5 @@
 sample_name,group_name,input_name,fastq
-PHO92_A,PHO92,HNRNPC,https://github.com/ulelab/flowAPIscripts/raw/main/test-datasets/clipseq/PHO92_A.fastq.gz
-PHO92_B,PHO92,HNRNPC,https://github.com/ulelab/flowAPIscripts/raw/main/test-datasets/clipseq/PHO92_B.fastq.gz
-PHO92_C,PHO92,HNRNPC,https://github.com/ulelab/flowAPIscripts/raw/main/test-datasets/clipseq/PHO92_C.fastq.gz
-HNRNPC,,,https://github.com/ulelab/flowAPIscripts/raw/main/test-datasets/clipseq/HNRNPC.fastq.gz
+HNRNPC_Hs_HeLa_R1,HNRNPC,U2AF2_Hs_HeLa_KD1,assets/fastq-chr21/HNRNPC_Hs_HeLa_R1_chr21.fastq.gz
+HNRNPC_Hs_HeLa_R2,HNRNPC,U2AF2_Hs_HeLa_KD1,assets/fastq-chr21/HNRNPC_Hs_HeLa_R2_chr21.fastq.gz
+HNRNPC_Hs_HeLa_R3,HNRNPC,U2AF2_Hs_HeLa_KD1,assets/fastq-chr21/HNRNPC_Hs_HeLa_R3_chr21.fastq.gz
+U2AF2_Hs_HeLa_KD1,,,assets/fastq-chr21/U2AF2_Hs_HeLa_KD1_chr21.fastq.gz
