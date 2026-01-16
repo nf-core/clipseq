@@ -1,0 +1,86 @@
+nextflow_process {
+
+    name "Test Process CLIPSEQ_DEFINEBINDINGSITES"
+    script "../main.nf"
+    process "defineBindingSites"
+
+    tag "clipseq"
+    tag "clipseq_definebindingsites"
+    tag "definebindingsites"
+
+    // Global setup for rds input files
+    setup {
+        run("sortAnnotationForBindingSiteFinder", alias: "ANNOTATIONS") {
+            script "../../sortAnnotationForBindingSiteFinder/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'test_sort' ], // meta map
+                    file('https://raw.githubusercontent.com/nf-core/test-datasets/clipseq/v_2_0/genome/yeast_MitoV_filtered_seg.gtf'),
+                ]
+                """
+            }
+        }
+    }
+
+    test("DefineBindingSites - bw_files_folder, peak_bed, anno_genes_rds, anno_regions_rds") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ], // meta map
+                    file('/Users/hdash/code/public/clipseq/tests/bigwigs', checkIfExists: true),
+                ]
+                input[1] = [
+                    [ id:'test' ], // meta map
+                    file('/Users/hdash/code/public/clipseq/results/05_peakcalling/pureclip/HNRNPC_pureclip_crosslinks.bed', checkIfExists: true),
+                ]
+                input[2] = ANNOTATIONS.out[0]
+                input[3] = ANNOTATIONS.out[1]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // { assert snapshot(process.out).match() }
+                //TODO nf-core: Add all required assertions to verify the test output.
+                // See https://nf-co.re/docs/contributing/tutorials/nf-test_assertions for more information and examples.
+            )
+        }
+
+    }
+
+    test("DefineBindingSites - bw_files_folder, peak_bed, anno_genes_rds, anno_regions_rds - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ], // meta map
+                    file('/Users/hdash/code/public/clipseq/tests/bigwigs', checkIfExists: true),
+                ]
+                input[1] = [
+                    [ id:'test' ], // meta map
+                    file('/Users/hdash/code/public/clipseq/results/05_peakcalling/pureclip/HNRNPC_pureclip_crosslinks.bed', checkIfExists: true),
+                ]
+                input[2] = ANNOTATIONS.out[0]
+                input[3] = ANNOTATIONS.out[1]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert snapshot(process.out).match()
+            assert new File(process.out.binding_sites_rds[0][1]).exists()
+            assert new File(process.out.binding_sites_csv[0][1]).exists()
+        }
+
+    }
+
+}

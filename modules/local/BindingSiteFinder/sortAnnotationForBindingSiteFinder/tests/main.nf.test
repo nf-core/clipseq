@@ -1,0 +1,59 @@
+nextflow_process {
+
+    name "Test Process CLIPSEQ_SORTANNOTATIONSFORBINDINGSITEFINDER"
+    script "../main.nf"
+    process "sortAnnotationForBindingSiteFinder"
+
+    tag "clipseq"
+    tag "clipseq_sortannotationsforbindingsitefinder"
+    tag "sortannotationsforbindingsitefinder"
+
+    test("sortAnnotationsForBindingSiteFinder - gtf") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ], // meta map
+                    file('https://raw.githubusercontent.com/nf-core/test-datasets/clipseq/v_2_0/genome/yeast_MitoV_filtered_seg.gtf'),
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out.versions).match("versions") }
+            )
+
+            // These statements fail inside assertAll (not sure why)
+            assert new File(process.out.gns_rds[0][1]).exists()
+            assert new File(process.out.regions_rds[0][1]).exists()
+        }
+
+    }
+
+    test("sortAnnotationsForBindingSiteFinder - gtf - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ], // meta map
+                    file('https://raw.githubusercontent.com/nf-core/test-datasets/clipseq/v_2_0/genome/yeast_MitoV_filtered_seg.gtf'),
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert new File(process.out.gns_rds[0][1]).exists()
+            assert new File(process.out.regions_rds[0][1]).exists()
+        }
+
+    }
+
+}
