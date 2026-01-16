@@ -12,6 +12,10 @@ process CLIPQC {
     path("icount/*")
     path("paraclu/*")
     path("clippy/*")
+    path("pureclip/*")
+    path("summary_type/*")
+    path("summary_subtype/*")
+    path("summary_gene/*")
 
     output:
     path "*.tsv"         , emit: tsv

@@ -1,6 +1,6 @@
 process GET_CONSENSUS_COUNTS {
     tag "${meta.id}"
-    label "process_single"
+    label "process_high"
 
     conda "bioconda::bioconductor-rtracklayer=1.62.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -13,7 +13,7 @@ process GET_CONSENSUS_COUNTS {
     val(output_name)
 
     output:
-    path "*.tsv"         , emit: tsv
+    tuple val(meta), path ("*.tsv")         , emit: tsv
     path  "versions.yml" , emit: versions
 
     when:

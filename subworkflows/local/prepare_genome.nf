@@ -117,7 +117,7 @@ workflow PREPARE_GENOME {
         }
     }
     else {
-        ch_bt_index = BOWTIE_BUILD ( ch_ncrna_fasta ).index
+        ch_bt_index = BOWTIE_BUILD ( ch_ncrna_fasta).index
         ch_versions = ch_versions.mix(BOWTIE_BUILD.out.versions)
     }
 
