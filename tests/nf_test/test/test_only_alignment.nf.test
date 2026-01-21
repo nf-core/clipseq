@@ -54,4 +54,34 @@ nextflow_pipeline {
             assert !(file("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam.bai").exists())
         }
     }
+
+    test("skip_bowtie_alignment") {
+        tag "skip_bowtie_alignment"
+        tag "test"
+        when {
+            params {
+                outdir = "$outputDir"
+                skip_bowtie = true
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            // NCRNA ALIGNMENT
+            assert !(file("$outputDir/02_alignment/ncrna").exists())
+            assert !(file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam.bai").exists())
+            assert !(file("$outputDir/02_alignment/ncrna/unmapped/PHO92_A_ncrna.unmapped.fastq.gz").exists())
+
+            // icountmini summaries
+            assert file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_gene.tsv").exists()
+            assert file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_subtype.tsv").exists()
+            assert file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_type.tsv").exists()
+
+            assert !file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_gene_premapadjusted.tsv").exists()
+            assert !file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_subtype_premapadjusted.tsv").exists()
+            assert !file("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_type_premapadjusted.tsv").exists()
+            
+        }
+    }
 }

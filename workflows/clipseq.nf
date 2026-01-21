@@ -228,6 +228,8 @@ workflow CLIPSEQ {
             ch_regions_gtf,
             ch_regions_filt_gtf,
             ch_regions_resolved_gtf,
+            ch_regions_resolved_gtf_genic,
+            params.skip_bowtie,
             params.skip_filter_gtf,
             params.skip_transcriptome
         )
@@ -295,7 +297,8 @@ workflow CLIPSEQ {
             ch_genome_index,
             ch_gtf,
             ch_fasta,
-            params.skip_transcriptome
+            params.skip_transcriptome,
+            params.skip_bowtie
         )
         ch_versions                = ch_versions.mix(RNA_ALIGN.out.versions)
         ch_ncrna_bam               = RNA_ALIGN.out.ncrna_bam
