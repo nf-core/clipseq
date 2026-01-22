@@ -25,7 +25,7 @@ for (param in check_param_list) {
     }
 }
 
-// Check non-mandatory input parameters to see if the files exist if they have been specified
+// Check non-manditory input parameters to see if the files exist if they have been specified
 def checkPathParamList = [
     params.multiqc_config,
     params.fasta_fai,
@@ -249,6 +249,8 @@ workflow CLIPSEQ {
         ch_regions_resolved_gtf              = PREPARE_GENOME.out.regions_resolved_gtf.collect()
         ch_genome_index                      = PREPARE_GENOME.out.genome_index.collect()
         ch_ncrna_genome_index                = PREPARE_GENOME.out.ncrna_index.collect()
+        ch_gns_rds                    = PREPARE_GENOME.out.gns_rds
+        ch_regions_rds                = PREPARE_GENOME.out.regions_rds
     }
 
     //

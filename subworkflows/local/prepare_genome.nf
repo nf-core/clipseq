@@ -21,6 +21,7 @@ include { FILTER_GTF_BY_TRANSCRIPT                                              
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
 include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS             } from '../../modules/local/resolve_unannotated/main'
+include { SORT_ANNOTATION_FOR_BINDING_SITE_FINDER                                            } from '../../modules/local/BindingSiteFinder/sortAnnotationForBindingSiteFinder/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -294,6 +295,73 @@ workflow PREPARE_GENOME {
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
     //RESOLVE_UNANNOTATED_REGIONS.out.gtf | view
 
+<<<<<<< HEAD
+    //
+    // MODULE: Resolve the GTF regions that iCount did not annotate with genic_other flag
+    //
+    ch_seg_resolved_gtf_genic = Channel.of( [ [id:seg_resolved_gtf_genic.baseName], seg_resolved_gtf_genic ] )
+    if (!params.seg_resolved_gtf_genic) {
+        RESOLVE_UNANNOTATED_GENIC_OTHER (
+            ch_seg_gtf.map{ it[1] },
+            ch_seg_filt_gtf.map{ it[1] },
+            ch_gtf.map{ it[1] },
+            ch_fasta_fai.map{ it[1] },
+            true
+        )
+        ch_seg_resolved_gtf_genic = RESOLVE_UNANNOTATED_GENIC_OTHER.out.gtf
+    }
+    // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
+    //RESOLVE_UNANNOTATED_GENIC_OTHER.out.gtf | view
+
+    //
+    // MODULE: Resolve the GTF regions that iCount did not annotate with genic_other flag REGIONS FILE
+    //
+    ch_regions_resolved_gtf_genic = Channel.of( [ [id:regions_resolved_gtf_genic.baseName], regions_resolved_gtf_genic ] )
+    if (!params.regions_resolved_gtf_genic) {
+        RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS (
+            ch_regions_gtf.map{ it[1] },
+            ch_regions_filt_gtf.map{ it[1] },
+            ch_gtf.map{ it[1] },
+            ch_fasta_fai.map{ it[1] },
+            true
+        )
+        ch_regions_resolved_gtf_genic = RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS.out.gtf
+    }
+    // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
+    //RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS.out.gtf | view
+    SORT_ANNOTATION_FOR_BINDING_SITE_FINDER (
+        ch_filt_gtf
+    )
+    ch_versions = ch_versions.mix(SORT_ANNOTATION_FOR_BINDING_SITE_FINDER.out.versions)
+    ch_gns_rds = SORT_ANNOTATION_FOR_BINDING_SITE_FINDER.out.gns_rds
+    ch_regions_rds = SORT_ANNOTATION_FOR_BINDING_SITE_FINDER.out.regions_rds
+
+    emit:
+    fasta                      = ch_fasta                      // channel: [ val(meta), [ fasta ] ]
+    fasta_fai                  = ch_fasta_fai                  // channel: [ val(meta), [ fai ] ]
+    ncrna_fasta                = ch_ncrna_fasta                // channel: [ val(meta), [ fasta ] ]
+    ncrna_fasta_fai            = ch_ncrna_fasta_fai            // channel: [ val(meta), [ fai ] ]
+    genome_index               = ch_star_index                 // channel: [ val(meta), [ star_index ] ]
+    ncrna_index                = ch_bt_index                   // channel: [ val(meta), [ bt2_index ] ]
+    chrom_sizes                = ch_genome_chrom_sizes         // channel: [ val(meta), [ txt ] ]
+    ncrna_chrom_sizes          = ch_ncrna_chrom_sizes          // channel: [ val(meta), [ txt ] ]
+    gtf                        = ch_gtf                        // channel: [ val(meta), [ gtf ] ]
+    longest_transcript         = ch_longest_transcript         // channel: [ val(meta), [ txt ] ]
+    longest_transcript_fai     = ch_longest_transcript_fai     // channel: [ val(meta), [ fai ] ]
+    longest_transcript_gtf     = ch_longest_transcript_gtf     // channel: [ val(meta), [ fai ] ]
+    filtered_gtf               = ch_filt_gtf                   // channel: [ val(meta), [ gtf ] ]
+    seg_gtf                    = ch_seg_gtf                    // channel: [ val(meta), [ gtf ] ]
+    seg_filt_gtf               = ch_seg_filt_gtf               // channel: [ val(meta), [ gtf ] ]
+    seg_resolved_gtf           = ch_seg_resolved_gtf           // channel: [ val(meta), [ gtf ] ]
+    seg_resolved_gtf_genic     = ch_seg_resolved_gtf_genic     // channel: [ val(meta), [ gtf ] ]
+    regions_gtf                = ch_regions_gtf                // channel: [ val(meta), [ gtf ] ]
+    regions_filt_gtf           = ch_regions_filt_gtf           // channel: [ val(meta), [ gtf ] ]
+    regions_resolved_gtf       = ch_regions_resolved_gtf       // channel: [ val(meta), [ gtf ] ]
+    regions_resolved_gtf_genic = ch_regions_resolved_gtf_genic // channel: [ val(meta), [ gtf ] ]
+    gns_rds                    = ch_gns_rds                    // channel: [ val(meta), [ rds ] ]
+    regions_rds                = ch_regions_rds                // channel: [ val(meta), [ rds ] ]
+    versions                   = ch_versions                   // channel: [ versions.yml ]
+=======
 
 
     emit:
@@ -315,4 +383,5 @@ workflow PREPARE_GENOME {
     regions_filt_gtf                  = ch_regions_filt_gtf                  // channel: [ val(meta), [ gtf ] ] or Channel.empty()
     regions_resolved_gtf              = ch_regions_resolved_gtf              // channel: [ val(meta), [ gtf ] ] or Channel.empty()
     versions                          = ch_versions                          // channel: [ versions.yml ]
+>>>>>>> feat-2-0
 }
