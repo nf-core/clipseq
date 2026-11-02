@@ -14,6 +14,9 @@ export_plots: true
 
 disable_version_detection: true
 
+section_comments:
+  general_stats: "Key CLIPseq QC metrics<br><ul><li>Median len - Median read length (after trimming)</li><li>Seqs - Total number of reads which were trimmed</li><li>% Aligned - Percentage of reads which aligned to rRNA</li><li>M Aligned - Number of reads which aligned to rRNA</li><li>Aligned - Percentage of reads which lined to the reference genome</li><li>Uniq aligned - Percentage of these reads which aligned uniquely</li><li>PCR dedup ratio - Ratio of reads in vs cDNA out after PCR deduplication</li><li>Ratio of cDNA:XL - Ratio of total cDNAs to number of crosslink positions</li><li>XL events - Percentage of crosslinks within peaks</li></ul>"
+
 # Run only these modules
 run_modules:
   - custom_content
@@ -23,22 +26,15 @@ run_modules:
   - star
 
 module_order:
-  - fastqc:
-      name: "FastQC (raw)"
-      anchor: "fastqc_raw"
-      info: "This section of the report shows FastQC results before adapter trimming."
-      path_filters:
-        - "*_fastqc.zip"
   - cutadapt
   - fastqc:
       name: "FastQC (trimmed)"
       anchor: "fastqc_trimmed"
-      info: "This section of the report shows FastQC results after adapter trimming."
-      genome: ""
+      info: "FastQC results after adapter trimming."
       path_filters:
         - "*_trimmed_fastqc.zip"
   - bowtie1:
-      name: "BOWTIE ncRNA Alignment"
+      name: "BOWTIE rRNA Alignment (pre-mapping)"
       path_filters:
         - "*.out"
   - star:
@@ -47,16 +43,256 @@ module_order:
         - "*.final.out"
   - custom_content
 
+# Other MultiQC config stuff here
+custom_data:
+  mapping:
+    parent_id: mapping
+    parent_name: "Mapping"
+    file_format: "tsv"
+    section_name: "Mapping"
+    description: "The mapping metrics for each experiment"
+    plot_type: "bargraph"
+  dedup_reads:
+    parent_id: dedup
+    parent_name: "Deduplication"
+    file_format: "tsv"
+    section_name: "Reads"
+    description: "The number of reads before PCR deduplication, and number of cDNAs after, for each experiment. NB for this metric, multi-mapped reads are counted in multiplicate, as de-duplication is done by UMI and alignment location."
+    plot_type: "bargraph"
+    cats:
+      - input_reads
+      - output_reads
+    pconfig:
+      ylab: "Count"
+      stacking: "group"
+      cpswitch: False
+      tt_percentages: False
+  crosslinks_counts:
+    parent_id: crosslinks
+    parent_name: "Crosslinks"
+    file_format: "tsv"
+    section_name: "Counts"
+    description: "The number of crosslinks or crosslink sites for each experiments."
+    plot_type: "bargraph"
+    cats:
+      - number_of_cDNAss
+      - total_positions_of_crosslinks
+    pconfig:
+      ylab: "Count"
+      stacking: "group"
+      cpswitch: False
+      tt_percentages: False
+  dedup_ratio:
+    file_format: "tsv"
+    plot_type: "generalstats"
+    pconfig:
+      dedup_ratio:
+        title: 'PCR dedup ratio'
+        min: 0
+  crosslinks_ratio:
+    parent_id: crosslinks
+    parent_name: "Crosslinks"
+    file_format: "tsv"
+    section_name: "Ratios"
+    description: "The ratio of number of cDNAs to location of crosslinks"
+    plot_type: "generalstats"
+    pconfig:
+      ratio:
+        title: 'Ratio of cDNAs:XL'
+        min: 0
+        scale: 'RdYlGn'
+  xlinks_in_peaks:
+    parent_id: peaks
+    parent_name: "Peaks"
+    file_format: "tsv"
+    section_name: "Crosslinks positions in peaks - clippy"
+    description: "The percentage of crosslink sites which are called within peaks"
+    plot_type: 'generalstats'
+    pconfig:
+      clippy:
+        title: 'XL events (Clippy)'
+        min: 0
+        max: 100
+        suffix: '%'
+        scale: 'RdYlGn'
+      icount:
+        title: "XL events (Clippy)"
+        min: 0
+        max: 100
+        suffix: "%"
+        scale: 'RdYlGn'
+      paraclu:
+        title: 'Xl events (paraclu)'
+        min: 0
+        max: 100
+        suffix: '%'
+        scale: 'RdYlGn'
+      pureclip:
+        title: "XL events (pureclip)"
+        min: 0
+        max: 100
+        suffix: "%"
+        scale: 'RdYlGn'
+  peaks_counts:
+    parent_id: peaks
+    parent_name: "Peaks"
+    file_format: "tsv"
+    section_name: "Counts"
+    description: "The total number of peaks called by each peak caller"
+    plot_type: "bargraph"
+    cats:
+      - clippy
+      - icount
+      - paraclu
+      - pureclip
+    pconfig:
+      ylab: "Number of peaks"
+      stacking: "group"
+      cpswitch: False
+      tt_percentages: False
+  xlinksites_in_peaks:
+    parent_id: peaks
+    parent_name: "Peaks"
+    file_format: "tsv"
+    section_name: "Crosslinks positions in peaks"
+    description: "The total percentage of crosslink sites within peaks for each peak caller"
+    plot_type: 'bargraph'
+    cats:
+      - clippy
+      - icount
+      - paraclu
+      - pureclip
+    pconfig:
+      ylab: "Percentage of crosslink sites"
+      stacking: null
+      cpswitch: False
+      tt_percentages: False
+      tt_decimals: 2
+      tt_suffix: "%"
+  peaks_xlinksite_coverage:
+    parent_id: peaks
+    parent_name: "Peaks"
+    file_format: "tsv"
+    section_name: "Peak-crosslink coverage"
+    description: "The total percentage of nucleotides within peaks covered by a crosslink site"
+    plot_type: "bargraph"
+    cats:
+      - clippy
+      - icount
+      - paraclu
+      - pureclip
+    pconfig:
+      ylab: "Percentage of nucleotides within peaks"
+      stacking: null
+      cpswitch: False
+      tt_percentages: False
+      tt_decimals: 2
+      tt_suffix: "%"
+  deseq2_qc_plot_1:
+      parent_id: deseq2_qc
+      parent_name: "Consensus peaks"
+      section_name: "PCA analysis of top 500 consensus peaks"
+  deseq2_qc_plot_2:
+      parent_id: deseq2_qc
+      parent_name: "Consensus peaks"
+      section_name: "PCA analysis of all consensus peaks"
+  deseq2_qc_heatmap:
+      parent_id: deseq2_qc
+      parent_name: "Consensus peaks"
+      section_name: "Heatmap of consensus peaks"
+  peka_mqc_plots_clustermap:
+      parent_id: peka_mqc
+      parent_name: "Motif analysis (PEKA)"
+      section_name: "PEKA clustermap"
+      description: "Motif similarity (cosine distances) clustermap between samples"
+  peka_mqc_plots_heatmap:
+      parent_id: peka_mqc
+      parent_name: "Motif analysis (PEKA)"
+      section_name: "PEKA heatmap"
+      description: "Motif enrichment heatmap for the top n k-mers per sample"
+  mm_binning:
+      parent_id: overall_binning
+      parent_name: "Summary"
+      file_format: "csv"
+      section_name: "Number of cDNAs by category"
+      description: "Overall binding to different regions and types of RNA, categories determined by binning (please see the documentation for more details)."
+      plot_type: "bargraph"
+      pconfig:
+        stacking: "normal"
+        id: "binning_bargraph"
+
+sp:
+  mapping:
+    fn: "mapping.tsv"
+  dedup_reads:
+    fn: "dedup_reads.tsv"
+  dedup_ratio:
+    fn: "dedup_ratio.tsv"
+  telescope_genome_qc:
+    fn: "ref_genome_telescope_qc.tsv"
+  telescope_annotation_qc:
+    fn: "te_ann_telescope_qc.tsv"
+  tetranscripts_qc:
+    fn: "tetranscripts_qc.tsv"
+  crosslinks_counts:
+    fn: "xlinks_counts.tsv"
+  crosslinks_ratio:
+    fn: "xlinks_ratio.tsv"
+  peaks:
+    fn: "total_peaks.tsv"
+  xlinks_in_peaks:
+    fn: "xlinks_in_peaks.tsv"
+  xlinksites_in_peaks:
+    fn: "xlinksites_in_peaks.tsv"
+  peaks_xlinksite_coverage:
+    fn: "peaks_xlinksite_coverage.tsv"
+  deseq2_qc_plot_1:
+    fn: "*1.png"
+  deseq2_qc_plot_2:
+    fn: "*2.png"
+  deseq2_qc_heatmap:
+    fn: "*correlation_heatmap.png"
+  peka_mqc_plots_clustermap:
+    fn: "*clustermap.png"
+  peka_mqc_plots_heatmap:
+    fn: "*kmer_heatmap.png"
+  icountmini_summary_mqc_subtype:
+    fn: "summary_subtype_qc.tsv"
+  icountmini_summary_mqc_type:
+    fn: "summary_type_qc.tsv"
+  mm_binning:
+    fn: "multimap_binning.csv"
+
+table_columns_visible:
+  "FASTQC (trimmed)":
+    median_sequence_length: True
+    total_sequences: True
+    percent_duplicates: False
+    percent_gc: False
+  bowtie_ncrna_alignment:
+    reads_aligned_percentage: True
+    reads_aligned: False
+  star_genome_alignment:
+    uniquely_mapped_percent: True
+    uniquely_mapped: False
+    mapped_percent: True
+
+table_columns_name:
+  "FASTQC (trimmed)":
+    median_sequence_length: "Median read length"
+    total_sequences: "No. trimmed reads"
+  bowtie_ncrna_alignment:
+    reads_aligned_percentage: "rRNA reads"
+  star_genome_alignment:
+    uniquely_mapped_percent: "Uniquely mapped genomic reads"
+    mapped_percent: "Genomic reads"
+
+ignore_images: false
+
 custom_content:
   order:
+    - clipqc
+    - te_mm_binning
     - software-versions-by-process
     - software-versions-unique
 
-# Customise the module search patterns to speed up execution time
-sp:
-  samtools/stats:
-    fn: "*.stats"
-  samtools/flagstat:
-    fn: "*.flagstat"
-  samtools/idxstats:
-    fn: "*.idxstats*"

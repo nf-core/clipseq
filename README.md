@@ -60,7 +60,8 @@ By default, the pipeline currently performs the following:
 
 First, prepare a samplesheet with your input data that looks as follows:
 
-`samplesheet.csv`:
+`
+.csv`:
 
 ```csv
 sample_name,group_name,input_name,fastq

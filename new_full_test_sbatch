@@ -1,0 +1,14 @@
+#!/bin/bash 
+#SBATCH --job-name=clipseq_fulltest 
+#SBATCH --output=clipseq_fulltest_%j.out 
+#SBATCH --ntasks=1 
+#SBATCH --cpus-per-task=16 
+#SBATCH --mem=600G 
+#SBATCH --mail-user=hannah.18.jones@kcl.ac.uk
+#SBATCH --time=24:00:00
+
+ml purge ml Nextflow/23.10.0 ml Singularity/3.6.4 
+export NXF_SINGULARITY_LIBRARYDIR=/flask/apps/containers/all-singularity-images/ 
+export NXF_HOME=/nemo/lab/ulej/home/users/jonesh1/nextflow/
+
+nextflow run main.nf -profile test_full,crick

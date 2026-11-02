@@ -12,8 +12,8 @@ process GET_CROSSLINKS {
     tuple val(meta2), path(fai)
 
     output:
-    tuple val(meta), path("*.xl.bed")               , emit: bed 
-    tuple val(meta), path("*.xl.bedgraph")          , emit: bedgraph 
+    tuple val(meta), path("*.xl.bed")               , emit: bed
+    tuple val(meta), path("*.xl.bedgraph")          , emit: bedgraph
     tuple val(meta), path("*.xl.CPMnorm.bedgraph")  , emit: norm_bedgraph
     path  "versions.yml"                            ,emit: versions
 
@@ -21,10 +21,9 @@ process GET_CROSSLINKS {
     script:
     def prefix = task.ext.suffix ? "${meta.id}${task.ext.suffix}" : "${meta.id}"
     """
-    bedtools bamtobed -i $bam > dedup.bed
-    bedtools shift -m 1 -p -1 -i dedup.bed -g $fai > shifted.bed
-    bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "+"}' > pos.bed
-    bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "-"}' > neg.bed
+    bedtools bamtobed -i $bam >  shifted.bed
+    bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{printf "%s\\t%d\\t%d\\t.\\t%.0f\\t+\\n", \$1, \$2, \$2+1, \$3}' > pos.bed
+    bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{printf "%s\\t%d\\t%d\\t.\\t%.0f\\t-\\n", \$1, \$2, \$2+1, \$3}' > neg.bed
     cat pos.bed neg.bed | sort -k1,1 -k2,2n -k3,3 -k6,6 > ${prefix}.xl.bed
     cat ${prefix}.xl.bed | awk '{OFS = "\t"}{if (\$6 == "+") {print \$1, \$2, \$3, \$5} else {print \$1, \$2, \$3, -\$5}}' > ${prefix}.xl.bedgraph
     TOTAL_VARIABLE=`cat ${prefix}.xl.bed | awk \'BEGIN {total=0} {total=total+\$5} END {print total}\'`

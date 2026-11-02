@@ -49,6 +49,7 @@ def main(process_name):
             ncrna["ncrna_reads"].append(input_reads - output_reads)
 
     ncrna_df = pd.DataFrame(ncrna)
+    print(ncrna_df)
 
     # Next get STAR logs
     star_logs = sorted(["mapped/" + f for f in os.listdir("mapped") if f.endswith(".Log.final.out")])
@@ -91,12 +92,16 @@ def main(process_name):
     # Deduplication
     # ==========
 
-    dedup_logs = sorted(["collapse/" + f for f in os.listdir("collapse") if f.endswith(".log")])
-    dedup = dict((key, []) for key in ["exp", "input_reads", "output_reads", "mean_umis", "ratio"])
+    if os.path.isdir("collapse") :
+        dedup_logs = sorted(["collapse/" + f for f in os.listdir("collapse") if f.endswith(".log")])
+    else:
+        dedup_logs = []
+
+    dedup = dict((key, []) for key in ["exp", "input_reads", "output_reads", "dedup_ratio"])
 
     for dedup_log in dedup_logs:
         with open(dedup_log, "r") as logfile:
-            exp = re.sub(".log", "", os.path.basename(dedup_log))
+            exp = re.sub(".genomeUnique.dedup_UMICollapse.log", "", os.path.basename(dedup_log))
 
             lines = logfile.readlines()
 
@@ -106,25 +111,22 @@ def main(process_name):
             output_reads = [i for i in lines if "Number of reads after deduplicating" in i]
             output_reads = int(re.findall(r"\d+", output_reads[0])[-1])
 
-            mean_umis = [i for i in lines if "Average number of UMIs per alignment position" in i]
-            mean_umis = float(re.findall(r"\d+", mean_umis[0])[-1])
 
             dedup["exp"].append(exp)
             dedup["input_reads"].append(input_reads)
             dedup["output_reads"].append(output_reads)
-            dedup["mean_umis"].append(mean_umis)
-            dedup["ratio"].append(round(input_reads / output_reads, 2))
+            dedup["dedup_ratio"].append(round(input_reads / output_reads, 2))
 
-    dedup_df = pd.DataFrame(dedup)
-    dedup_df.to_csv("dedup_metrics.tsv", sep="\t", index=False)
+    if dedup_logs:
+        dedup_df = pd.DataFrame(dedup)
+        dedup_df.to_csv("dedup_metrics.tsv", sep="\t", index=False)
 
-    # Subset for MultiQC plots
-    dedup_df.loc[:, ["exp", "input_reads", "output_reads"]].to_csv("dedup_reads.tsv", sep="\t", index=False)
-    dedup_df.loc[:, ["exp", "mean_umis"]].to_csv("dedup_mean_umis.tsv", sep="\t", index=False)
-    dedup_df.loc[:, ["exp", "ratio"]].to_csv("dedup_ratio.tsv", sep="\t", index=False)
+        # Subset for MultiQC plots
+        dedup_df.loc[:, ["exp", "input_reads", "output_reads"]].to_csv("dedup_reads.tsv", sep="\t", index=False)
+        dedup_df.loc[:, ["exp", "dedup_ratio"]].to_csv("dedup_ratio.tsv", sep="\t", index=False)
 
-    print(dedup_df)
-    print("\n\n")
+        print(dedup_df)
+        print("\n\n")
 
     # ==========
     # Crosslinks
@@ -149,26 +151,26 @@ def main(process_name):
     # First get xlink bed files
     xlinks_files = sorted(["xlinks/" + f for f in os.listdir("xlinks") if f.endswith(".bed")])
 
-    xlinks = dict((key, []) for key in ["exp", "total_xlinks", "total_xlinksites", "ratio"])
+    xlinks = dict((key, []) for key in ["exp", "number_of_cDNAs", "total_positions_of_crosslinks", "ratio"])
 
     for xlinks_file in xlinks_files:
         xlinks_df = read_bed(xlinks_file)
 
-        exp = re.sub(".bed", "", os.path.basename(xlinks_file))
-        total_xlinks = xlinks_df["score"].sum()
-        total_xlinksites = xlinks_df.shape[0]
-        ratio = total_xlinks / total_xlinksites
+        exp = re.sub(".genome.xl.bed", "", os.path.basename(xlinks_file))
+        number_of_cDNAs = xlinks_df["score"].sum()
+        total_positions_of_crosslinks = xlinks_df.shape[0]
+        ratio = number_of_cDNAs / total_positions_of_crosslinks
 
         xlinks["exp"].append(exp)
-        xlinks["total_xlinks"].append(total_xlinks)
-        xlinks["total_xlinksites"].append(total_xlinksites)
-        xlinks["ratio"].append(round(total_xlinks / total_xlinksites, 2))
+        xlinks["number_of_cDNAs"].append(number_of_cDNAs)
+        xlinks["total_positions_of_crosslinks"].append(total_positions_of_crosslinks)
+        xlinks["ratio"].append(round(number_of_cDNAs / total_positions_of_crosslinks, 2))
 
     xlinks_metrics_df = pd.DataFrame(xlinks)
     xlinks_metrics_df.to_csv("xlinks_metrics.tsv", sep="\t", index=False)
 
     # Subset for MultiQC plots
-    xlinks_metrics_df.loc[:, ["exp", "total_xlinks", "total_xlinksites"]].to_csv(
+    xlinks_metrics_df.loc[:, ["exp", "number_of_cDNAs", "total_positions_of_crosslinks"]].to_csv(
         "xlinks_counts.tsv", sep="\t", index=False
     )
     xlinks_metrics_df.loc[:, ["exp", "ratio"]].to_csv("xlinks_ratio.tsv", sep="\t", index=False)
@@ -177,10 +179,79 @@ def main(process_name):
     print("\n\n")
 
     # ==========
+    # Summary cDNA
+    # ==========
+    summary_type_files = sorted(["summary_type/" + f for f in os.listdir("summary_type") if f.endswith(".tsv")])
+    # summary_data = dict((key, []) for key in ["exp", "Type", "Length", "Total_number_cDNA", "perc_number_cDNA"])
+    # summary_data = dict((key, []) for key in ["exp", "Type", "perc_number_cDNA"])
+    summary_data = []
+
+    for summary_type_file in summary_type_files:
+
+        exp = re.sub(".summary_type_premapadjusted.tsv", "", os.path.basename(summary_type_file))
+        df = pd.read_csv(summary_type_file, sep="\t")
+
+        exp_data = {"exp": exp}
+
+        # Add percentage for each RNA type
+        for _, row in df.iterrows():
+            rna_type = row["Type"]
+            exp_data[rna_type] = row["cDNA %"]
+
+        summary_data.append(exp_data)
+
+    summary_df = pd.DataFrame(summary_data)
+    desired_columns = ["exp", "CDS", "ncRNA", "intergenic", "premapped RNA"]
+    existing_cols = [col for col in desired_columns if col in summary_df.columns]
+    summary_df = summary_df[existing_cols]
+    summary_df.to_csv("summary_type_metrics.tsv", sep="\t", index=False)
+
+    # ==========
+    # Summary subtype cDNA
+    # ==========
+
+    summary_subtype_files = sorted(
+        ["summary_subtype/" + f for f in os.listdir("summary_subtype") if f.endswith(".tsv")]
+    )
+    summary_subtypedata = []
+
+    for summary_subtype_file in summary_subtype_files:
+
+        exp = re.sub(".summary_subtype_premapadjusted.tsv", "", os.path.basename(summary_subtype_file))
+        df = pd.read_csv(summary_subtype_file, sep="\t")
+
+        exp_data = {"exp": exp}
+
+        # Add percentage for each RNA type
+        for _, row in df.iterrows():
+            rna_type = row["Subtype"]
+            exp_data[rna_type] = row["cDNA %"]
+
+        summary_subtypedata.append(exp_data)
+
+    summary_subtype_df = pd.DataFrame(summary_subtypedata)
+    desired_columns = [
+        "exp",
+        "CDS mRNA",
+        "ncRNA rRNA",
+        "ncRNA snRNA",
+        "ncRNA snoRNA",
+        "ncRNA tRNA",
+        "ncRNA ncRNA",
+        "intergenic",
+        "premapped RNA",
+    ]
+    existing_cols = [col for col in desired_columns if col in summary_subtype_df.columns]
+    summary_subtype_df = summary_subtype_df[existing_cols]
+    summary_subtype_df.to_csv("summary_subtype_metrics.tsv", sep="\t", index=False)
+
+    # ==========
     # Peaks
     # ==========
 
-    peakcallers = ["icount", "paraclu", "clippy"]
+  #  peakcallers = ["icount", "paraclu", "clippy", "pureclip"]
+  # Only referring to peak callers which were actually used
+    peakcallers = [c.strip().strip("[]") for c in "!{callers}".split(",")]
 
     def get_peaks_metrics(peakcaller):
         peak_files = sorted([peakcaller + "/" + f for f in os.listdir(peakcaller) if f.endswith(".bed")])
@@ -209,13 +280,15 @@ def main(process_name):
             if peakcaller == "icount":
                 exp = re.sub(".peaks.bed", "", os.path.basename(peak_file))
             elif peakcaller == "paraclu":
-                exp = re.sub(".peaks.bed", "", os.path.basename(peak_file))
+                exp = re.sub(".genome.peaks.clustered.simplified.bed", "", os.path.basename(peak_file))
             elif peakcaller == "clippy":
                 exp = re.sub(
-                    "_rollmean.+_stdev.+_minGeneCount.+.bed",
+                    ".genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed",
                     "",
                     os.path.basename(peak_file),
                 )
+            elif peakcaller == "pureclip":
+                exp = re.sub("_pureclip.peaks.bed", "", os.path.basename(peak_file))
 
             xlinks_df = read_bed(xlinks_files[0])
             expanded_xlinks_df = xlinks_df.loc[xlinks_df.index.repeat(xlinks_df.score)].reset_index(drop=True)

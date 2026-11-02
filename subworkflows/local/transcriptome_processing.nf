@@ -47,7 +47,7 @@ workflow TRANSCRIPTOME_PROCESSING {
         //
         // Sort, index filtered bam
         //
-        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam )
+        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam , [[],[]] )
         ch_versions       = ch_versions.mix(SAMTOOLS_SORT_FILT_TRANSCRIPT.out.versions)
         ch_transcript_bam = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
 
@@ -204,10 +204,10 @@ workflow TRANSCRIPTOME_PROCESSING {
     transcript_dedupe_bam   = ch_transcript_peakcalling_bam      // channel: [ val(meta), [ bam ] ]
     transcript_dedupe_bai   = ch_transcript_peakcalling_bai      // channel: [ val(meta), [ bai ] ]
 
-    crosslink_bed           = ch_trans_crosslink_bed             // channel: [ val(meta), [ bed ] ] 
+    crosslink_bed           = ch_trans_crosslink_bed             // channel: [ val(meta), [ bed ] ]
 
     clippy_peaks            = ch_clippy_transcriptome_peaks      // channel: [ val(meta), [ bed ] ]
     paraclu_peaks           = ch_paraclu_transcriptome_peaks     // channel: [ val(meta), [ bed ] ]
- 
+
     versions                = ch_versions                        // channel: [ versions.yml ]
 }

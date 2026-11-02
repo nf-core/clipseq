@@ -1,0 +1,40 @@
+name: clipseq_clipqc
+description: Runs python-based clip quality control and outputs to a set of tsv files
+keywords:
+  - iCLIP
+  - eCLIP
+  - CLIP
+  - qc
+input:
+  - premap:
+      type: file
+      description: Premap metrics files
+  - mapped:
+      type: file
+      description: Alignment metrics files
+  - collapse:
+      type: file
+      description: UMI collapse metrics files
+  - xlinks:
+      type: file
+      description: xlinks metric files
+  - icount:
+      type: file
+      description: iCount metrics files
+  - paraclu:
+      type: file
+      description: paraclu metrics files
+  - clippy:
+      type: file
+      description: Clippy metrics files
+output:
+  - tsv:
+      type: file
+      description: All tsv file outputs
+      pattern: "*.tsv"
+  - version:
+      type: file
+      description: File containing software version
+      pattern: "*.{version.txt}"
+authors:
+  - "@chris-cheshire"

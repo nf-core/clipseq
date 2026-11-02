@@ -1,7 +1,7 @@
 // modules/local/bedgraph_strand_split/main.nf
 process BEDGRAPH_STRAND_SPLIT {
     tag "$meta.id"
-    label 'process_low'
+    label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

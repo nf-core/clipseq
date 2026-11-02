@@ -20,6 +20,11 @@
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
+                    "bedtools/intersect": {
+                        "branch": "master",
+                        "git_sha": "06054b469d0997aa3442ba1373e17a641260f451",
+                        "installed_by": ["modules"]
+                    },
                     "bedtools/map": {
                         "branch": "master",
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
@@ -127,7 +132,7 @@
                     },
                     "samtools/faidx": {
                         "branch": "master",
-                        "git_sha": "b75d04926473d07bb85c08df19531f37bcf5fd4a",
+                        "git_sha": "b2e78932ef01165fd85829513eaca29eff8e640a",
                         "installed_by": ["modules"]
                     },
                     "samtools/flagstat": {
@@ -173,6 +178,16 @@
                     "star/genomegenerate": {
                         "branch": "master",
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["modules"]
+                    },
+                    "telescope/assign": {
+                        "branch": "master",
+                        "git_sha": "8619727fd0c3c5216b3df6a078459463b448e6b9",
+                        "installed_by": ["modules"]
+                    },
+                    "tetranscripts": {
+                        "branch": "master",
+                        "git_sha": "debd168650ce6692d489c02e9db709eaebc9a1e5",
                         "installed_by": ["modules"]
                     },
                     "trimgalore": {
