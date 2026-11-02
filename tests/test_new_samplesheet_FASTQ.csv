@@ -1,5 +1,6 @@
 sample_name,group_name,input_name,fastq
-PHO92_A,PHO92,HNRNPC,/nemo/lab/ulej/home/users/jonesh1/CLIPseq_pipeline/ref_data/clipseq_test/PHO92_A.fq.gz
-PHO92_B,PHO92,HNRNPC,/nemo/lab/ulej/home/users/jonesh1/CLIPseq_pipeline/ref_data/clipseq_test/PHO92_B.fq.gz
-PHO92_C,PHO92,HNRNPC,/nemo/lab/ulej/home/users/jonesh1/CLIPseq_pipeline/ref_data/clipseq_test/PHO92_C.fq.gz
-HNRNPC,,,/nemo/lab/ulej/home/users/jonesh1/CLIPseq_pipeline/ref_data/clipseq_test/HNRNPC.fq.gz
+
+PHO92_A,PHO92,HNRNPC,https://raw.githubusercontent.com/ulelab/flowAPIscripts/refs/heads/main/test-datasets/PHO92_A.fastq.gz
+PHO92_B,PHO92,HNRNPC,https://raw.githubusercontent.com/ulelab/flowAPIscripts/refs/heads/main/test-datasets/clipseq/PHO92_B.fastq.gz
+PHO92_C,PHO92,HNRNPC,https://raw.githubusercontent.com/ulelab/flowAPIscripts/refs/heads/main/test-datasets/clipseq/PHO92_C.fastq.gz
+HNRNPC,,,https://raw.githubusercontent.com/ulelab/flowAPIscripts/refs/heads/main/test-datasets/clipseq/HNRNPC.fastq.gz
