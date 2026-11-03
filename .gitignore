@@ -13,3 +13,4 @@ conf/test_dedup_fastq.config
 Homo_sapiens.GRCh38.111.gtf/Homo_sapiens.GRCh38.111.gtf
 C1C_Samplesheet.csv
 ensembl_GRCh38_rmsk_ncRNA_tRNA_scaRNA.gtf
+.codex/*

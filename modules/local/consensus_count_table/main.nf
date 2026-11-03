@@ -3,9 +3,7 @@ process GET_CONSENSUS_COUNTS {
     label "process_high"
 
     conda "bioconda::bioconductor-rtracklayer=1.62.0"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bioconductor-rtracklayer:1.62.0--r43ha9d7317_0' :
-        'biocontainers/bioconductor-rtracklayer:1.62.0--r43ha9d7317_0' }"
+    container 'quay.io/biocontainers/bioconductor-rtracklayer:1.62.0--r43ha9d7317_0'
 
     input:
     tuple val(meta), path(bedtools_map_outputs)

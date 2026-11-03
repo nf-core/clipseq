@@ -3,9 +3,7 @@ process MERGE_SUMMARY {
     label "process_single"
 
     conda "conda-forge::pandas=1.4.3"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/pandas:1.4.3':
-        'biocontainers/pandas:1.4.3' }"
+    container 'quay.io/biocontainers/pandas:1.4.3'
 
     input:
     tuple val(meta), path(summaries)

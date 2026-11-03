@@ -35,7 +35,7 @@ workflow RNA_ALIGN {
     skip_transcriptome  // boolean
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // SAMTOOLS_SORT expects [ meta, fasta, fai ]
     ch_sort_fasta = fasta.map { meta, fa -> [ meta, fa, [] ] }
