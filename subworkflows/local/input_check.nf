@@ -1,4 +1,4 @@
-include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check'
+include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check.nf'
 include { CAT_FASTQ } from '../../modules/nf-core/cat/fastq'
 
 workflow INPUT_CHECK {
