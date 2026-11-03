@@ -47,7 +47,7 @@ workflow TRANSCRIPTOME_PROCESSING {
         //
         // Sort, index filtered bam
         //
-        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam , [[],[]] )
+        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam , [[],[],[]], '' )
         ch_transcript_bam = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
 
         SAMTOOLS_INDEX_FILT_TRANSCRIPT ( SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam )

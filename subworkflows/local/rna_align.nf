@@ -64,7 +64,7 @@ workflow RNA_ALIGN {
         true
     )
 
-    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta )
+    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta, '' )
 
     SAMTOOLS_INDEX_rDNA_K1 ( SAMTOOLS_SORT_rDNA_K1.out.bam )
 
@@ -149,7 +149,7 @@ workflow RNA_ALIGN {
         //
         // MODULE: Sort and index transcript BAM file
         //
-        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, fasta )
+        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, fasta, '' )
         SAMTOOLS_INDEX_TRANS( SAMTOOLS_SORT_TRANS.out.bam )
 
         /*
