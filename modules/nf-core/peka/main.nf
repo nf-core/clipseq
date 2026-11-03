@@ -8,7 +8,7 @@ process PEKA {
         'biocontainers/peka:1.0.0--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(peaks)
+    tuple val(meta_peaks), path(peaks)
     tuple val(meta), path(crosslinks)
     path fasta
     path fai

@@ -8,7 +8,7 @@ process PURECLIP {
         'biocontainers/pureclip:1.3.1--0' }"
 
     input:
-    tuple val(meta), path(ipbam), path(controlbam)
+    tuple val(meta_bam), path(ipbam), path(controlbam)
     tuple val(meta), path(ipbai), path(controlbai)
     tuple val(meta2), path(genome_fasta)
     val input_control

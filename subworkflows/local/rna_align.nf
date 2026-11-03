@@ -47,7 +47,7 @@ workflow RNA_ALIGN {
     ch_versions = ch_versions.mix(BOWTIE_ALIGN.out.versions)
 
     //
-    // SUBWORKFLOW: Sort, index BAM file 
+    // SUBWORKFLOW: Sort, index BAM file
     //
     SAMTOOLS_SORT_rDNA( BOWTIE_ALIGN.out.bam, fasta )
     SAMTOOLS_INDEX_rDNA( SAMTOOLS_SORT_rDNA.out.bam )
@@ -109,7 +109,7 @@ workflow RNA_ALIGN {
             }
         /*
         * CHANNEL: Filter for uniquely mapping reads for downstream analysis; samtools view -b -q 5 -o output.bam alignments.bam
-        */       
+        */
         GONLY_SAMTOOLS_VIEW_GENOME (
             ch_coord_bam_bai,
             [[],[]],
@@ -189,7 +189,7 @@ workflow RNA_ALIGN {
             []
         )
 
-        TONLYSAMTOOLS_VIEW_TRANSCRIPT (
+        TONLY_SAMTOOLS_VIEW_TRANSCRIPT (
             ch_transcript_bam_bai,
             [[],[]],
             []
@@ -202,8 +202,8 @@ workflow RNA_ALIGN {
         ch_genome_unique_bam      = TONLY_SAMTOOLS_VIEW_GENOME.out.bam
         ch_genome_unique_bai      = TONLY_SAMTOOLS_VIEW_GENOME.out.bai
 
-        ch_transcript_unique_bam  = TONLYSAMTOOLS_VIEW_TRANSCRIPT.out.bam
-        ch_transcript_unique_bai  = TONLYSAMTOOLS_VIEW_TRANSCRIPT.out.bai
+        ch_transcript_unique_bam  = TONLY_SAMTOOLS_VIEW_TRANSCRIPT.out.bam
+        ch_transcript_unique_bai  = TONLY_SAMTOOLS_VIEW_TRANSCRIPT.out.bai
         ch_transcript_multi_bam   = SAMTOOLS_SORT_TRANS.out.bam
         ch_transcript_multi_bai   = SAMTOOLS_INDEX_TRANS.out.bai
     }

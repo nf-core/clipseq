@@ -1,6 +1,3 @@
-// Import the log object
-import nextflow.util.LoggerHelper
-
 //
 // Uncompress and prepare reference genome files
 //
@@ -129,7 +126,7 @@ workflow PREPARE_GENOME {
         ch_fasta_fai = Channel.of([ [id:fasta_fai.baseName], fasta_fai ])
     } else {
         GENOME_INDEX (
-            ch_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            ch_fasta.map{ meta, fa -> [ meta, fa, [] ] },
             false
         )
         ch_fasta_fai = GENOME_INDEX.out.fai
@@ -145,7 +142,7 @@ workflow PREPARE_GENOME {
         ch_rDNA_fasta_fai = Channel.of([ [id:rDNA_fasta_fai.baseName], rDNA_fasta_fai ])
     } else {
         rDNA_INDEX (
-            ch_rDNA_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            ch_rDNA_fasta.map{ meta, fa -> [ meta, fa, [] ] },
             false
         )
         ch_rDNA_fasta_fai = rDNA_INDEX.out.fai
@@ -161,7 +158,7 @@ workflow PREPARE_GENOME {
         ch_genome_chrom_sizes = Channel.of([ [id:genome_chrom_sizes.baseName], genome_chrom_sizes ])
     } else {
         GENOME_CHROM_SIZE (
-            ch_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            ch_fasta.map{ meta, fa -> [ meta, fa, [] ] },
             true
         )
         ch_genome_chrom_sizes = GENOME_CHROM_SIZE.out.sizes
@@ -175,7 +172,7 @@ workflow PREPARE_GENOME {
         ch_rDNA_chrom_sizes = Channel.of([ [id:rDNA_chrom_sizes.baseName], rDNA_chrom_sizes ])
     } else {
         rDNA_CHROM_SIZE (
-            ch_rDNA_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            ch_rDNA_fasta.map{ meta, fa -> [ meta, fa, [] ] },
             true
         )
         ch_rDNA_chrom_sizes = rDNA_CHROM_SIZE.out.sizes

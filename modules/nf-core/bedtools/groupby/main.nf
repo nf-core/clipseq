@@ -21,13 +21,13 @@ process BEDTOOLS_GROUPBY {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}.grouped"
-    def summary_col = task.ext.summary_col ? "-c ${task.ext.summary_col}" : "-c 5"
+    def summary_col_arg = task.ext.summary_col ? "-c ${task.ext.summary_col}" : "-c ${summary_col}"
     if ("$bed" == "${prefix}.bed") error "Input and output names are the same, use \"task.ext.prefix\" to disambiguate!"
     """
     bedtools \\
         groupby \\
         -i $bed \\
-        ${summary_col} \\
+        ${summary_col_arg} \\
         $args \\
         > ${prefix}.bed
 

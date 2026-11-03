@@ -1,89 +1,5 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    VALIDATE INPUTS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
-
-// Validate input parameters
-WorkflowClipseq.initialise(params, log)
-
-// Check manditory input parameters to see if the files exist if they have been specified
-check_param_list = [
-    input: params.input,
-    fasta: params.fasta,
-    rDNA_fasta: params.rDNA_fasta,
-    gtf: params.gtf
-]
-for (param in check_param_list) {
-    if (!param.value) {
-        exit 1, "Required parameter not specified: ${param.key}"
-    }
-    else {
-        file(param.value, checkIfExists: true)
-    }
-}
-
-// Check non-mandatory input parameters to see if the files exist if they have been specified
-def checkPathParamList = [
-    params.multiqc_config,
-    params.fasta_fai,
-    params.rDNA_fasta_fai,
-    params.genome_index,
-    params.rDNA_genome_index,
-    params.genome_chrom_sizes,
-    params.rDNA_chrom_sizes,
-    params.representative_transcript,
-    params.representative_transcript_fai,
-    params.representative_transcript_gtf,
-    params.filtered_gtf,
-    params.seg_gtf,
-    params.regions_gtf,
-    params.regions_filt_gtf,
-    params.regions_resolved_gtf
-]
-for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
-
-// Define peak callers and check in list
-caller_list = [ 'icount', 'paraclu', 'pureclip', 'clippy']
-callers = params.peakcaller ? params.peakcaller.split(',').collect{ it.trim().toLowerCase() } : []
-if ((caller_list + callers).unique().size() != caller_list.size()) {
-    exit 1, "Invalid variant caller option: ${params.peakcaller}. Valid options: ${caller_list.join(', ')}"
-}
-
-// Creating a channel of callers to pass to CLIPQC later
-ch_callers = Channel.value(callers)
-
-// // Stage dummy files to be used as an optional input where required
-ch_dummy_file  = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
-ch_dummy_file2 = file("$projectDir/assets/dummy_file2.txt", checkIfExists: true)
-
-// deseq2 header files:
-ch_multiqc_merged_replicate_deseq2_pca_header        = file("$projectDir/assets/merged_replicate_deseq2_pca_header.txt", checkIfExists: true)
-ch_multiqc_merged_replicate_deseq2_clustering_header = file("$projectDir/assets/merged_replicate_deseq2_clustering_header.txt", checkIfExists: true)
-
-// // Check if an AWS iGenome has been provided to use the appropriate version of STAR
-// def is_aws_igenome = false
-// if (params.fasta && params.gtf) {
-//     if ((file(params.fasta).getName() - '.gz' == 'genome.fa') && (file(params.gtf).getName() - '.gz' == 'genes.gtf')) {
-//         is_aws_igenome = true
-//     }
-// }
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    CONFIG FILES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-ch_multiqc_config                     = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
-ch_multiqc_custom_config              = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
-ch_multiqc_logo                       = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
-ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT LOCAL MODULES/SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -150,6 +66,10 @@ include { ICOUNTMINI_SIGXLS                                         } from "../m
 include { ICOUNTMINI_PEAKS                                          } from "../modules/nf-core/icountmini/peaks/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS                        } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                         } from "../modules/nf-core/gunzip/main"
+include { ICOUNTMINI_SIGXLS as CONSENSUS_ICOUNTMINI_SIGXLS         } from "../modules/nf-core/icountmini/sigxls/main"
+include { ICOUNTMINI_PEAKS as CONSENSUS_ICOUNTMINI_PEAKS            } from "../modules/nf-core/icountmini/peaks/main"
+include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS              } from "../modules/nf-core/gunzip/main"
+include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS               } from "../modules/nf-core/gunzip/main"
 
 include { PARACLU as PARACLU_GENOME                                 } from "../modules/nf-core/paraclu/main"
 include { PARACLU as PARACLU_GENOME_CONSENSUS                       } from "../modules/nf-core/paraclu/main"
@@ -187,10 +107,74 @@ include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE                          } from '../s
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// Info required for completion email and summary
-def multiqc_report = []
-
 workflow CLIPSEQ {
+
+    // Validate inputs
+    def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
+
+    // Validate input parameters
+    WorkflowClipseq.initialise(params, log)
+
+    // Check manditory input parameters to see if the files exist if they have been specified
+    def check_param_list = [
+        input: params.input,
+        fasta: params.fasta,
+        rDNA_fasta: params.rDNA_fasta,
+        gtf: params.gtf
+    ]
+    check_param_list.each { key, value ->
+        if (!value) {
+            error "Required parameter not specified: ${key}"
+        }
+        file(value, checkIfExists: true)
+    }
+
+    // Check non-mandatory input parameters to see if the files exist if they have been specified
+    def checkPathParamList = [
+        params.multiqc_config,
+        params.fasta_fai,
+        params.rDNA_fasta_fai,
+        params.genome_index,
+        params.rDNA_genome_index,
+        params.genome_chrom_sizes,
+        params.rDNA_chrom_sizes,
+        params.representative_transcript,
+        params.representative_transcript_fai,
+        params.representative_transcript_gtf,
+        params.filtered_gtf,
+        params.seg_gtf,
+        params.regions_gtf,
+        params.regions_filt_gtf,
+        params.regions_resolved_gtf
+    ]
+    checkPathParamList.each { path_param -> if (path_param) { file(path_param, checkIfExists: true) } }
+
+    // Define peak callers and check in list
+    def caller_list = [ 'icount', 'paraclu', 'pureclip', 'clippy']
+    def callers = params.peakcaller ? params.peakcaller.split(',').collect{ c -> c.trim().toLowerCase() } : []
+    if ((caller_list + callers).unique().size() != caller_list.size()) {
+        error "Invalid variant caller option: ${params.peakcaller}. Valid options: ${caller_list.join(', ')}"
+    }
+
+    // Creating a channel of callers to pass to CLIPQC later
+    def ch_callers = channel.value(callers)
+
+    // Stage dummy files to be used as an optional input where required
+    def ch_dummy_file  = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
+    def ch_dummy_file2 = file("$projectDir/assets/dummy_file2.txt", checkIfExists: true)
+
+    // deseq2 header files:
+    def ch_multiqc_merged_replicate_deseq2_pca_header        = file("$projectDir/assets/merged_replicate_deseq2_pca_header.txt", checkIfExists: true)
+    def ch_multiqc_merged_replicate_deseq2_clustering_header = file("$projectDir/assets/merged_replicate_deseq2_clustering_header.txt", checkIfExists: true)
+
+    // MultiQC config files
+    def ch_multiqc_config                     = channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+    def ch_multiqc_custom_config              = params.multiqc_config ? channel.fromPath( params.multiqc_config, checkIfExists: true ) : channel.empty()
+    def ch_multiqc_logo                       = params.multiqc_logo   ? channel.fromPath( params.multiqc_logo, checkIfExists: true ) : channel.empty()
+    def ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
+
+    // Info required for completion email and summary
+    def multiqc_report = []
 
     // Init
     ch_versions = Channel.empty()
@@ -879,9 +863,13 @@ workflow CLIPSEQ {
                 ICOUNT_CONSENSUS_PEAK_TABLE (
                     ch_all_crosslinks,
                     CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS.out.gunzip,
+                    ch_fasta,
                     ch_fasta_fai,
                     ch_regions_used,
-                    "iCount-Mini_Consensus_AllCounts.tsv"
+                    "iCount-Mini_Consensus_AllCounts.tsv",
+                    ch_multiqc_merged_replicate_deseq2_pca_header,
+                    ch_multiqc_merged_replicate_deseq2_clustering_header,
+                    params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(ICOUNT_CONSENSUS_PEAK_TABLE.out.versions)
             }
@@ -1113,21 +1101,15 @@ workflow CLIPSEQ {
         multiqc_report = MULTIQC.out.report.toList()
 
     }
-}
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    COMPLETION EMAIL AND SUMMARY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-workflow.onComplete {
-    if (params.email || params.email_on_fail) {
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    }
-    NfcoreTemplate.summary(workflow, params, log)
-    if (params.hook_url) {
-        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
+    workflow.onComplete {
+        if (params.email || params.email_on_fail) {
+            NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        }
+        NfcoreTemplate.summary(workflow, params, log)
+        if (params.hook_url) {
+            NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
+        }
     }
 }
 

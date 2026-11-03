@@ -14,7 +14,6 @@ process rDNA_SUMMARY {
     path  "versions.yml"                            ,emit: versions
 
     script:
-    def args = task.ext.args ?: ''
     """
 
     Rscript $projectDir/modules/local/rDNA_summary/templates/rDNA_summary.R
