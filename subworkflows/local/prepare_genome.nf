@@ -240,7 +240,7 @@ workflow PREPARE_GENOME {
     if (!seg_gtf || !regions_gtf) {
         ICOUNT_SEG_GTF (
             ch_gtf,
-            ch_fasta_fai.map{ meta, file -> file }
+            ch_fasta_fai.map{ _meta, file -> file }
         )
         ch_seg_gtf     = ICOUNT_SEG_GTF.out.gtf
         ch_regions_gtf = ICOUNT_SEG_GTF.out.regions
@@ -258,7 +258,7 @@ workflow PREPARE_GENOME {
     if (!skip_filter_gtf && !regions_filt_gtf) {
         ICOUNT_SEG_FILTGTF (
             ch_filt_gtf,
-            ch_fasta_fai.map{ meta, file -> file }
+            ch_fasta_fai.map{ _meta, file -> file }
         )
 
         ch_regions_filt_gtf = ICOUNT_SEG_FILTGTF.out.regions

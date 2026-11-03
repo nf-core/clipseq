@@ -57,7 +57,7 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     SAMTOOLS_MERGE (
         ch_grouped_bam.map { meta, bams -> [meta, bams, []] },
-        ch_fasta.combine(ch_fasta_fai).map { meta, fa, meta_fai, fai -> [meta, fa, fai, []] },
+        ch_fasta.combine(ch_fasta_fai).map { meta, fa, _meta_fai, fai -> [meta, fa, fai, []] },
         ''
     )
     ch_grouped_bam = SAMTOOLS_MERGE.out.bam
@@ -97,12 +97,12 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_INDIVIDUAL (
         STRAND_SPLIT_INDIVIDUAL.out.pos_bedgraph,
-        ch_fasta_fai.map{ meta, file -> file }
+        ch_fasta_fai.map{ _meta, file -> file }
     )
 
     BIGWIG_NEG_INDIVIDUAL (
         STRAND_SPLIT_INDIVIDUAL.out.neg_bedgraph,
-        ch_fasta_fai.map{ meta, file -> file }
+        ch_fasta_fai.map{ _meta, file -> file }
     )
 
     //
@@ -132,12 +132,12 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_INDIVIDUAL_HASGROUP (
         STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.pos_bedgraph,
-        ch_fasta_fai.map{ meta, file -> file }
+        ch_fasta_fai.map{ _meta, file -> file }
     )
 
     BIGWIG_NEG_INDIVIDUAL_HASGROUP (
         STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.neg_bedgraph,
-        ch_fasta_fai.map{ meta, file -> file }
+        ch_fasta_fai.map{ _meta, file -> file }
     )
 
     //
@@ -167,12 +167,12 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_GROUP_HASGROUP (
         STRAND_SPLIT_GROUP_HASGROUP.out.pos_bedgraph,
-        ch_fasta_fai.map{ meta, file -> file }
+        ch_fasta_fai.map{ _meta, file -> file }
     )
 
     BIGWIG_NEG_GROUP_HASGROUP (
         STRAND_SPLIT_GROUP_HASGROUP.out.neg_bedgraph,
-        ch_fasta_fai.map{ meta, file -> file }
+        ch_fasta_fai.map{ _meta, file -> file }
     )
 
     //
