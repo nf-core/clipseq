@@ -438,7 +438,8 @@ workflow CLIPSEQ {
 
     SORT_INIT_ALIGNED_XLINKS(
         GET_INIT_ALIGNED_XLINKS.out.bam,
-        [[],[]]
+        [[],[],[]],
+        ''
     )
 
     ch_init_aligned_xlinks = SORT_INIT_ALIGNED_XLINKS.out.bam
@@ -492,8 +493,10 @@ workflow CLIPSEQ {
 
         COUNT_PREMAPPED_READS(
             ch_rDNA_k1_bam.map { meta, bam -> [meta, bam, []] },
+            [[],[],[]],
             [[],[]],
-            []
+            [[],[]],
+            ''
         )
 
         ch_premapped_counts = COUNT_PREMAPPED_READS.out.bam
@@ -567,7 +570,8 @@ workflow CLIPSEQ {
 
         SORT_BAMS_FOR_TELE(
             SORT_INIT_ALIGNED_XLINKS.out.bam,
-            [[],[]]
+            [[],[],[]],
+            ''
         )
 
         TELESCOPE_ASSIGN(
@@ -599,7 +603,8 @@ workflow CLIPSEQ {
 
     SORT_INIT_ALIGNED_XLINKS_rDNA(
         GET_INIT_ALIGNED_XLINKS_rDNA.out.bam,
-        [[],[]]
+        [[],[],[]],
+        ''
     )
 
     INDEX_INIT_ALIGNED_XLINKS_rDNA(
@@ -790,8 +795,7 @@ workflow CLIPSEQ {
                 PEKA_CLIPPY (
                     ch_clippy_genome_peaks,
                     ch_genome_crosslink_group_resolved_bed,
-                    ch_fasta.map{ it[1] },
-                    ch_fasta_fai.map{ it[1] },
+                    ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_CLIPPY.out.versions)
@@ -878,8 +882,7 @@ workflow CLIPSEQ {
                 PEKA_ICOUNT (
                     ch_icountmini_peaks,
                     ch_genome_crosslink_group_resolved_bed,
-                    ch_fasta.map{ it[1] },
-                    ch_fasta_fai.map{ it[1] },
+                    ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_ICOUNT.out.versions)
@@ -925,8 +928,7 @@ workflow CLIPSEQ {
                 PEKA_PARACLU (
                     ch_paraclu_genome_peaks,
                     ch_genome_crosslink_group_resolved_bed,
-                    ch_fasta.map{ it[1] },
-                    ch_fasta_fai.map{ it[1] },
+                    ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PARACLU.out.versions)
@@ -1022,8 +1024,7 @@ workflow CLIPSEQ {
                 PEKA_PURECLIP(
                     ch_pureclip_genome_peaks_matched,
                     ch_genome_crosslink_bed_matched,
-                    ch_fasta.map{ it[1] },
-                    ch_fasta_fai.map{ it[1] },
+                    ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
@@ -1092,11 +1093,14 @@ workflow CLIPSEQ {
         ch_multiqc_custom_config = ch_multiqc_custom_config.mix(COMBINE_BINS.out.config.ifEmpty([]))
         }
 
+        // MultiQC takes a single tuple: [ meta, files, configs, logo, replace_names, sample_names ]
+        ch_multiqc_input = ch_multiqc_files.collect().map { files -> [files] }
+            .combine(ch_multiqc_config.mix(ch_multiqc_custom_config).toList().map { cfg -> [cfg] })
+            .combine(ch_multiqc_logo.toList().map { logo -> [logo] })
+            .map { files, cfg, logo -> [[id: 'multiqc'], files, cfg, logo, [], []] }
+
         MULTIQC (
-            ch_multiqc_files.collect(),
-            ch_multiqc_config.toList(),
-            ch_multiqc_custom_config.toList(),
-            ch_multiqc_logo.toList()
+            ch_multiqc_input
         )
         multiqc_report = MULTIQC.out.report.toList()
 

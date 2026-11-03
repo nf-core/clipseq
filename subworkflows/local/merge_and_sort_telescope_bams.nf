@@ -14,31 +14,36 @@ workflow MERGE_AND_SORT_TELESCOPE_BAMS {
 
     FILTER_UNIQUE_MAP_UPDATED(
         telescope_out_updated.map { meta, bam -> [meta, bam, []] },
+        [[],[],[]],
         [[],[]],
-        []
+        [[],[]],
+        ''
     )
 
     FILTER_UNIQUE_MAP_OTHER(
         telescope_out_other.map { meta, bam -> [meta, bam, []] },
+        [[],[],[]],
         [[],[]],
-        []
-        )
+        [[],[]],
+        ''
+    )
 
     // MERGE TELESCOPE BAMS TOGETHER FOR PEAK CALLING
 
     bams_to_merge = FILTER_UNIQUE_MAP_UPDATED.out.bam
         .join(FILTER_UNIQUE_MAP_OTHER.out.bam)
-        .map { meta, bam1, bam2 -> [meta, [bam1, bam2]] }
+        .map { meta, bam1, bam2 -> [meta, [bam1, bam2], []] }
 
     MERGE_TE_BAMS(
         bams_to_merge,
-        [[],[]],
-        [[],[]]
+        [[],[],[],[]],
+        ''
     )
 
     SORT_TE_BAMS(
         MERGE_TE_BAMS.out.bam,
-        [[],[]]
+        [[],[],[]],
+        ''
     )
 
     INDEX_TE_BAMS(
