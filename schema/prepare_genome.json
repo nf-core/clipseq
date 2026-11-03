@@ -22,8 +22,8 @@
                     "fileset_pattern": "gtf$",
                     "description": "An annotation for the genome."
                 },
-                "ncrna_fasta": {
-                    "name": "ncRNA FASTA",
+                "rDNA_fasta": {
+                    "name": "rDNA FASTA",
                     "type": "data",
                     "pattern": "fasta|fa$",
                     "required": true,

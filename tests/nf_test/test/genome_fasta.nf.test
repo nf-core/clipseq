@@ -62,15 +62,15 @@ nextflow_pipeline {
         }
     }
 
-    test("genome_ncrna_fasta_gz") {
-        tag "genome_ncrna_fasta_gz"
+    test("genome_rDNA_fasta_gz") {
+        tag "genome_rDNA_fasta_gz"
         tag "test"
         when {
             params {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                ncrna_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa.gz"
+                rDNA_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa.gz"
             }
         }
 
@@ -81,15 +81,15 @@ nextflow_pipeline {
         }
     }
 
-    test("genome_ncrna_fasta") {
-        tag "genome_ncrna_fasta"
+    test("genome_rDNA_fasta") {
+        tag "genome_rDNA_fasta"
         tag "test"
         when {
             params {
                 outdir = "$outputDir"
                 only_genome = true
                 save_reference = true
-                ncrna_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa"
+                rDNA_fasta = "https://raw.githubusercontent.com/luslab/test-datasets/clipseq/v_2_0/genome/homosapiens_smallRNA.fa"
             }
         }
 
@@ -100,8 +100,8 @@ nextflow_pipeline {
         }
     }
 
-    test("genome_ncrna_fasta_fai") {
-        tag "genome_ncrna_fasta_fai"
+    test("genome_rDNA_fasta_fai") {
+        tag "genome_rDNA_fasta_fai"
         tag "test"
         when {
             params {

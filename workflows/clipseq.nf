@@ -13,7 +13,7 @@ WorkflowClipseq.initialise(params, log)
 check_param_list = [
     input: params.input,
     fasta: params.fasta,
-    ncrna_fasta: params.ncrna_fasta,
+    rDNA_fasta: params.rDNA_fasta,
     gtf: params.gtf
 ]
 for (param in check_param_list) {
@@ -29,11 +29,11 @@ for (param in check_param_list) {
 def checkPathParamList = [
     params.multiqc_config,
     params.fasta_fai,
-    params.ncrna_fasta_fai,
+    params.rDNA_fasta_fai,
     params.genome_index,
-    params.ncrna_genome_index,
+    params.rDNA_genome_index,
     params.genome_chrom_sizes,
-    params.ncrna_chrom_sizes,
+    params.rDNA_chrom_sizes,
     params.representative_transcript,
     params.representative_transcript_fai,
     params.representative_transcript_gtf,
@@ -102,7 +102,7 @@ include { ICOUNTMINI_SUMMARY_MQC                                          } from
 include { MULTIMAP_CLASS_BINNING as BIN_ncRNA                             } from '../modules/local/multimap_class_binning'
 include { MULTIMAP_CLASS_BINNING as BIN_REGIONS                           } from '../modules/local/multimap_class_binning'
 include { GET_INIT_ALIGNED_XLINKS                                         } from '../modules/local/get_init_aligned_xlinks'
-include { GET_INIT_ALIGNED_XLINKS as GET_INIT_ALIGNED_XLINKS_ncRNA        } from '../modules/local/get_init_aligned_xlinks'
+include { GET_INIT_ALIGNED_XLINKS as GET_INIT_ALIGNED_XLINKS_rDNA        } from '../modules/local/get_init_aligned_xlinks'
 include { IDENTIFY_UNBINNED                                               } from '../modules/local/identify_unbinned'
 include { COMBINE_BINS                                                    } from '../modules/local/combine_bins'
 include { rDNA_SUMMARY                                                    } from '../modules/local/rDNA_summary'
@@ -116,10 +116,10 @@ include { INPUT_CHECK                                                           
 include { RNA_ALIGN                                                             } from '../subworkflows/local/rna_align'
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_UNIQUE_DEDUP                 } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_MULTI_DEDUP                  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
-include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as NCRNA_DEDUP                         } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
-include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as NCRNA_K1_DEDUP                      } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as rDNA_DEDUP                         } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as rDNA_K1_DEDUP                      } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
 include { RESOLVE_GROUPS_AND_CROSSLINKS as GENOME_RESOLVE_GROUPS_AND_CROSSLINKS } from '../subworkflows/local/resolve_groupings_and_crosslinks'
-include { RESOLVE_GROUPS_AND_CROSSLINKS as NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS  } from '../subworkflows/local/resolve_groupings_and_crosslinks'
+include { RESOLVE_GROUPS_AND_CROSSLINKS as rDNA_RESOLVE_GROUPS_AND_CROSSLINKS  } from '../subworkflows/local/resolve_groupings_and_crosslinks'
 include { RESOLVE_GROUPS_AND_CROSSLINKS as TE_RESOLVE_GROUPS_AND_CROSSLINKS     } from '../subworkflows/local/resolve_groupings_and_crosslinks'
 include { TRANSCRIPTOME_PROCESSING                                              } from '../subworkflows/local/transcriptome_processing'
 include { CONSENSUS_PEAK_TABLE as CLIPPY_CONSENSUS_PEAK_TABLE                   } from '../subworkflows/local/consensus_peak_table'
@@ -171,8 +171,8 @@ include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_OTHER                  } from '../m
 include { SAMTOOLS_SORT as SORT_BAMS_FOR_TELE                       } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_SORT as SORT_INIT_ALIGNED_XLINKS                 } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as INDEX_INIT_ALIGNED_XLINKS               } from '../modules/nf-core/samtools/index/main'
-include { SAMTOOLS_SORT as SORT_INIT_ALIGNED_XLINKS_ncRNA           } from '../modules/nf-core/samtools/sort/main'
-include { SAMTOOLS_INDEX as INDEX_INIT_ALIGNED_XLINKS_ncRNA         } from '../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_SORT as SORT_INIT_ALIGNED_XLINKS_rDNA           } from '../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as INDEX_INIT_ALIGNED_XLINKS_rDNA         } from '../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_VIEW as COUNT_PREMAPPED_READS                    } from '../modules/nf-core/samtools/view/main'
 
 //
@@ -198,16 +198,16 @@ workflow CLIPSEQ {
     // Prepare mandatory params
     ch_input       = file(params.input)
     ch_fasta       = file(params.fasta)
-    ch_ncrna_fasta = file(params.ncrna_fasta)
+    ch_rDNA_fasta = file(params.rDNA_fasta)
     ch_gtf         = file(params.gtf)
 
     // Prepare non-mandatory params
     ch_fasta_fai                         = []
-    ch_ncrna_fasta_fai                   = []
+    ch_rDNA_fasta_fai                   = []
     ch_genome_index                      = []
-    ch_ncrna_genome_index                = []
+    ch_rDNA_genome_index                = []
     ch_genome_chrom_sizes                = []
-    ch_ncrna_chrom_sizes                 = []
+    ch_rDNA_chrom_sizes                 = []
     ch_representative_transcript         = []
     ch_representative_transcript_fai     = []
     ch_representative_transcript_gtf     = []
@@ -217,11 +217,11 @@ workflow CLIPSEQ {
     ch_regions_filt_gtf                  = []
     ch_regions_resolved_gtf              = []
     if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
-    if(params.ncrna_fasta_fai) { ch_ncrna_fasta_fai = file(params.ncrna_fasta_fai) }
+    if(params.rDNA_fasta_fai) { ch_rDNA_fasta_fai = file(params.rDNA_fasta_fai) }
     if(params.genome_index) { ch_genome_index = file(params.genome_index) }
-    if(params.ncrna_genome_index) { ch_ncrna_genome_index = file(params.ncrna_genome_index) }
+    if(params.rDNA_genome_index) { ch_rDNA_genome_index = file(params.rDNA_genome_index) }
     if(params.genome_chrom_sizes) { ch_genome_chrom_sizes = file(params.genome_chrom_sizes) }
-    if(params.ncrna_chrom_sizes) { ch_ncrna_chrom_sizes = file(params.ncrna_chrom_sizes) }
+    if(params.rDNA_chrom_sizes) { ch_rDNA_chrom_sizes = file(params.rDNA_chrom_sizes) }
     if(params.representative_transcript) { ch_representative_transcript = file(params.representative_transcript) }
     if(params.representative_transcript_fai) { ch_representative_transcript_fai = file(params.representative_transcript_fai) }
     if(params.representative_transcript_gtf) { ch_representative_transcript_gtf = file(params.representative_transcript_gtf) }
@@ -238,13 +238,13 @@ workflow CLIPSEQ {
         PREPARE_GENOME (
             ch_fasta,
             ch_fasta_fai,
-            ch_ncrna_fasta,
-            ch_ncrna_fasta_fai,
+            ch_rDNA_fasta,
+            ch_rDNA_fasta_fai,
             ch_gtf,
             ch_genome_index,
-            ch_ncrna_genome_index,
+            ch_rDNA_genome_index,
             ch_genome_chrom_sizes,
-            ch_ncrna_chrom_sizes,
+            ch_rDNA_chrom_sizes,
             ch_representative_transcript,
             ch_representative_transcript_fai,
             ch_representative_transcript_gtf,
@@ -262,9 +262,9 @@ workflow CLIPSEQ {
         ch_gtf                               = PREPARE_GENOME.out.gtf.collect()
         ch_filtered_gtf                      = PREPARE_GENOME.out.filtered_gtf.collect()
         ch_genome_chrom_sizes                = PREPARE_GENOME.out.chrom_sizes.collect()
-        ch_ncrna_fasta                       = PREPARE_GENOME.out.ncrna_fasta.collect()
-        ch_ncrna_fasta_fai                   = PREPARE_GENOME.out.ncrna_fasta_fai.collect()
-        ch_ncrna_chrom_sizes                 = PREPARE_GENOME.out.ncrna_chrom_sizes.collect()
+        ch_rDNA_fasta                       = PREPARE_GENOME.out.rDNA_fasta.collect()
+        ch_rDNA_fasta_fai                   = PREPARE_GENOME.out.rDNA_fasta_fai.collect()
+        ch_rDNA_chrom_sizes                 = PREPARE_GENOME.out.rDNA_chrom_sizes.collect()
         ch_representative_transcript         = PREPARE_GENOME.out.representative_transcript.collect()
         ch_representative_transcript_fai     = PREPARE_GENOME.out.representative_transcript_fai.collect()
         ch_representative_transcript_gtf     = PREPARE_GENOME.out.representative_transcript_gtf.collect()
@@ -273,7 +273,7 @@ workflow CLIPSEQ {
         ch_regions_filt_gtf                  = PREPARE_GENOME.out.regions_filt_gtf.collect()
         ch_regions_resolved_gtf              = PREPARE_GENOME.out.regions_resolved_gtf.collect()
         ch_genome_index                      = PREPARE_GENOME.out.genome_index.collect()
-        ch_ncrna_genome_index                = PREPARE_GENOME.out.ncrna_index.collect()
+        ch_rDNA_genome_index                = PREPARE_GENOME.out.rDNA_index.collect()
     }
 
 
@@ -319,14 +319,14 @@ workflow CLIPSEQ {
     //ch_fastq | view
 
     //
-    // SUBWORKFLOW: Align reads to ncrna and primary genomes
+    // SUBWORKFLOW: Align reads to rDNA and primary genomes
     //
     if(params.source == "fastq" & params.run_alignment) {
 
         ch_fastq
             .view { "ALIGN FASTQ: $it" }
-        ch_ncrna_genome_index
-            .view { "ALIGN ncRNA: $it" }
+        ch_rDNA_genome_index
+            .view { "ALIGN rDNA: $it" }
         ch_genome_index
             .view { "ALIGN GENOME INDEX: $it" }
         ch_gtf
@@ -336,18 +336,18 @@ workflow CLIPSEQ {
 
         RNA_ALIGN (
             ch_fastq,
-            ch_ncrna_genome_index,
+            ch_rDNA_genome_index,
             ch_genome_index,
             ch_gtf,
             ch_fasta,
             params.skip_transcriptome
         )
         ch_versions                = ch_versions.mix(RNA_ALIGN.out.versions)
-        ch_ncrna_bam               = RNA_ALIGN.out.ncrna_bam
-        ch_ncrna_bai               = RNA_ALIGN.out.ncrna_bai
-        ch_ncrna_log               = RNA_ALIGN.out.ncrna_log
-        ch_ncrna_k1_bam            = RNA_ALIGN.out.ncrna_k1_bam
-        ch_ncrna_k1_bai            = RNA_ALIGN.out.ncrna_k1_bai
+        ch_rDNA_bam               = RNA_ALIGN.out.rDNA_bam
+        ch_rDNA_bai               = RNA_ALIGN.out.rDNA_bai
+        ch_rDNA_log               = RNA_ALIGN.out.rDNA_log
+        ch_rDNA_k1_bam            = RNA_ALIGN.out.rDNA_k1_bam
+        ch_rDNA_k1_bai            = RNA_ALIGN.out.rDNA_k1_bai
         ch_genome_log              = RNA_ALIGN.out.genome_log_final
         ch_genome_unique_bam       = RNA_ALIGN.out.genome_unique_bam
         ch_genome_unique_bai       = RNA_ALIGN.out.genome_unique_bai
@@ -401,14 +401,14 @@ workflow CLIPSEQ {
             .join ( ch_genome_multi_bai.map { row -> [row[0].id, row ].flatten()} )
             .map { row -> [row[1], row[2], row[4]] }
 
-        ch_ncrna_bam_bai = ch_ncrna_bam
+        ch_rDNA_bam_bai = ch_rDNA_bam
             .map { row -> [row[0].id, row ].flatten()}
-            .join ( ch_ncrna_bai.map { row -> [row[0].id, row ].flatten()} )
+            .join ( ch_rDNA_bai.map { row -> [row[0].id, row ].flatten()} )
             .map { row -> [row[1], row[2], row[4]] }
 
-        ch_ncrna_k1_bam_bai = ch_ncrna_k1_bam
+        ch_rDNA_k1_bam_bai = ch_rDNA_k1_bam
             .map { row -> [row[0].id, row ].flatten()}
-            .join ( ch_ncrna_k1_bai.map { row -> [row[0].id, row ].flatten()} )
+            .join ( ch_rDNA_k1_bai.map { row -> [row[0].id, row ].flatten()} )
             .map { row -> [row[1], row[2], row[4]] }
 
         /*
@@ -431,18 +431,18 @@ workflow CLIPSEQ {
         ch_genome_multi_final_bam_bai = ch_genome_multi_final_bam.join(ch_genome_multi_final_bai, by: 0)
         ch_umi_log    = GENOME_MULTI_DEDUP.out.umi_log
 
-        NCRNA_DEDUP (
-            ch_ncrna_bam_bai
+        rDNA_DEDUP (
+            ch_rDNA_bam_bai
         )
-        ch_versions   = ch_versions.mix(NCRNA_DEDUP.out.versions)
+        ch_versions   = ch_versions.mix(rDNA_DEDUP.out.versions)
 
-        NCRNA_K1_DEDUP (
-            ch_ncrna_k1_bam_bai
+        rDNA_K1_DEDUP (
+            ch_rDNA_k1_bam_bai
         )
-        ch_versions     = ch_versions.mix(NCRNA_K1_DEDUP.out.versions)
-        ch_ncrna_k1_bam = NCRNA_K1_DEDUP.out.bam
-        ch_ncrna_k1_bai = NCRNA_K1_DEDUP.out.bai
-        ch_umi_ncrna_log      = NCRNA_K1_DEDUP.out.umi_log
+        ch_versions     = ch_versions.mix(rDNA_K1_DEDUP.out.versions)
+        ch_rDNA_k1_bam = rDNA_K1_DEDUP.out.bam
+        ch_rDNA_k1_bai = rDNA_K1_DEDUP.out.bai
+        ch_umi_rDNA_log      = rDNA_K1_DEDUP.out.umi_log
     }
 
     // Overall read assignment //
@@ -507,7 +507,7 @@ workflow CLIPSEQ {
         // 5: Count pre-mapped reads
 
         COUNT_PREMAPPED_READS(
-            ch_ncrna_k1_bam.map { meta, bam -> [meta, bam, []] },
+            ch_rDNA_k1_bam.map { meta, bam -> [meta, bam, []] },
             [[],[]],
             []
         )
@@ -601,29 +601,29 @@ workflow CLIPSEQ {
 
     }
 
-    // Crosslinks for ncRNA
+    // Crosslinks for rDNA
     // genome-aligned files get crosslinks for bucketing, os ncRNA files get crosslinks here
     // to balance
 
     // join .bam and .bai into one channel
 
-    ch_ncrna_k1_bam_bai_joined = ch_ncrna_k1_bam.join(ch_ncrna_k1_bai, by: 0)
+    ch_rDNA_k1_bam_bai_joined = ch_rDNA_k1_bam.join(ch_rDNA_k1_bai, by: 0)
 
-    GET_INIT_ALIGNED_XLINKS_ncRNA(
-        ch_ncrna_k1_bam_bai_joined
+    GET_INIT_ALIGNED_XLINKS_rDNA(
+        ch_rDNA_k1_bam_bai_joined
     )
 
-    SORT_INIT_ALIGNED_XLINKS_ncRNA(
-        GET_INIT_ALIGNED_XLINKS_ncRNA.out.bam,
+    SORT_INIT_ALIGNED_XLINKS_rDNA(
+        GET_INIT_ALIGNED_XLINKS_rDNA.out.bam,
         [[],[]]
     )
 
-    INDEX_INIT_ALIGNED_XLINKS_ncRNA(
-        SORT_INIT_ALIGNED_XLINKS_ncRNA.out.bam
+    INDEX_INIT_ALIGNED_XLINKS_rDNA(
+        SORT_INIT_ALIGNED_XLINKS_rDNA.out.bam
     )
 
-    ch_ncrna_k1_bam =     SORT_INIT_ALIGNED_XLINKS_ncRNA.out.bam
-    ch_ncrna_k1_bai =     INDEX_INIT_ALIGNED_XLINKS_ncRNA.out.bai
+    ch_rDNA_k1_bam =     SORT_INIT_ALIGNED_XLINKS_rDNA.out.bam
+    ch_rDNA_k1_bai =     INDEX_INIT_ALIGNED_XLINKS_rDNA.out.bai
 
 
     //
@@ -645,24 +645,24 @@ workflow CLIPSEQ {
         ch_genome_peakcalling_bam                    = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.genome_peakcalling_bam
         ch_genome_peakcalling_bai                    = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.genome_peakcalling_bai
 
-        NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS(
-            ch_ncrna_k1_bam,
-            ch_ncrna_k1_bai,
-            ch_ncrna_fasta,
-            ch_ncrna_fasta_fai
+        rDNA_RESOLVE_GROUPS_AND_CROSSLINKS(
+            ch_rDNA_k1_bam,
+            ch_rDNA_k1_bai,
+            ch_rDNA_fasta,
+            ch_rDNA_fasta_fai
         )
-        ch_versions                                    = ch_versions.mix(NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.versions)
-        ch_ncrna_k1_crosslink_group_resolved_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
-        ch_ncrna_k1_crosslink_INDIVIDUAL_bed           = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL
-        ch_ncrna_k1_crosslink_INDIVIDUAL_HASGROUP_bed  = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL_HASGROUP
-        ch_ncrna_k1_crosslink_GROUP_HASGROUP_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_GROUP_HASGROUP
+        ch_versions                                    = ch_versions.mix(rDNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.versions)
+        ch_rDNA_k1_crosslink_group_resolved_bed       = rDNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
+        ch_rDNA_k1_crosslink_INDIVIDUAL_bed           = rDNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL
+        ch_rDNA_k1_crosslink_INDIVIDUAL_HASGROUP_bed  = rDNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL_HASGROUP
+        ch_rDNA_k1_crosslink_GROUP_HASGROUP_bed       = rDNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_GROUP_HASGROUP
 
 
         // rDNA SUMMARY OUTPUT
 
         if(params.run_rDNA_summary) {
             rDNA_SUMMARY(
-                NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.ncRNA_CPMnorm_bedgraph
+                rDNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.ncRNA_CPMnorm_bedgraph
                 .map{ it[1] }
                 .collect()
             )
@@ -680,7 +680,7 @@ workflow CLIPSEQ {
         ch_merged_summaries = ICOUNTMINI_SUMMARY.out.summary_type
             .join( ICOUNTMINI_SUMMARY.out.summary_subtype, by: [0])
             .join( ICOUNTMINI_SUMMARY.out.summary_gene, by: [0])
-            .join( ch_ncrna_k1_crosslink_group_resolved_bed, by: [0])
+            .join( ch_rDNA_k1_crosslink_group_resolved_bed, by: [0])
             .map { meta, type, subtype, gene, bed ->
                 [meta, [type, subtype, gene, bed]]
             }
@@ -1050,7 +1050,7 @@ workflow CLIPSEQ {
 
         CLIPQC (
             ch_callers,
-            ch_ncrna_log.collect{ it[1] },
+            ch_rDNA_log.collect{ it[1] },
             ch_genome_log.collect{ it[1] },
             ch_umi_log.collect{ it[1] },
             ch_genome_crosslink_group_resolved_bed.collect{ it[1] },
@@ -1086,7 +1086,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(ch_ncrna_log.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_rDNA_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_genome_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
@@ -1098,7 +1098,7 @@ workflow CLIPSEQ {
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.type.collect().ifEmpty([]))
         }
 
-        ch_tmp = ch_ncrna_log.collect{it[1]}
+        ch_tmp = ch_rDNA_log.collect{it[1]}
 
         if (params.run_te){
         ch_multiqc_custom_config = ch_multiqc_custom_config.mix(COMBINE_BINS.out.config.ifEmpty([]))

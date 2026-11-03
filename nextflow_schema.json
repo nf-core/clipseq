@@ -126,7 +126,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "ncrna_fasta": {
+                "rDNA_fasta": {
                     "type": "string",
                     "default": "None"
                 },
@@ -150,7 +150,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "ncrna_fasta_fai": {
+                "rDNA_fasta_fai": {
                     "type": "string",
                     "default": "None"
                 },
@@ -170,7 +170,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "ncrna_chrom_sizes": {
+                "rDNA_chrom_sizes": {
                     "type": "string",
                     "default": "None"
                 },
@@ -186,7 +186,7 @@
                     "type": "string",
                     "default": "None"
                 },
-                "ncrna_genome_index": {
+                "rDNA_genome_index": {
                     "type": "string",
                     "default": "None"
                 },

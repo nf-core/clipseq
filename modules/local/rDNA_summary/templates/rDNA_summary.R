@@ -12,7 +12,7 @@ for (i in 1:length(files)){
   df <- read.delim(files[i],
                        col.names = c("chr", "xlink_1", "xlink2", "count")) %>%
       mutate(count = abs(count),
-             sample = str_remove(basename(files[i]), ".ncrna.xl.CPMnorm.bedgraph"))
+             sample = str_remove(basename(files[i]), ".rDNA.xl.CPMnorm.bedgraph"))
 
   }
 
@@ -20,7 +20,7 @@ for (i in 1:length(files)){
     df_2 <- read.delim(files[i],
                        col.names = c("chr", "xlink_1", "xlink2", "count")) %>%
       mutate(count = abs(count),
-             sample = str_remove(basename(files[i]), ".ncrna.xl.CPMnorm.bedgraph"))
+             sample = str_remove(basename(files[i]), ".rDNA.xl.CPMnorm.bedgraph"))
 
     df <- rbind(df, df_2)
   }

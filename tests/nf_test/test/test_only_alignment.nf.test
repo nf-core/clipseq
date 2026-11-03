@@ -15,10 +15,10 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            // NCRNA
-            assert file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam").exists()
-            assert file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam.bai").exists()
-            assert file("$outputDir/02_alignment/ncrna/unmapped/PHO92_A_ncrna.unmapped.fastq.gz").exists()
+            // rDNA
+            assert file("$outputDir/02_alignment/rDNA/PHO92_A_rDNA.sorted.bam").exists()
+            assert file("$outputDir/02_alignment/rDNA/PHO92_A_rDNA.sorted.bam.bai").exists()
+            assert file("$outputDir/02_alignment/rDNA/unmapped/PHO92_A_rDNA.unmapped.fastq.gz").exists()
 
             // GENOME
             assert file("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam").exists()
@@ -42,10 +42,10 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            // NCRNA
-            assert !(file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam").exists())
-            assert !(file("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam.bai").exists())
-            assert !(file("$outputDir/02_alignment/ncrna/unmapped/PHO92_A_ncrna.unmapped.fastq.gz").exists())
+            // rDNA
+            assert !(file("$outputDir/02_alignment/rDNA/PHO92_A_rDNA.sorted.bam").exists())
+            assert !(file("$outputDir/02_alignment/rDNA/PHO92_A_rDNA.sorted.bam.bai").exists())
+            assert !(file("$outputDir/02_alignment/rDNA/unmapped/PHO92_A_rDNA.unmapped.fastq.gz").exists())
 
             // GENOME
             assert !(file("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam").exists())
