@@ -47,7 +47,7 @@ workflow TRANSCRIPTOME_PROCESSING {
         //
         // Sort, index filtered bam
         //
-        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam , [[],[]] )
+        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam , [[],[],[]], '' )
         ch_versions       = ch_versions.mix(SAMTOOLS_SORT_FILT_TRANSCRIPT.out.versions)
         ch_transcript_bam = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
 
@@ -123,9 +123,9 @@ workflow TRANSCRIPTOME_PROCESSING {
         .set { ch_grouped_transcript_bam }
 
     SAMTOOLS_MERGE_TRANSCRIPTOME (
-        ch_grouped_transcript_bam,
-        [[],[]],
-        [[],[]]
+        ch_grouped_transcript_bam.map { meta, bams -> [meta, bams, []] },
+        [[],[],[],[]],
+        ''
     )
     ch_versions = ch_versions.mix(SAMTOOLS_MERGE_TRANSCRIPTOME.out.versions)
     ch_grouped_transcript_bam = SAMTOOLS_MERGE_TRANSCRIPTOME.out.bam
