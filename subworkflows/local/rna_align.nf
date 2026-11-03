@@ -1,5 +1,5 @@
 //
-// Align to ncrna and primary genomes before indexing and sorting
+// Align to rDNA and primary genomes before indexing and sorting
 //
 
 //
@@ -13,10 +13,10 @@ include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_COORD_TONLY      } from '../../module
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_COORD_GONLY      } from '../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_SORT as SAMTOOLS_SORT_TRANS              } from '../../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_TRANS            } from '../../modules/nf-core/samtools/index/main'
-include { SAMTOOLS_SORT as SAMTOOLS_SORT_NCRNA              } from '../../modules/nf-core/samtools/sort/main'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_NCRNA            } from '../../modules/nf-core/samtools/index/main'
-include { SAMTOOLS_SORT as SAMTOOLS_SORT_NCRNA_K1           } from '../../modules/nf-core/samtools/sort/main'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_NCRNA_K1         } from '../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_SORT as SAMTOOLS_SORT_rDNA               } from '../../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_rDNA             } from '../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_SORT as SAMTOOLS_SORT_rDNA_K1            } from '../../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_rDNA_K1          } from '../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_VIEW as TONLY_SAMTOOLS_VIEW_GENOME       } from '../../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_VIEW as TONLY_SAMTOOLS_VIEW_TRANSCRIPT   } from '../../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_VIEW as GONLY_SAMTOOLS_VIEW_GENOME       } from '../../modules/nf-core/samtools/view/main'
@@ -37,7 +37,7 @@ workflow RNA_ALIGN {
     main:
     ch_versions = Channel.empty()
     //
-    // MODULE: Align reads to ncrna genome
+    // MODULE: Align reads to rDNA genome
     //
     BOWTIE_ALIGN (
         fastq,
@@ -47,13 +47,13 @@ workflow RNA_ALIGN {
     ch_versions = ch_versions.mix(BOWTIE_ALIGN.out.versions)
 
     //
-    // SUBWORKFLOW: Sort, index BAM file 
+    // SUBWORKFLOW: Sort, index BAM file
     //
-    SAMTOOLS_SORT_NCRNA( BOWTIE_ALIGN.out.bam, fasta )
-    SAMTOOLS_INDEX_NCRNA( SAMTOOLS_SORT_NCRNA.out.bam )
+    SAMTOOLS_SORT_rDNA( BOWTIE_ALIGN.out.bam, fasta )
+    SAMTOOLS_INDEX_rDNA( SAMTOOLS_SORT_rDNA.out.bam )
 
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT_NCRNA.out.versions)
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX_NCRNA.out.versions)
+    ch_versions = ch_versions.mix(SAMTOOLS_SORT_rDNA.out.versions)
+    ch_versions = ch_versions.mix(SAMTOOLS_INDEX_rDNA.out.versions)
 
     /*
     * MODULE: Align reads to smrna genome, here allowing 100 multimappers but only reporting one alignment per multimapped read
@@ -67,14 +67,14 @@ workflow RNA_ALIGN {
     )
     ch_versions = ch_versions.mix(BOWTIE_ALIGN_K1.out.versions)
 
-    SAMTOOLS_SORT_NCRNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta )
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT_NCRNA_K1.out.versions)
+    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta )
+    ch_versions = ch_versions.mix(SAMTOOLS_SORT_rDNA_K1.out.versions)
 
-    SAMTOOLS_INDEX_NCRNA_K1 ( SAMTOOLS_SORT_NCRNA_K1.out.bam )
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX_NCRNA_K1.out.versions)
+    SAMTOOLS_INDEX_rDNA_K1 ( SAMTOOLS_SORT_rDNA_K1.out.bam )
+    ch_versions = ch_versions.mix(SAMTOOLS_INDEX_rDNA_K1.out.versions)
 
     //
-    // MODULE: Align reads that did not align to the ncrna genome to the primary genome
+    // MODULE: Align reads that did not align to the rDNA genome to the primary genome
     //
     if (skip_transcriptome) {
         STAR_ALIGN_GENOME_ONLY (
@@ -109,7 +109,7 @@ workflow RNA_ALIGN {
             }
         /*
         * CHANNEL: Filter for uniquely mapping reads for downstream analysis; samtools view -b -q 5 -o output.bam alignments.bam
-        */       
+        */
         GONLY_SAMTOOLS_VIEW_GENOME (
             ch_coord_bam_bai,
             [[],[]],
@@ -189,7 +189,7 @@ workflow RNA_ALIGN {
             []
         )
 
-        TONLYSAMTOOLS_VIEW_TRANSCRIPT (
+        TONLY_SAMTOOLS_VIEW_TRANSCRIPT (
             ch_transcript_bam_bai,
             [[],[]],
             []
@@ -202,19 +202,19 @@ workflow RNA_ALIGN {
         ch_genome_unique_bam      = TONLY_SAMTOOLS_VIEW_GENOME.out.bam
         ch_genome_unique_bai      = TONLY_SAMTOOLS_VIEW_GENOME.out.bai
 
-        ch_transcript_unique_bam  = TONLYSAMTOOLS_VIEW_TRANSCRIPT.out.bam
-        ch_transcript_unique_bai  = TONLYSAMTOOLS_VIEW_TRANSCRIPT.out.bai
+        ch_transcript_unique_bam  = TONLY_SAMTOOLS_VIEW_TRANSCRIPT.out.bam
+        ch_transcript_unique_bai  = TONLY_SAMTOOLS_VIEW_TRANSCRIPT.out.bai
         ch_transcript_multi_bam   = SAMTOOLS_SORT_TRANS.out.bam
         ch_transcript_multi_bai   = SAMTOOLS_INDEX_TRANS.out.bai
     }
 
 
     emit:
-    ncrna_bam        = SAMTOOLS_SORT_NCRNA.out.bam      // channel: [ val(meta), [ bam ] ]
-    ncrna_bai        = SAMTOOLS_INDEX_NCRNA.out.bai     // channel: [ val(meta), [ bai ] ]
-    ncrna_log        = BOWTIE_ALIGN.out.log             // channel: [ val(meta), [ txt ] ]
-    ncrna_k1_bam     = SAMTOOLS_SORT_NCRNA_K1.out.bam                  // channel: [ val(meta), [ bam ] ]
-    ncrna_k1_bai     = SAMTOOLS_INDEX_NCRNA_K1.out.bai                 // channel: [ val(meta), [ bai ] ]
+    rDNA_bam         = SAMTOOLS_SORT_rDNA.out.bam       // channel: [ val(meta), [ bam ] ]
+    rDNA_bai         = SAMTOOLS_INDEX_rDNA.out.bai      // channel: [ val(meta), [ bai ] ]
+    rDNA_log         = BOWTIE_ALIGN.out.log             // channel: [ val(meta), [ txt ] ]
+    rDNA_k1_bam      = SAMTOOLS_SORT_rDNA_K1.out.bam                   // channel: [ val(meta), [ bam ] ]
+    rDNA_k1_bai      = SAMTOOLS_INDEX_rDNA_K1.out.bai                  // channel: [ val(meta), [ bai ] ]
 
     genome_log             = ch_genome_log                    // channel: [ val(meta), [ txt ] ]
     genome_log_final       = ch_genome_log_final              // channel: [ val(meta), [ txt ] ]

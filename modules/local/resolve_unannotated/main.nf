@@ -6,8 +6,8 @@ process CLIPSEQ_RESOLVE_UNANNOTATED {
     container "quay.io/goodwright/mulled-v2-9617f1b1a927f74fecc0c8b26ec773df8a8593b7:78688d5e3c856e3fbba8a63a7740b414dc4c0c5a-0"
 
     input:
-    tuple val(meta), path(unfilt_regs)
-    tuple val(meta), path(filt_regs)
+    tuple val(meta_unfilt), path(unfilt_regs)
+    tuple val(meta_filt), path(filt_regs)
     tuple val(meta), path(fai)
 
     output:

@@ -15,7 +15,6 @@ process ICOUNTMINI_SUMMARY_MQC{
      task.ext.when == null || task.ext.when
 
      script:
-     def args = task.ext.args ?: ''
 
      """
      Rscript $projectDir/modules/local/icountmini_summary_mqc/templates/icount_mini_summary_reformat.R

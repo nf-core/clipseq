@@ -1,22 +1,19 @@
-// Import the log object
-import nextflow.util.LoggerHelper
-
 //
 // Uncompress and prepare reference genome files
 //
 
 include { GUNZIP as GUNZIP_FASTA                                                 } from '../../modules/nf-core/gunzip/main'
-include { GUNZIP as GUNZIP_NCRNA_FASTA                                           } from '../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_rDNA_FASTA                                            } from '../../modules/nf-core/gunzip/main'
 include { GUNZIP as GUNZIP_GTF                                                   } from '../../modules/nf-core/gunzip/main'
 include { UNTAR as UNTAR_BT                                                      } from '../../modules/nf-core/untar/main'
 include { UNTAR as UNTAR_STAR                                                    } from '../../modules/nf-core/untar/main'
 include { BOWTIE_BUILD                                                           } from '../../modules/nf-core/bowtie/build/main'
 include { STAR_GENOMEGENERATE                                                    } from '../../modules/nf-core/star/genomegenerate/main'
 include { SAMTOOLS_FAIDX as GENOME_INDEX                                         } from '../../modules/nf-core/samtools/faidx/main'
-include { SAMTOOLS_FAIDX as NCRNA_INDEX                                          } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as rDNA_INDEX                                           } from '../../modules/nf-core/samtools/faidx/main'
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
 include { SAMTOOLS_FAIDX as GENOME_CHROM_SIZE                                    } from '../../modules/nf-core/samtools/faidx/main'
-include { SAMTOOLS_FAIDX as NCRNA_CHROM_SIZE                                     } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as rDNA_CHROM_SIZE                                      } from '../../modules/nf-core/samtools/faidx/main'
 include { FILTER_GTF_BY_TRANSCRIPT                                               } from '../../modules/local/filter_gtf_by_transcript/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
@@ -26,13 +23,13 @@ workflow PREPARE_GENOME {
     take:
     fasta                          // file: .fasta
     fasta_fai                      // file: .fai
-    ncrna_fasta                    // file: .fasta
-    ncrna_fasta_fai                // file: .fai
+    rDNA_fasta                     // file: .fasta
+    rDNA_fasta_fai                 // file: .fai
     gtf                            // file: .gtf
     genome_index                   // folder: index
-    ncrna_genome_index             // folder: index
+    rDNA_genome_index              // folder: index
     genome_chrom_sizes             // file: .txt
-    ncrna_chrom_sizes              // file: .txt
+    rDNA_chrom_sizes               // file: .txt
     representative_transcript      // file: .txt
     representative_transcript_fai  // file: .fai
     representative_transcript_gtf  // file: .gtf
@@ -62,17 +59,17 @@ workflow PREPARE_GENOME {
     //ch_fasta | view
 
     //
-    // MODULE: Uncompress genome ncrna_fasta file if required
+    // MODULE: Uncompress genome rDNA_fasta file if required
     //
-    ch_ncrna_fasta = Channel.empty()
-    if (ncrna_fasta.toString().endsWith(".gz")) {
-        ch_ncrna_fasta = GUNZIP_NCRNA_FASTA ( [ [id:ncrna_fasta.baseName], ncrna_fasta ] ).gunzip
-        ch_versions = ch_versions.mix(GUNZIP_NCRNA_FASTA.out.versions)
+    ch_rDNA_fasta = Channel.empty()
+    if (rDNA_fasta.toString().endsWith(".gz")) {
+        ch_rDNA_fasta = GUNZIP_rDNA_FASTA ( [ [id:rDNA_fasta.baseName], rDNA_fasta ] ).gunzip
+        ch_versions = ch_versions.mix(GUNZIP_rDNA_FASTA.out.versions)
     } else {
-        ch_ncrna_fasta = Channel.of([ [id:ncrna_fasta.baseName], ncrna_fasta ])
+        ch_rDNA_fasta = Channel.of([ [id:rDNA_fasta.baseName], rDNA_fasta ])
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fasta]
-    //ch_ncrna_fasta | view
+    //ch_rDNA_fasta | view
 
     //
     // MODULE: Uncompress genome gtf file if required
@@ -108,16 +105,16 @@ workflow PREPARE_GENOME {
     // MODULES: Uncompress Bowtie index or generate if required
     //
     ch_bt_index = Channel.empty()
-    if (ncrna_genome_index) {
-        if (ncrna_genome_index.toString().endsWith(".tar.gz")) {
-            ch_bt_index = UNTAR_BT ( [ [:], ncrna_genome_index ] ).untar
+    if (rDNA_genome_index) {
+        if (rDNA_genome_index.toString().endsWith(".tar.gz")) {
+            ch_bt_index = UNTAR_BT ( [ [:], rDNA_genome_index ] ).untar
             ch_versions  = ch_versions.mix(UNTAR_BT.out.versions)
         } else {
-            ch_bt_index = Channel.of([ [:] , ncrna_genome_index ])
+            ch_bt_index = Channel.of([ [:] , rDNA_genome_index ])
         }
     }
     else {
-        ch_bt_index = BOWTIE_BUILD ( ch_ncrna_fasta).index
+        ch_bt_index = BOWTIE_BUILD ( ch_rDNA_fasta).index
         ch_versions = ch_versions.mix(BOWTIE_BUILD.out.versions)
     }
 
@@ -129,7 +126,7 @@ workflow PREPARE_GENOME {
         ch_fasta_fai = Channel.of([ [id:fasta_fai.baseName], fasta_fai ])
     } else {
         GENOME_INDEX (
-            ch_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            ch_fasta.map{ meta, fa -> [ meta, fa, [] ] },
             false
         )
         ch_fasta_fai = GENOME_INDEX.out.fai
@@ -138,17 +135,17 @@ workflow PREPARE_GENOME {
     //ch_fasta_fai | view
 
     //
-    // MODULE: Create fasta fai if required for ncrna genome
+    // MODULE: Create fasta fai if required for rDNA genome
     //
-    ch_ncrna_fasta_fai = Channel.empty()
-    if (ncrna_fasta_fai) {
-        ch_ncrna_fasta_fai = Channel.of([ [id:ncrna_fasta_fai.baseName], ncrna_fasta_fai ])
+    ch_rDNA_fasta_fai = Channel.empty()
+    if (rDNA_fasta_fai) {
+        ch_rDNA_fasta_fai = Channel.of([ [id:rDNA_fasta_fai.baseName], rDNA_fasta_fai ])
     } else {
-        NCRNA_INDEX (
-            ch_ncrna_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+        rDNA_INDEX (
+            ch_rDNA_fasta.map{ meta, fa -> [ meta, fa, [] ] },
             false
         )
-        ch_ncrna_fasta_fai = NCRNA_INDEX.out.fai
+        ch_rDNA_fasta_fai = rDNA_INDEX.out.fai
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fai]
     //ch_fasta_fai | view
@@ -161,24 +158,24 @@ workflow PREPARE_GENOME {
         ch_genome_chrom_sizes = Channel.of([ [id:genome_chrom_sizes.baseName], genome_chrom_sizes ])
     } else {
         GENOME_CHROM_SIZE (
-            ch_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            ch_fasta.map{ meta, fa -> [ meta, fa, [] ] },
             true
         )
         ch_genome_chrom_sizes = GENOME_CHROM_SIZE.out.sizes
     }
 
     //
-    // MODULE: Calc ncrna chrom sizes
+    // MODULE: Calc rDNA chrom sizes
     //
-    ch_ncrna_chrom_sizes = Channel.empty()
-    if(ncrna_chrom_sizes) {
-        ch_ncrna_chrom_sizes = Channel.of([ [id:ncrna_chrom_sizes.baseName], ncrna_chrom_sizes ])
+    ch_rDNA_chrom_sizes = Channel.empty()
+    if(rDNA_chrom_sizes) {
+        ch_rDNA_chrom_sizes = Channel.of([ [id:rDNA_chrom_sizes.baseName], rDNA_chrom_sizes ])
     } else {
-        NCRNA_CHROM_SIZE (
-            ch_ncrna_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+        rDNA_CHROM_SIZE (
+            ch_rDNA_fasta.map{ meta, fa -> [ meta, fa, [] ] },
             true
         )
-        ch_ncrna_chrom_sizes = NCRNA_CHROM_SIZE.out.sizes
+        ch_rDNA_chrom_sizes = rDNA_CHROM_SIZE.out.sizes
     }
 
     //
@@ -301,12 +298,12 @@ workflow PREPARE_GENOME {
     emit:
     fasta                             = ch_fasta                             // channel: [ val(meta), [ fasta ] ]
     fasta_fai                         = ch_fasta_fai                         // channel: [ val(meta), [ fai ] ]
-    ncrna_fasta                       = ch_ncrna_fasta                       // channel: [ val(meta), [ fasta ] ]
-    ncrna_fasta_fai                   = ch_ncrna_fasta_fai                   // channel: [ val(meta), [ fai ] ]
+    rDNA_fasta                        = ch_rDNA_fasta                        // channel: [ val(meta), [ fasta ] ]
+    rDNA_fasta_fai                    = ch_rDNA_fasta_fai                    // channel: [ val(meta), [ fai ] ]
     genome_index                      = ch_star_index                        // channel: [ val(meta), [ star_index ] ]
-    ncrna_index                       = ch_bt_index                          // channel: [ val(meta), [ bt2_index ] ]
+    rDNA_index                        = ch_bt_index                          // channel: [ val(meta), [ bt2_index ] ]
     chrom_sizes                       = ch_genome_chrom_sizes                // channel: [ val(meta), [ txt ] ]
-    ncrna_chrom_sizes                 = ch_ncrna_chrom_sizes                 // channel: [ val(meta), [ txt ] ]
+    rDNA_chrom_sizes                  = ch_rDNA_chrom_sizes                  // channel: [ val(meta), [ txt ] ]
     gtf                               = ch_gtf                               // channel: [ val(meta), [ gtf ] ]
     representative_transcript         = ch_representative_transcript         // channel: [ val(meta), [ txt ] ] or Channel.empty()
     representative_transcript_fai     = ch_representative_transcript_fai     // channel: [ val(meta), [ fai ] ] or Channel.empty()

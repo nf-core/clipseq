@@ -8,7 +8,7 @@ process FILTER_GTF_BY_TRANSCRIPT {
         'quay.io/biocontainers/pyranges:0.1.4--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(gtf)
+    tuple val(meta_gtf), path(gtf)
     tuple val(meta), path(transcript)
     val(skip_filter_gtf)
 

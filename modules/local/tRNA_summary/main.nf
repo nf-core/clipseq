@@ -16,8 +16,6 @@ process tRNA_SUMMARY {
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
     python ${projectDir}/modules/local/tRNA_summary/templates/gettRNAxlsites_v3.py -i ${bedfile}

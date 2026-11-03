@@ -14,7 +14,6 @@ process PEKA_MQC_PLOTS {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
 
 
     // Klara's PEKA MQC script
@@ -33,7 +32,7 @@ process PEKA_MQC_PLOTS {
 
     stub:
     """
-    touch ${meta.id}.png
+    touch peka_mqc_plot.png
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version | sed 's/Python //')
