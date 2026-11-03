@@ -1,3 +1,7 @@
+include { paramsSummaryMap } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { PIPELINE_COMPLETION; methodsDescriptionText } from '../subworkflows/local/utils_nfcore_clipseq_pipeline'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT LOCAL MODULES/SUBWORKFLOWS
@@ -110,10 +114,7 @@ include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE                          } from '../s
 workflow CLIPSEQ {
 
     // Validate inputs
-    def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
-
-    // Validate input parameters
-    WorkflowClipseq.initialise(params, log)
+    def summary_params = paramsSummaryMap(workflow)
 
     // Check manditory input parameters to see if the files exist if they have been specified
     def check_param_list = [
@@ -174,7 +175,7 @@ workflow CLIPSEQ {
     def ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 
     // Info required for completion email and summary
-    def multiqc_report = []
+    def multiqc_report = channel.empty()
 
     // Init
     ch_versions = channel.empty()
@@ -1061,11 +1062,13 @@ workflow CLIPSEQ {
         //
         // MODULE: Run multiqc
         //
-        workflow_summary    = WorkflowClipseq.paramsSummaryMultiqc(workflow, summary_params)
+
+        workflow_summary    = paramsSummaryMultiqc(summary_params)
         ch_workflow_summary = channel.value(workflow_summary)
 
-        methods_description    = WorkflowClipseq.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
+        methods_description    = methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
         ch_methods_description = channel.value(methods_description)
+
 
         ch_multiqc_files = channel.empty()
         ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
@@ -1111,19 +1114,21 @@ workflow CLIPSEQ {
         MULTIQC (
             ch_multiqc_input
         )
-        multiqc_report = MULTIQC.out.report.map { _meta, html -> html }.toList()
+        multiqc_report = MULTIQC.out.report.map { meta, html -> html }
+
 
     }
 
-    workflow.onComplete {
-        if (params.email || params.email_on_fail) {
-            NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-        }
-        NfcoreTemplate.summary(workflow, params, log)
-        if (params.hook_url) {
-            NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-        }
-    }
+    PIPELINE_COMPLETION(
+        params.email,
+        params.email_on_fail,
+        params.plaintext_email,
+        params.outdir,
+        params.monochrome_logs,
+        params.hook_url,
+        multiqc_report
+    )
+
 }
 
 /*

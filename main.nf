@@ -18,6 +18,7 @@ nextflow.enable.dsl = 2
 */
 
 include { CLIPSEQ } from './workflows/clipseq'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_clipseq_pipeline'
 
 //
 // WORKFLOW: Run main nf-core/clipseq analysis pipeline
@@ -37,7 +38,7 @@ workflow NFCORE_CLIPSEQ {
 // See: https://github.com/nf-core/rnaseq/issues/619
 //
 workflow {
-    WorkflowMain.initialise(workflow, params, log)
+    PIPELINE_INITIALISATION(args)
     NFCORE_CLIPSEQ ()
 }
 

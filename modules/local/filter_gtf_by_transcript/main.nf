@@ -3,9 +3,7 @@ process FILTER_GTF_BY_TRANSCRIPT {
     label "process_single"
 
     conda "bioconda::pyranges=0.1.4"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/pyranges:0.1.2--pyhdfd78af_1':
-        'quay.io/biocontainers/pyranges:0.1.4--pyhdfd78af_0' }"
+    container 'quay.io/biocontainers/pyranges:0.1.4--pyhdfd78af_0'
 
     input:
     tuple val(meta_gtf), path(gtf)

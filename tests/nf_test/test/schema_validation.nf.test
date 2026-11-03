@@ -1,0 +1,43 @@
+nextflow_pipeline {
+    name "Schema validation and startup"
+    script "main.nf"
+    tag "schema_validation"
+
+    test("help works without analysis inputs") {
+        when {
+            params {
+                help = true
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.stdout.join('\n').contains('Input/output options')
+        }
+    }
+
+    test("version exits before validating inputs") {
+        when {
+            params {
+                version = true
+            }
+        }
+        then {
+            assert workflow.success
+            assert workflow.stdout.join('\n').contains('nf-core/clipseq')
+        }
+    }
+
+    test("invalid integer fails schema validation") {
+        when {
+            params {
+                min_trimmed_reads = "invalid"
+                validate_params = true
+            }
+        }
+        then {
+            assert workflow.exitStatus != 0
+            assert workflow.stdout.join('\n').contains('min_trimmed_reads')
+            assert !workflow.stdout.join('\n').contains('could not determine version')
+        }
+    }
+}
