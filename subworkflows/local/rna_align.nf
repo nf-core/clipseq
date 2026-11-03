@@ -36,6 +36,9 @@ workflow RNA_ALIGN {
 
     main:
     ch_versions = Channel.empty()
+
+    // SAMTOOLS_SORT expects [ meta, fasta, fai ]
+    ch_sort_fasta = fasta.map { meta, fa -> [ meta, fa, [] ] }
     //
     // MODULE: Align reads to rDNA genome
     //
@@ -48,7 +51,7 @@ workflow RNA_ALIGN {
     //
     // SUBWORKFLOW: Sort, index BAM file
     //
-    SAMTOOLS_SORT_rDNA( BOWTIE_ALIGN.out.bam, fasta, '' )
+    SAMTOOLS_SORT_rDNA( BOWTIE_ALIGN.out.bam, ch_sort_fasta, '' )
     SAMTOOLS_INDEX_rDNA( SAMTOOLS_SORT_rDNA.out.bam )
 
 
@@ -64,7 +67,7 @@ workflow RNA_ALIGN {
         true
     )
 
-    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta, '' )
+    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, ch_sort_fasta, '' )
 
     SAMTOOLS_INDEX_rDNA_K1 ( SAMTOOLS_SORT_rDNA_K1.out.bam )
 
@@ -88,16 +91,7 @@ workflow RNA_ALIGN {
         // CHANNEL: Merge reads and index
         //
         ch_coord_bam_bai = STAR_ALIGN_GENOME_ONLY.out.bam_sorted
-            .join(SAMTOOLS_INDEX_COORD_GONLY.out.bai, by: [0], remainder: true)
-            .join(SAMTOOLS_INDEX_COORD_GONLY.out.csi, by: [0], remainder: true)
-            .map {
-                meta, bam, bai, csi ->
-                    if (bai) {
-                        [ meta, bam, bai ]
-                    } else {
-                        [ meta, bam, csi ]
-                    }
-            }
+            .join(SAMTOOLS_INDEX_COORD_GONLY.out.index, by: [0])
         /*
         * CHANNEL: Filter for uniquely mapping reads for downstream analysis; samtools view -b -q 5 -o output.bam alignments.bam
         */
@@ -106,13 +100,13 @@ workflow RNA_ALIGN {
             [[],[],[]],
             [[],[]],
             [[],[]],
-            ''
+            'bai'
         )
 
-        ch_genome_log             = STAR_ALIGN_GENOME_ONLY.log
+        ch_genome_log             = STAR_ALIGN_GENOME_ONLY.out.log_final
         ch_genome_log_final       = STAR_ALIGN_GENOME_ONLY.out.log_final
         ch_genome_multi_bam       = STAR_ALIGN_GENOME_ONLY.out.bam_sorted
-        ch_genome_multi_bai       = SAMTOOLS_INDEX_COORD_GONLY.out.bai
+        ch_genome_multi_bai       = SAMTOOLS_INDEX_COORD_GONLY.out.index
         ch_genome_unique_bam      = GONLY_SAMTOOLS_VIEW_GENOME.out.bam
         ch_genome_unique_bai      = GONLY_SAMTOOLS_VIEW_GENOME.out.bai
         ch_transcript_unique_bam  = []
@@ -136,36 +130,18 @@ workflow RNA_ALIGN {
         // CHANNEL: Merge reads and index
         //
         ch_coord_bam_bai = STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted
-            .join(SAMTOOLS_INDEX_COORD_TONLY.out.bai, by: [0], remainder: true)
-            .join(SAMTOOLS_INDEX_COORD_TONLY.out.csi, by: [0], remainder: true)
-            .map {
-                meta, bam, bai, csi ->
-                    if (bai) {
-                        [ meta, bam, bai ]
-                    } else {
-                        [ meta, bam, csi ]
-                    }
-            }
+            .join(SAMTOOLS_INDEX_COORD_TONLY.out.index, by: [0])
         //
         // MODULE: Sort and index transcript BAM file
         //
-        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, fasta, '' )
+        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, ch_sort_fasta, '' )
         SAMTOOLS_INDEX_TRANS( SAMTOOLS_SORT_TRANS.out.bam )
 
         /*
         * CHANNEL: Join transcriptbam and bai files
         */
         ch_transcript_bam_bai = SAMTOOLS_SORT_TRANS.out.bam
-            .join(SAMTOOLS_INDEX_TRANS.out.bai, by: [0], remainder: true)
-            .join(SAMTOOLS_INDEX_TRANS.out.csi, by: [0], remainder: true)
-            .map {
-                meta, bam, bai, csi ->
-                    if (bai) {
-                        [ meta, bam, bai ]
-                    } else {
-                        [ meta, bam, csi ]
-                    }
-            }
+            .join(SAMTOOLS_INDEX_TRANS.out.index, by: [0])
         /*
         * CHANNEL: Filter for uniquely mapping reads for downstream analysis; samtools view -b -q 5 -o output.bam alignments.bam
         */
@@ -174,7 +150,7 @@ workflow RNA_ALIGN {
             [[],[],[]],
             [[],[]],
             [[],[]],
-            ''
+            'bai'
         )
 
         TONLY_SAMTOOLS_VIEW_TRANSCRIPT (
@@ -182,29 +158,29 @@ workflow RNA_ALIGN {
             [[],[],[]],
             [[],[]],
             [[],[]],
-            ''
+            'bai'
         )
 
-        ch_genome_log             = STAR_ALIGN_WITH_TRANSCRIPTOME.out.log
+        ch_genome_log             = STAR_ALIGN_WITH_TRANSCRIPTOME.out.log_final
         ch_genome_log_final       = STAR_ALIGN_WITH_TRANSCRIPTOME.out.log_final
         ch_genome_multi_bam       = STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted
-        ch_genome_multi_bai       = SAMTOOLS_INDEX_COORD_TONLY.out.bai
+        ch_genome_multi_bai       = SAMTOOLS_INDEX_COORD_TONLY.out.index
         ch_genome_unique_bam      = TONLY_SAMTOOLS_VIEW_GENOME.out.bam
         ch_genome_unique_bai      = TONLY_SAMTOOLS_VIEW_GENOME.out.bai
 
         ch_transcript_unique_bam  = TONLY_SAMTOOLS_VIEW_TRANSCRIPT.out.bam
         ch_transcript_unique_bai  = TONLY_SAMTOOLS_VIEW_TRANSCRIPT.out.bai
         ch_transcript_multi_bam   = SAMTOOLS_SORT_TRANS.out.bam
-        ch_transcript_multi_bai   = SAMTOOLS_INDEX_TRANS.out.bai
+        ch_transcript_multi_bai   = SAMTOOLS_INDEX_TRANS.out.index
     }
 
 
     emit:
     rDNA_bam         = SAMTOOLS_SORT_rDNA.out.bam       // channel: [ val(meta), [ bam ] ]
-    rDNA_bai         = SAMTOOLS_INDEX_rDNA.out.bai      // channel: [ val(meta), [ bai ] ]
+    rDNA_bai         = SAMTOOLS_INDEX_rDNA.out.index    // channel: [ val(meta), [ bai ] ]
     rDNA_log         = BOWTIE_ALIGN.out.log             // channel: [ val(meta), [ txt ] ]
     rDNA_k1_bam      = SAMTOOLS_SORT_rDNA_K1.out.bam                   // channel: [ val(meta), [ bam ] ]
-    rDNA_k1_bai      = SAMTOOLS_INDEX_rDNA_K1.out.bai                  // channel: [ val(meta), [ bai ] ]
+    rDNA_k1_bai      = SAMTOOLS_INDEX_rDNA_K1.out.index                // channel: [ val(meta), [ bai ] ]
 
     genome_log             = ch_genome_log                    // channel: [ val(meta), [ txt ] ]
     genome_log_final       = ch_genome_log_final              // channel: [ val(meta), [ txt ] ]

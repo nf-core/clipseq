@@ -258,6 +258,12 @@ workflow CLIPSEQ {
         ch_regions_resolved_gtf              = PREPARE_GENOME.out.regions_resolved_gtf.collect()
         ch_genome_index                      = PREPARE_GENOME.out.genome_index.collect()
         ch_rDNA_genome_index                = PREPARE_GENOME.out.rDNA_index.collect()
+    } else {
+        // Wrap provided reference files as [ meta, file ] to match the prepared channels
+        ch_fasta          = channel.value([ [id: ch_fasta.baseName], ch_fasta ])
+        ch_fasta_fai      = ch_fasta_fai ? channel.value([ [id: ch_fasta_fai.baseName], ch_fasta_fai ]) : channel.value([ [], [] ])
+        ch_rDNA_fasta     = channel.value([ [id: ch_rDNA_fasta.baseName], ch_rDNA_fasta ])
+        ch_rDNA_fasta_fai = ch_rDNA_fasta_fai ? channel.value([ [id: ch_rDNA_fasta_fai.baseName], ch_rDNA_fasta_fai ]) : channel.value([ [], [] ])
     }
 
 
@@ -578,9 +584,15 @@ workflow CLIPSEQ {
             ch_rpt_annotation_gtf
         )
 
+        // Telescope emits updated and other BAMs together; split them by filename
+        ch_telescope_bams = TELESCOPE_ASSIGN.out.bam
+            .flatMap { meta, bams -> [bams].flatten().collect { bam -> [meta, bam] } }
+        ch_telescope_updated = ch_telescope_bams.filter { meta, bam -> bam.name.endsWith('updated.bam') }
+        ch_telescope_other   = ch_telescope_bams.filter { meta, bam -> bam.name.endsWith('other.bam') }
+
         MERGE_AND_SORT_TELESCOPE_BAMS(
-            TELESCOPE_ASSIGN.out.updated_bam,
-            TELESCOPE_ASSIGN.out.other_bam
+            ch_telescope_updated,
+            ch_telescope_other
         )
 
     ch_genome_unique_final_bam = MERGE_AND_SORT_TELESCOPE_BAMS.out.bam
@@ -611,7 +623,7 @@ workflow CLIPSEQ {
     )
 
     ch_rDNA_k1_bam =     SORT_INIT_ALIGNED_XLINKS_rDNA.out.bam
-    ch_rDNA_k1_bai =     INDEX_INIT_ALIGNED_XLINKS_rDNA.out.bai
+    ch_rDNA_k1_bai =     INDEX_INIT_ALIGNED_XLINKS_rDNA.out.index
 
 
     //

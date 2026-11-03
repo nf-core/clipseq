@@ -67,7 +67,7 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     SAMTOOLS_GROUP_INDEX (
         ch_peakcalling_bam
     )
-    ch_peakcalling_bai = SAMTOOLS_GROUP_INDEX.out.bai
+    ch_peakcalling_bai = SAMTOOLS_GROUP_INDEX.out.index
 
 
     //
