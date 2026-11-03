@@ -20,7 +20,7 @@ workflow BAM_DEDUP_SAMTOOLS_UMICOLLAPSE {
     bam_bai // channel: [ val(meta), [ bam ], [ bai/csi ] ]
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // MODULE: UMI-tools collapse

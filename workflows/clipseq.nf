@@ -177,7 +177,7 @@ workflow CLIPSEQ {
     def multiqc_report = []
 
     // Init
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // Prepare mandatory params
     ch_input       = file(params.input)
@@ -270,7 +270,7 @@ workflow CLIPSEQ {
     //
     // SUBWORKFLOW: Read in samplesheet, validate, stage input files and merge replicates
     //
-    ch_fastq = Channel.empty()
+    ch_fastq = channel.empty()
     if(params.run_input_check) {
         INPUT_CHECK (
             ch_input,
@@ -313,15 +313,15 @@ workflow CLIPSEQ {
     if(params.source == "fastq" & params.run_alignment) {
 
         ch_fastq
-            .view { "ALIGN FASTQ: $it" }
+            .view { v -> "ALIGN FASTQ: $v" }
         ch_rDNA_genome_index
-            .view { "ALIGN rDNA: $it" }
+            .view { v -> "ALIGN rDNA: $v" }
         ch_genome_index
-            .view { "ALIGN GENOME INDEX: $it" }
+            .view { v -> "ALIGN GENOME INDEX: $v" }
         ch_gtf
-            .view { "ALIGN GTF: $it" }
+            .view { v -> "ALIGN GTF: $v" }
         ch_fasta
-            .view { "ALIGN FASTA: $it" }
+            .view { v -> "ALIGN FASTA: $v" }
 
         RNA_ALIGN (
             ch_fastq,
@@ -346,7 +346,7 @@ workflow CLIPSEQ {
         ch_transcript_unique_bai   = RNA_ALIGN.out.transcript_unique_bai
     }
 
-    ch_paraclu_mincluster = Channel.value(params.paraclu_minValue)
+    ch_paraclu_mincluster = channel.value(params.paraclu_minValue)
     if(!params.skip_transcriptome) {
         TRANSCRIPTOME_PROCESSING(
             ch_transcript_unique_bam,
@@ -460,13 +460,13 @@ workflow CLIPSEQ {
 
     if(!params.run_te){
 
-        ch_combine_bins = Channel.empty()
+        ch_combine_bins = channel.empty()
     }
 
     if(params.run_te) {
 
         // repeats gtf required for te reassignment
-        ch_rpt_annotation_gtf = Channel.value([[id: 'te_annotations'], file(params.ch_rpt_annotation_gtf, checkIfExists: true)])
+        ch_rpt_annotation_gtf = channel.value([[id: 'te_annotations'], file(params.ch_rpt_annotation_gtf, checkIfExists: true)])
 
         // 2: Binning to assign to TEs/ncRNA/tRNA
 
@@ -546,10 +546,10 @@ workflow CLIPSEQ {
             error "ERROR: --ch_rpt_annotation_gtf is required when --run_te is specified"
         }
 
-        ch_tetranscripts_gtf = Channel.value([[id: 'te_annotations'], file(params.tetranscripts_gtf, checkIfExists: true)])
+        ch_tetranscripts_gtf = channel.value([[id: 'te_annotations'], file(params.tetranscripts_gtf, checkIfExists: true)])
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
-        ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
+        ch_bam_c = channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
              .map { file -> [[id: 'control'], file] }
 
         if (params.run_dedup){
@@ -663,7 +663,7 @@ workflow CLIPSEQ {
         if(params.run_rDNA_summary) {
             rDNA_SUMMARY(
                 rDNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.ncRNA_CPMnorm_bedgraph
-                .map{ it[1] }
+                .map{ meta, file -> file }
                 .collect()
             )
         }
@@ -674,7 +674,7 @@ workflow CLIPSEQ {
 
         ICOUNTMINI_SUMMARY (
             ch_genome_crosslink_group_resolved_bed,
-            ch_regions_used.map{ it[1] }
+            ch_regions_used.map{ meta, file -> file }
         )
 
         ch_merged_summaries = ICOUNTMINI_SUMMARY.out.summary_type
@@ -704,7 +704,7 @@ workflow CLIPSEQ {
 
         ICOUNTMINI_METAGENE (
             ch_genome_crosslink_group_resolved_bed,
-            ch_regions_used.map{ it[1] }
+            ch_regions_used.map{ meta, file -> file }
         )
 
         if(params.consensus_peak){
@@ -713,7 +713,7 @@ workflow CLIPSEQ {
             ch_all_crosslinks = ch_genome_crosslink_INDIVIDUAL_HASGROUP_bed.mix(ch_genome_crosslink_INDIVIDUAL_bed)
 
             ch_all_crosslinks
-                .collect { it[1] }
+                .collect{ meta, file -> file }
                 .map { crosslinks -> [[id:"allXL"], crosslinks]}
                 .set { ch_consensus_crosslinks_bed }
 
@@ -748,25 +748,25 @@ workflow CLIPSEQ {
     //
     // SUBWORKFLOW: Run peakcalling on genome
     //
-    ch_clippy_genome_peaks          = Channel.empty()
-    ch_icountmini_sigxls_gz         = Channel.empty()
-    ch_icountmini_peaks_gz          = Channel.empty()
-    ch_icountmini_sigxls            = Channel.empty()
-    ch_paraclu_genome_peaks         = Channel.empty()
+    ch_clippy_genome_peaks          = channel.empty()
+    ch_icountmini_sigxls_gz         = channel.empty()
+    ch_icountmini_peaks_gz          = channel.empty()
+    ch_icountmini_sigxls            = channel.empty()
+    ch_paraclu_genome_peaks         = channel.empty()
 
     //
     // PEKA CHANNELS
     //
-    ch_peka_icountmini_peaks        = Channel.empty()
-    ch_peka_clippy_peaks            = Channel.empty()
-    ch_peka_paraclu_peaks           = Channel.empty()
-    ch_peka_pureclip_peaks          = Channel.empty()
+    ch_peka_icountmini_peaks        = channel.empty()
+    ch_peka_clippy_peaks            = channel.empty()
+    ch_peka_paraclu_peaks           = channel.empty()
+    ch_peka_pureclip_peaks          = channel.empty()
 
 
     // Create empty channel for DESEQ2_QC and PEKA_MQC_PLOTS for conditional use
     // initialise before the if(params.run_peakcalling) block
-    ch_deseq2_qc_plots = Channel.empty()
-    ch_peka_mqc_plots = Channel.empty()
+    ch_deseq2_qc_plots = channel.empty()
+    ch_peka_mqc_plots = channel.empty()
 
     if(params.run_peakcalling) {
 
@@ -774,16 +774,16 @@ workflow CLIPSEQ {
 
             CLIPPY_GENOME (
                 ch_genome_crosslink_group_resolved_bed,
-                ch_gtf_used.map{ it[1] },
-                ch_fasta_fai.map{ it[1] }
+                ch_gtf_used.map{ meta, file -> file },
+                ch_fasta_fai.map{ meta, file -> file }
             )
             ch_clippy_genome_peaks  = CLIPPY_GENOME.out.peaks
 
             if(params.consensus_peak){
                 CLIPPY_GENOME_CONSENSUS (
                     ch_consensus_crosslinks_final_bed,
-                    ch_gtf_used.map{ it[1] },
-                    ch_fasta_fai.map{ it[1] }
+                    ch_gtf_used.map{ meta, file -> file },
+                    ch_fasta_fai.map{ meta, file -> file }
                 )
 
                 CLIPPY_CONSENSUS_PEAK_TABLE (
@@ -806,7 +806,7 @@ workflow CLIPSEQ {
                     ch_clippy_genome_peaks,
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
-                    ch_regions_used.map{ it[1] }
+                    ch_regions_used.map{ meta, file -> file }
                 )
                 ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_CLIPPY.out.distribution)
             }
@@ -817,7 +817,7 @@ workflow CLIPSEQ {
 
             ICOUNTMINI_SIGXLS (
                 ch_genome_crosslink_group_resolved_bed,
-                ch_seg_gtf.map{ it[1]}
+                ch_seg_gtf.map{ meta, file -> file }
 
             )
 
@@ -825,9 +825,9 @@ workflow CLIPSEQ {
 
             // CHANNEL: Create combined channel of input crosslinks and sigxls
             ch_peaks_input = ch_genome_crosslink_group_resolved_bed
-                .map{ [ it[0].id, it[0], it[1] ] }
-                .join( ICOUNTMINI_SIGXLS.out.sigxls.map{ [ it[0].id, it[0], it[1] ] } )
-                .map { [ it[1], it[2], it[4] ] }
+                .map{ meta, file -> [ meta.id, meta, file ] }
+                .join( ICOUNTMINI_SIGXLS.out.sigxls.map{ meta, file -> [ meta.id, meta, file ] } )
+                .map { id, meta, bed, meta2, sigxls -> [ meta, bed, sigxls ] }
             //EXAMPLE CHANNEL STRUCT: [ [id:test], BED(crosslinks), BED(sigxls) ]
 
             ICOUNTMINI_PEAKS (
@@ -851,13 +851,13 @@ workflow CLIPSEQ {
             if(params.consensus_peak){
                 CONSENSUS_ICOUNTMINI_SIGXLS (
                     ch_consensus_crosslinks_final_bed,
-                    ch_seg_gtf.map{ it[1]}
+                    ch_seg_gtf.map{ meta, file -> file }
                 )
                 // CHANNEL: Create combined channel of input crosslinks and sigxls
                 ch_consensus_peaks_input = ch_consensus_crosslinks_final_bed
-                    .map{ [ it[0].id, it[0], it[1] ] }
-                    .join( CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls.map{ [ it[0].id, it[0], it[1] ] } )
-                    .map { [ it[1], it[2], it[4] ] }
+                    .map{ meta, file -> [ meta.id, meta, file ] }
+                    .join( CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls.map{ meta, file -> [ meta.id, meta, file ] } )
+                    .map { id, meta, bed, meta2, sigxls -> [ meta, bed, sigxls ] }
                 //EXAMPLE CHANNEL STRUCT: [ [id:test], BED(crosslinks), BED(sigxls) ]
                 CONSENSUS_ICOUNTMINI_PEAKS (
                     ch_consensus_peaks_input
@@ -888,7 +888,7 @@ workflow CLIPSEQ {
                     ch_icountmini_peaks,
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
-                    ch_regions_used.map{ it[1] }
+                    ch_regions_used.map{ meta, file -> file }
                 )
                 ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_ICOUNT.out.distribution)
             }
@@ -932,7 +932,7 @@ workflow CLIPSEQ {
                     ch_paraclu_genome_peaks,
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
-                    ch_regions_used.map{ it[1] }
+                    ch_regions_used.map{ meta, file -> file }
                 )
                 ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_PARACLU.out.distribution)
             }
@@ -1025,7 +1025,7 @@ workflow CLIPSEQ {
                     ch_pureclip_genome_peaks_matched,
                     ch_genome_crosslink_bed_matched,
                     ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
-                    ch_regions_used.map{ it[1] }
+                    ch_regions_used.map{ meta, file -> file }
                 )
                 ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_PURECLIP.out.distribution)
             }
@@ -1038,48 +1038,48 @@ workflow CLIPSEQ {
 
         CLIPQC (
             ch_callers,
-            ch_rDNA_log.collect{ it[1] },
-            ch_genome_log.collect{ it[1] },
-            ch_umi_log.collect{ it[1] },
-            ch_genome_crosslink_group_resolved_bed.collect{ it[1] },
-            'icount' in callers ? ch_icountmini_peaks.collect{ it[1] } : [],
-            'paraclu' in callers ? ch_paraclu_genome_peaks.collect {it[1]} : [],
-            'clippy' in callers ? ch_clippy_genome_peaks.collect {it[1]} : [],
-            'pureclip' in callers ? ch_pureclip_genome_peaks.collect {it[1] } : [],
-            ch_merged_summary_type.collect{it[1]},
-            ch_merged_summary_subtype.collect{it[1]},
-            ch_merged_summary_gene.collect{it[1]},
+            ch_rDNA_log.collect{ meta, file -> file },
+            ch_genome_log.collect{ meta, file -> file },
+            ch_umi_log.collect{ meta, file -> file },
+            ch_genome_crosslink_group_resolved_bed.collect{ meta, file -> file },
+            'icount' in callers ? ch_icountmini_peaks.collect{ meta, file -> file } : [],
+            'paraclu' in callers ? ch_paraclu_genome_peaks.collect{ meta, file -> file } : [],
+            'clippy' in callers ? ch_clippy_genome_peaks.collect{ meta, file -> file } : [],
+            'pureclip' in callers ? ch_pureclip_genome_peaks.collect{ meta, file -> file } : [],
+            ch_merged_summary_type.collect{ meta, file -> file },
+            ch_merged_summary_subtype.collect{ meta, file -> file },
+            ch_merged_summary_gene.collect{ meta, file -> file },
 
         )
 
         // MODULE: Run peka multiqc plots
 
         PEKA_MQC_PLOTS (
-            ch_peka_mqc_plots.collect{ it[1] }.flatten().collect()
+            ch_peka_mqc_plots.collect{ meta, file -> file }.flatten().collect()
         )
 
         //
         // MODULE: Run multiqc
         //
         workflow_summary    = WorkflowClipseq.paramsSummaryMultiqc(workflow, summary_params)
-        ch_workflow_summary = Channel.value(workflow_summary)
+        ch_workflow_summary = channel.value(workflow_summary)
 
         methods_description    = WorkflowClipseq.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
-        ch_methods_description = Channel.value(methods_description)
+        ch_methods_description = channel.value(methods_description)
 
-        ch_multiqc_files = Channel.empty()
+        ch_multiqc_files = channel.empty()
         ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
         ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
 
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(ch_rDNA_log.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(ch_genome_log.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{ meta, file -> file }.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{ meta, file -> file }.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{ meta, file -> file }.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_rDNA_log.collect{ meta, file -> file }.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_genome_log.collect{ meta, file -> file }.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(ch_combine_bins.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_combine_bins.collect{ meta, file -> file }.ifEmpty([]))
 
         // Software versions: `versions` topic (nf-core modules) plus versions.yml from local modules
         ch_collated_versions = channel.topic('versions')
@@ -1096,7 +1096,7 @@ workflow CLIPSEQ {
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.type.collect().ifEmpty([]))
         }
 
-        ch_tmp = ch_rDNA_log.collect{it[1]}
+        ch_tmp = ch_rDNA_log.collect{ meta, file -> file }
 
         if (params.run_te){
         ch_multiqc_custom_config = ch_multiqc_custom_config.mix(COMBINE_BINS.out.config.ifEmpty([]))

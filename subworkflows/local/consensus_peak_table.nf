@@ -30,7 +30,7 @@ workflow CONSENSUS_PEAK_TABLE {
     skip_deseq2_qc
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     SORT_FAI (
         genome_fai,
@@ -63,7 +63,7 @@ workflow CONSENSUS_PEAK_TABLE {
     )
 
     CONSENSUS_MAP.out.mapped
-        .collect { it[1] }
+        .collect{ meta, file -> file }
         .map { crosslinks -> [[id:"allXL"], crosslinks]}
         .set { ch_mapped_xls }
 
@@ -76,16 +76,16 @@ workflow CONSENSUS_PEAK_TABLE {
     //
     // Generate QC plots with DESeq2
     //
-    ch_deseq2_qc_pdf           = Channel.empty()
-    ch_deseq2_qc_rdata         = Channel.empty()
-    ch_deseq2_qc_rds           = Channel.empty()
-    ch_deseq2_qc_pca_txt       = Channel.empty()
-    ch_deseq2_qc_pca_multiqc   = Channel.empty()
-    ch_deseq2_qc_dists_txt     = Channel.empty()
-    ch_deseq2_qc_dists_multiqc = Channel.empty()
-    ch_deseq2_qc_log           = Channel.empty()
-    ch_deseq2_qc_size_factors  = Channel.empty()
-    ch_deseq2_qc_plots         = Channel.empty()
+    ch_deseq2_qc_pdf           = channel.empty()
+    ch_deseq2_qc_rdata         = channel.empty()
+    ch_deseq2_qc_rds           = channel.empty()
+    ch_deseq2_qc_pca_txt       = channel.empty()
+    ch_deseq2_qc_pca_multiqc   = channel.empty()
+    ch_deseq2_qc_dists_txt     = channel.empty()
+    ch_deseq2_qc_dists_multiqc = channel.empty()
+    ch_deseq2_qc_log           = channel.empty()
+    ch_deseq2_qc_size_factors  = channel.empty()
+    ch_deseq2_qc_plots         = channel.empty()
 
     if (!skip_deseq2_qc) {
         DESEQ2_QC (

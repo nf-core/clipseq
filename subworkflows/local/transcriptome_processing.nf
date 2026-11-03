@@ -23,7 +23,7 @@ workflow TRANSCRIPTOME_PROCESSING {
     ch_paraclu_mincluster
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
     if(params.source == "fastq" & params.run_filtering) {
         //
         // CHANNEL: Combine bam and bai files on id
@@ -55,7 +55,7 @@ workflow TRANSCRIPTOME_PROCESSING {
     }
 
     // UMI DEDUPLICATION
-    ch_trans_umi_log  = Channel.empty()
+    ch_trans_umi_log  = channel.empty()
     if(params.source == "fastq" & params.run_dedup) {
         ch_transcript_bam_bai = ch_transcript_bam
         .map { row -> [row[0].id, row ].flatten()}
@@ -74,23 +74,23 @@ workflow TRANSCRIPTOME_PROCESSING {
         ch_trans_umi_log   = TRANS_DEDUP.out.umi_log
     }
 
-    ch_trans_crosslink_bed            = Channel.empty()
-    ch_trans_crosslink_coverage       = Channel.empty()
-    ch_trans_crosslink_coverage_norm  = Channel.empty()
+    ch_trans_crosslink_bed            = channel.empty()
+    ch_trans_crosslink_coverage       = channel.empty()
+    ch_trans_crosslink_coverage_norm  = channel.empty()
 
     //
     // GROUPING: At this point, if groups have been specified, then we need to merge corresponding BAM files
     //
     // ch_genome_bam.view { item -> println("Pre-branch: $item") }
 
-    ch_transcript_bam.branch {
-        hasGroup: it[0].group  // Branch condition for samples with a group
-        noGroup: it[0].group == ''  // Branch condition for samples without a group
+    ch_transcript_bam.branch { item ->
+        hasGroup: item[0].group  // Branch condition for samples with a group
+        noGroup: item[0].group == ''  // Branch condition for samples without a group
     }.set { ch_bam_branches }  // Capture branching result into ch_branches
 
-    ch_transcript_bai.branch {
-        hasGroup: it[0].group  // Branch condition for samples with a group
-        noGroup: it[0].group == ''  // Branch condition for samples without a group
+    ch_transcript_bai.branch { item ->
+        hasGroup: item[0].group  // Branch condition for samples with a group
+        noGroup: item[0].group == ''  // Branch condition for samples without a group
     }.set { ch_bai_branches }  // Capture branching result into ch_branches
 
     // After branching
@@ -144,21 +144,21 @@ workflow TRANSCRIPTOME_PROCESSING {
         //
         CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL (
             ch_bam_branches.noGroup.join(ch_bai_branches.noGroup),
-            ch_representative_transcript_fai.map{ [[id:it.baseName], it] }
+            ch_representative_transcript_fai.map{ file -> [[id:file.baseName], file] }
         )
         ch_versions                       = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL.out.versions)
         ch_trans_crosslink_INDIVIDUAL_bed = CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL.out.bed
 
         CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP (
             ch_bam_branches.hasGroup.join(ch_bai_branches.hasGroup),
-            ch_representative_transcript_fai.map{ [[id:it.baseName], it] }
+            ch_representative_transcript_fai.map{ file -> [[id:file.baseName], file] }
         )
         ch_versions                                   = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP.out.versions)
         ch_trans_crosslink_INDIVIDUAL_HASGROUP_bed    = CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed
 
         CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP (
             ch_grouped_transcript_bam.join(ch_transcript_peakcalling_bai),
-            ch_representative_transcript_fai.map{ [[id:it.baseName], it] }
+            ch_representative_transcript_fai.map{ file -> [[id:file.baseName], file] }
         )
         ch_versions                            = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP.out.versions)
         ch_trans_crosslink_GROUP_HASGROUP_bed  = CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP.out.bed
@@ -171,8 +171,8 @@ workflow TRANSCRIPTOME_PROCESSING {
     }
 
 
-    ch_clippy_transcriptome_peaks   = Channel.empty()
-    ch_paraclu_transcriptome_peaks  = Channel.empty()
+    ch_clippy_transcriptome_peaks   = channel.empty()
+    ch_paraclu_transcriptome_peaks  = channel.empty()
     if(params.run_peakcalling) {
         if('clippy' in callers) {
             CLIPPY_TRANSCRIPTOME (

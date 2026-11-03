@@ -4,16 +4,16 @@ nextflow.enable.dsl=2
 
 workflow {
     // Simulate input data
-    def inputData = Channel.of(
+    def inputData = channel.of(
         [[id:'PHO92_A', group:'PHO92', control:'ctrl1', single_end:true], '/path/to/PHO92_A.genome.dedup.bam'],
         [[id:'PHO92_B', group:'PHO92', control:'ctrl2', single_end:true], '/path/to/PHO92_B.genome.dedup.bam'],
         [[id:'TDP_A', group:'', control:'ctrl2', single_end:true], '/path/to/PHO92_B.genome.dedup.bam'],
         [[id:'PHNRNPX', group:'', control:'ctrl2', single_end:true], '/path/to/PHO92_B.genome.dedup.bam']
         // Add more simulated items if needed
     )
-    inputData.branch {
-        hasGroup: it[0].group  // Branch condition for samples with a group
-        noGroup: it[0].group == ''  // Branch condition for samples without a group
+    inputData.branch { item ->
+        hasGroup: item[0].group  // Branch condition for samples with a group
+        noGroup: item[0].group == ''  // Branch condition for samples without a group
     }.set { ch_branches }  // Capture branching result into ch_branches
     
     ch_branches.noGroup.view { item -> println("No group item: $item") }

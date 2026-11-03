@@ -21,16 +21,16 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     ch_fasta_fai   // channel: [ val(meta), fasta.fai ]
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
-    ch_bam.branch {
-        hasGroup: it[0].group  // Branch condition for samples with a group
-        noGroup: it[0].group == ''  // Branch condition for samples without a group
+    ch_bam.branch { item ->
+        hasGroup: item[0].group  // Branch condition for samples with a group
+        noGroup: item[0].group == ''  // Branch condition for samples without a group
     }.set { ch_bam_branches }
 
-    ch_bai.branch {
-        hasGroup: it[0].group  // Branch condition for samples with a group
-        noGroup: it[0].group == ''  // Branch condition for samples without a group
+    ch_bai.branch { item ->
+        hasGroup: item[0].group  // Branch condition for samples with a group
+        noGroup: item[0].group == ''  // Branch condition for samples without a group
     }.set { ch_bai_branches }
 
     ch_bam_branches.hasGroup
@@ -97,12 +97,12 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_INDIVIDUAL (
         STRAND_SPLIT_INDIVIDUAL.out.pos_bedgraph,
-        ch_fasta_fai.map{ it[1] }
+        ch_fasta_fai.map{ meta, file -> file }
     )
 
     BIGWIG_NEG_INDIVIDUAL (
         STRAND_SPLIT_INDIVIDUAL.out.neg_bedgraph,
-        ch_fasta_fai.map{ it[1] }
+        ch_fasta_fai.map{ meta, file -> file }
     )
 
     //
@@ -132,12 +132,12 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_INDIVIDUAL_HASGROUP (
         STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.pos_bedgraph,
-        ch_fasta_fai.map{ it[1] }
+        ch_fasta_fai.map{ meta, file -> file }
     )
 
     BIGWIG_NEG_INDIVIDUAL_HASGROUP (
         STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.neg_bedgraph,
-        ch_fasta_fai.map{ it[1] }
+        ch_fasta_fai.map{ meta, file -> file }
     )
 
     //
@@ -167,12 +167,12 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_GROUP_HASGROUP (
         STRAND_SPLIT_GROUP_HASGROUP.out.pos_bedgraph,
-        ch_fasta_fai.map{ it[1] }
+        ch_fasta_fai.map{ meta, file -> file }
     )
 
     BIGWIG_NEG_GROUP_HASGROUP (
         STRAND_SPLIT_GROUP_HASGROUP.out.neg_bedgraph,
-        ch_fasta_fai.map{ it[1] }
+        ch_fasta_fai.map{ meta, file -> file }
     )
 
     //
