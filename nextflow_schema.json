@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/clipseq/master/nextflow_schema.json",
     "title": "nf-core/clipseq pipeline parameters",
-    "description": "",
+    "description": "CLIP analysis pipeline",
     "type": "object",
     "$defs": {
         "trimming_options": {
@@ -72,9 +72,8 @@
                     "format": "file-path",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
-                    "schema": "assets/schema_input.json",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/clipseq/usage#samplesheet-input).",
+                    "help_text": "Provide a CSV samplesheet with sample_name, group_name, input_name, and fastq columns for FASTQ input, or bam instead of fastq for deduplicated BAM input. The pipeline validates its contents with the source-specific samplesheet checker.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -489,8 +488,11 @@
             "help_text": "These options are common to all nf-core pipelines and allow you to customise some of the core preferences for how the pipeline runs.\n\nTypically these options would be set in a Nextflow config file loaded for all pipeline runs, such as `~/.nextflow/config`.",
             "properties": {
                 "help": {
-                    "type": "boolean",
-                    "description": "Display help text.",
+                    "type": [
+                        "boolean",
+                        "string"
+                    ],
+                    "description": "Display help, optionally for a specific parameter.",
                     "fa_icon": "fas fa-question-circle",
                     "hidden": true
                 },
@@ -584,19 +586,23 @@
                 "show_hidden_params": {
                     "type": "boolean",
                     "fa_icon": "far fa-eye-slash",
-                    "description": "Show all params when using `--help`",
+                    "description": "Legacy alias for show_hidden; include hidden parameters in the help message.",
                     "hidden": true,
                     "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
-                },
-                "schema_ignore_params": {
-                    "type": "string",
-                    "description": "Comma-separated parameters excluded from the legacy parameter validation.",
-                    "default": "genomes,run_input_check,run_genome_prep,run_preprocessing,run_alignment,run_filtering,run_dedup,run_crosslinking,run_peakcalling,run_peka,run_reporting,only_peakcalling,only_crosslinks,only_dedup,only_filtering,only_alignment,only_preprocessing,only_genome,only_input,save_unaligned",
-                    "hidden": true
                 },
                 "trace_timestamp": {
                     "type": "string",
                     "description": "Timestamp generated at startup for execution report filenames.",
+                    "hidden": true
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full parameter help.",
+                    "hidden": true
+                },
+                "show_hidden": {
+                    "type": "boolean",
+                    "description": "Include hidden parameters in the help message.",
                     "hidden": true
                 }
             }
