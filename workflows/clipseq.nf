@@ -1062,19 +1062,13 @@ workflow CLIPSEQ {
         //
         // MODULE: Run multiqc
         //
-<<<<<<< HEAD
-        workflow_summary    = paramsSummaryMultiqc(summary_params)
-        ch_workflow_summary = Channel.value(workflow_summary)
 
-        methods_description    = methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
-        ch_methods_description = Channel.value(methods_description)
-=======
-        workflow_summary    = WorkflowClipseq.paramsSummaryMultiqc(workflow, summary_params)
+        workflow_summary    = paramsSummaryMultiqc(summary_params)
         ch_workflow_summary = channel.value(workflow_summary)
 
-        methods_description    = WorkflowClipseq.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
+        methods_description    = methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
         ch_methods_description = channel.value(methods_description)
->>>>>>> origin/feat-2-0
+
 
         ch_multiqc_files = channel.empty()
         ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
@@ -1120,11 +1114,8 @@ workflow CLIPSEQ {
         MULTIQC (
             ch_multiqc_input
         )
-<<<<<<< HEAD
         multiqc_report = MULTIQC.out.report.map { meta, html -> html }
-=======
-        multiqc_report = MULTIQC.out.report.map { _meta, html -> html }.toList()
->>>>>>> origin/feat-2-0
+
 
     }
 
