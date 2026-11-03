@@ -52,5 +52,5 @@ workflow MERGE_AND_SORT_TELESCOPE_BAMS {
 
     emit:
     bam = SORT_TE_BAMS.out.bam
-    bai = INDEX_TE_BAMS.out.bai
+    bai = INDEX_TE_BAMS.out.index
 }

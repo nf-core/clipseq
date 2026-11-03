@@ -41,21 +41,12 @@ workflow BAM_DEDUP_SAMTOOLS_UMICOLLAPSE {
     // CHANNEL: Merge reads and index
     //
     ch_bam_bai = UMICOLLAPSE.out.bam
-        .join(SAMTOOLS_INDEX.out.bai, by: [0], remainder: true)
-        .join(SAMTOOLS_INDEX.out.csi, by: [0], remainder: true)
-        .map {
-            meta, bam, bai, csi ->
-                if (bai) {
-                    [ meta, bam, bai ]
-                } else {
-                    [ meta, bam, csi ]
-                }
-        }
+        .join(SAMTOOLS_INDEX.out.index, by: [0])
 
 
     emit:
     bam      = UMICOLLAPSE.out.bam             // channel: [ val(meta), [ bam ] ]
-    bai      = SAMTOOLS_INDEX.out.bai          // channel: [ val(meta), [ bai ] ]
+    bai      = SAMTOOLS_INDEX.out.index          // channel: [ val(meta), [ bai ] ]
     umi_log  = UMICOLLAPSE.out.log             // channel: [ val(meta), [ log ] ]
     versions = ch_versions                     // channel: [ versions.yml ]
 }

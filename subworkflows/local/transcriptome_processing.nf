@@ -51,7 +51,7 @@ workflow TRANSCRIPTOME_PROCESSING {
         ch_transcript_bam = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
 
         SAMTOOLS_INDEX_FILT_TRANSCRIPT ( SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam )
-        ch_transcript_bai = SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.bai
+        ch_transcript_bai = SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.index
     }
 
     // UMI DEDUPLICATION
@@ -136,7 +136,7 @@ workflow TRANSCRIPTOME_PROCESSING {
     SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX (
         ch_transcript_peakcalling_bam
     )
-    ch_transcript_peakcalling_bai = SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX.out.bai
+    ch_transcript_peakcalling_bai = SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX.out.index
 
     if(params.run_crosslinking) {
         //
