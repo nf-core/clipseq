@@ -21,7 +21,7 @@ workflow CONSENSUS_PEAK_TABLE {
     take:
     all_crosslinks           // channel: [ val(meta), [ xl.bed ] ]
     consensus_peaks          // channel: [ val(meta), [ peaks.bed ] ]
-    genome_fasta
+    _genome_fasta
     genome_fai               // channel: [ val(meta), [ index ] ]
     gtf                      // channel: [ val(meta), [ gtf ] ]
     table_name               // val "Clippy_Consensus_Counts.tsv" must end in tsv
@@ -30,7 +30,7 @@ workflow CONSENSUS_PEAK_TABLE {
     skip_deseq2_qc
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     SORT_FAI (
         genome_fai,
@@ -54,7 +54,7 @@ workflow CONSENSUS_PEAK_TABLE {
     // Combine sorted peaks with sorted crosslinks
     CONSENSUS_PEAKS_SORT.out.file
         .combine(CROSSLINKS_SORT.out.file)
-        .map{ meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
+        .map{ _meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
         .set { ch_consensus_map }
 
     CONSENSUS_MAP (
@@ -63,7 +63,7 @@ workflow CONSENSUS_PEAK_TABLE {
     )
 
     CONSENSUS_MAP.out.mapped
-        .collect { it[1] }
+        .collect{ _meta, file -> file }
         .map { crosslinks -> [[id:"allXL"], crosslinks]}
         .set { ch_mapped_xls }
 
@@ -76,16 +76,16 @@ workflow CONSENSUS_PEAK_TABLE {
     //
     // Generate QC plots with DESeq2
     //
-    ch_deseq2_qc_pdf           = Channel.empty()
-    ch_deseq2_qc_rdata         = Channel.empty()
-    ch_deseq2_qc_rds           = Channel.empty()
-    ch_deseq2_qc_pca_txt       = Channel.empty()
-    ch_deseq2_qc_pca_multiqc   = Channel.empty()
-    ch_deseq2_qc_dists_txt     = Channel.empty()
-    ch_deseq2_qc_dists_multiqc = Channel.empty()
-    ch_deseq2_qc_log           = Channel.empty()
-    ch_deseq2_qc_size_factors  = Channel.empty()
-    ch_deseq2_qc_plots         = Channel.empty()
+    ch_deseq2_qc_pdf           = channel.empty()
+    ch_deseq2_qc_rdata         = channel.empty()
+    ch_deseq2_qc_rds           = channel.empty()
+    ch_deseq2_qc_pca_txt       = channel.empty()
+    ch_deseq2_qc_pca_multiqc   = channel.empty()
+    ch_deseq2_qc_dists_txt     = channel.empty()
+    ch_deseq2_qc_dists_multiqc = channel.empty()
+    ch_deseq2_qc_log           = channel.empty()
+    ch_deseq2_qc_size_factors  = channel.empty()
+    ch_deseq2_qc_plots         = channel.empty()
 
     if (!skip_deseq2_qc) {
         DESEQ2_QC (

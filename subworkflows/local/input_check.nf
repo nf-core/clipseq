@@ -8,8 +8,8 @@ workflow INPUT_CHECK {
 
     main:
 
-    ch_versions = Channel.empty() // initialise for this workflow
-    reads = Channel.empty()
+    ch_versions = channel.empty() // initialise for this workflow
+    reads = channel.empty()
 
     if (source == 'fastq') { // fastq ready for alignment
         SAMPLESHEET_CHECK ( samplesheet, source )
