@@ -8,43 +8,42 @@ nextflow_process {
     tag "star"
     tag "star/align"
     tag "star/genomegenerate"
-
-    setup {
-        run("STAR_GENOMEGENERATE") {
-            script "../../../star/genomegenerate/main.nf"
-            process {
-                """
-                input[0] = Channel.of([
-                    [ id:'test_fasta' ],
-                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
-                ])
-                input[1] = Channel.of([
-                    [ id:'test_gtf' ],
-                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
-                ])
-                """
-            }
-        }
-    }
+    tag "gunzip"
 
     test("homo_sapiens - single_end") {
         config "./nextflow.config"
 
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
         when {
             process {
                 """
-                input[0] = Channel.of([
+                input[0] = channel.of([
                     [ id:'test', single_end:true ], // meta map
                     [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true) ]
                 ])
                 input[1] = STAR_GENOMEGENERATE.out.index
-                input[2] = Channel.of([
+                input[2] = channel.of([
                     [ id:'test_gtf' ],
                     [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
                 ])
                 input[3] = false
-                input[4] = 'illumina'
-                input[5] = false
                 """
             }
         }
@@ -52,22 +51,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(file(process.out.log_final[0][1]).name).match("homo_sapiens - single_end - log_final") },
-                { assert snapshot(file(process.out.log_out[0][1]).name).match("homo_sapiens - single_end - log_out") },
-                { assert snapshot(process.out.bam).match("homo_sapiens - single_end - bam") },
-                { assert snapshot(process.out.bam_sorted).match("homo_sapiens - single_end - bam_sorted") },
-                { assert snapshot(process.out.bam_transcript).match("homo_sapiens - single_end - bam_transcript") },
-                { assert snapshot(process.out.bam_unsorted).match("homo_sapiens - single_end - bam_unsorted") },
-                { assert snapshot(process.out.bedgraph).match("homo_sapiens - single_end - bedgraph") },
-                { assert snapshot(process.out.fastq).match("homo_sapiens - single_end - fastq") },
-                { assert snapshot(process.out.junction).match("homo_sapiens - single_end - junction") },
-                { assert snapshot(process.out.log_progress).match("homo_sapiens - single_end - log_progress") },
-                { assert snapshot(process.out.read_per_gene_tab).match("homo_sapiens - single_end - read_per_gene_tab") },
-                { assert snapshot(process.out.sam).match("homo_sapiens - single_end - sam") },
-                { assert snapshot(process.out.spl_junc_tab).match("homo_sapiens - single_end - spl_junc_tab") },
-                { assert snapshot(process.out.tab).match("homo_sapiens - single_end - tab") },
-                { assert snapshot(process.out.wig).match("homo_sapiens - single_end - wig") },
-                { assert snapshot(process.out.versions).match("homo_sapiens - single_end - versions") }
+                { assert (file(process.out.log_out[0][1]).text =~ /##### Command Line:\n(.+)/)[0][1].contains('--readFilesCommand zcat') },
+                { assert snapshot(
+                    bam(process.out.bam[0][1]).getReadsMD5(),
+                    bam(process.out.bam_sorted_aligned[0][1]).getReadsMD5(),
+                    sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])
+                ).match() }
             )
         }
     }
@@ -75,10 +64,28 @@ nextflow_process {
     test("homo_sapiens - paired_end") {
         config "./nextflow.config"
 
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
         when {
             process {
                 """
-                input[0] = Channel.of([
+                input[0] = channel.of([
                     [ id:'test', single_end:false ], // meta map
                     [
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
@@ -86,13 +93,11 @@ nextflow_process {
                     ]
                 ])
                 input[1] = STAR_GENOMEGENERATE.out.index
-                input[2] = Channel.of([
+                input[2] = channel.of([
                     [ id:'test_gtf' ],
                     [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
                 ])
                 input[3] = false
-                input[4] = 'illumina'
-                input[5] = false
                 """
             }
         }
@@ -100,22 +105,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(file(process.out.log_final[0][1]).name).match("homo_sapiens - paired_end - log_final") },
-                { assert snapshot(file(process.out.log_out[0][1]).name).match("homo_sapiens - paired_end - log_out") },
-                { assert snapshot(process.out.bam).match("homo_sapiens - paired_end - bam") },
-                { assert snapshot(process.out.bam_sorted).match("homo_sapiens - paired_end - bam_sorted") },
-                { assert snapshot(process.out.bam_transcript).match("homo_sapiens - paired_end - bam_transcript") },
-                { assert snapshot(process.out.bam_unsorted).match("homo_sapiens - paired_end - bam_unsorted") },
-                { assert snapshot(process.out.bedgraph).match("homo_sapiens - paired_end - bedgraph") },
-                { assert snapshot(process.out.fastq).match("homo_sapiens - paired_end - fastq") },
-                { assert snapshot(process.out.junction).match("homo_sapiens - paired_end - junction") },
-                { assert snapshot(process.out.log_progress).match("homo_sapiens - paired_end - log_progress") },
-                { assert snapshot(process.out.read_per_gene_tab).match("homo_sapiens - paired_end - read_per_gene_tab") },
-                { assert snapshot(process.out.sam).match("homo_sapiens - paired_end - sam") },
-                { assert snapshot(process.out.spl_junc_tab).match("homo_sapiens - paired_end - spl_junc_tab") },
-                { assert snapshot(process.out.tab).match("homo_sapiens - paired_end - tab") },
-                { assert snapshot(process.out.wig).match("homo_sapiens - paired_end - wig") },
-                { assert snapshot(process.out.versions).match("homo_sapiens - paired_end - versions") }
+                { assert (file(process.out.log_out[0][1]).text =~ /##### Command Line:\n(.+)/)[0][1].contains('--readFilesCommand zcat') },
+                { assert snapshot(
+                    bam(process.out.bam[0][1]).getReadsMD5(),
+                    bam(process.out.bam_sorted_aligned[0][1]).getReadsMD5(),
+                    sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])
+                ).match() }
             )
         }
     }
@@ -123,10 +118,28 @@ nextflow_process {
     test("homo_sapiens - paired_end - arriba") {
         config "./nextflow.arriba.config"
 
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
         when {
             process {
                 """
-                input[0] = Channel.of([
+                input[0] = channel.of([
                     [ id:'test', single_end:false ], // meta map
                     [
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
@@ -134,13 +147,11 @@ nextflow_process {
                     ]
                 ])
                 input[1] = STAR_GENOMEGENERATE.out.index
-                input[2] = Channel.of([
+                input[2] = channel.of([
                     [ id:'test_gtf' ],
                     [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
                 ])
                 input[3] = false
-                input[4] = 'illumina'
-                input[5] = false
                 """
             }
         }
@@ -148,22 +159,11 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(file(process.out.log_final[0][1]).name).match("homo_sapiens - paired_end - arriba - log_final") },
-                { assert snapshot(file(process.out.log_out[0][1]).name).match("homo_sapiens - paired_end - arriba - log_out") },
-                { assert snapshot(file(process.out.log_progress[0][1]).name).match("homo_sapiens - paired_end - arriba - log_progress") },
-                { assert snapshot(process.out.bam).match("homo_sapiens - paired_end - arriba - bam") },
-                { assert snapshot(process.out.bam_sorted).match("homo_sapiens - paired_end - arriba - bam_sorted") },
-                { assert snapshot(process.out.bam_transcript).match("homo_sapiens - paired_end - arriba - bam_transcript") },
-                { assert snapshot(process.out.bam_unsorted).match("homo_sapiens - paired_end - arriba - bam_unsorted") },
-                { assert snapshot(process.out.bedgraph).match("homo_sapiens - paired_end - arriba - bedgraph") },
-                { assert snapshot(process.out.fastq).match("homo_sapiens - paired_end - arriba - fastq") },
-                { assert snapshot(process.out.junction).match("homo_sapiens - paired_end - arriba - junction") },
-                { assert snapshot(process.out.read_per_gene_tab).match("homo_sapiens - paired_end - arriba - read_per_gene_tab") },
-                { assert snapshot(process.out.sam).match("homo_sapiens - paired_end - arriba - sam") },
-                { assert snapshot(process.out.spl_junc_tab).match("homo_sapiens - paired_end - arriba - spl_junc_tab") },
-                { assert snapshot(process.out.tab).match("homo_sapiens - paired_end - arriba - tab") },
-                { assert snapshot(process.out.wig).match("homo_sapiens - paired_end - arriba - wig") },
-                { assert snapshot(process.out.versions).match("homo_sapiens - paired_end - arriba - versions") }
+                { assert (file(process.out.log_out[0][1]).text =~ /##### Command Line:\n(.+)/)[0][1].count('--readFilesCommand') == 1 },
+                { assert snapshot(
+                    bam(process.out.bam[0][1]).getReadsMD5(),
+                    sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])
+                ).match() }
             )
         }
     }
@@ -171,10 +171,28 @@ nextflow_process {
     test("homo_sapiens - paired_end - starfusion") {
         config "./nextflow.starfusion.config"
 
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
         when {
             process {
                 """
-                input[0] = Channel.of([
+                input[0] = channel.of([
                     [ id:'test', single_end:false ], // meta map
                     [
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
@@ -182,13 +200,11 @@ nextflow_process {
                     ]
                 ])
                 input[1] = STAR_GENOMEGENERATE.out.index
-                input[2] = Channel.of([
+                input[2] = channel.of([
                     [ id:'test_gtf' ],
                     [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
                 ])
                 input[3] = false
-                input[4] = 'illumina'
-                input[5] = false
                 """
             }
         }
@@ -196,22 +212,11 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(file(process.out.log_final[0][1]).name).match("homo_sapiens - paired_end - starfusion - log_final") },
-                { assert snapshot(file(process.out.log_out[0][1]).name).match("homo_sapiens - paired_end - starfusion - log_out") },
-                { assert snapshot(file(process.out.log_progress[0][1]).name).match("homo_sapiens - paired_end - starfusion - log_progress") },
-                { assert snapshot(process.out.bam).match("homo_sapiens - paired_end - starfusion - bam") },
-                { assert snapshot(process.out.bam_sorted).match("homo_sapiens - paired_end - starfusion - bam_sorted") },
-                { assert snapshot(process.out.bam_transcript).match("homo_sapiens - paired_end - starfusion - bam_transcript") },
-                { assert snapshot(process.out.bam_unsorted).match("homo_sapiens - paired_end - starfusion - bam_unsorted") },
-                { assert snapshot(process.out.bedgraph).match("homo_sapiens - paired_end - starfusion - bedgraph") },
-                { assert snapshot(process.out.fastq).match("homo_sapiens - paired_end - starfusion - fastq") },
-                { assert snapshot(process.out.junction).match("homo_sapiens - paired_end - starfusion - junction") },
-                { assert snapshot(process.out.read_per_gene_tab).match("homo_sapiens - paired_end - starfusion - read_per_gene_tab") },
-                { assert snapshot(process.out.sam).match("homo_sapiens - paired_end - starfusion - sam") },
-                { assert snapshot(process.out.spl_junc_tab).match("homo_sapiens - paired_end - starfusion - spl_junc_tab") },
-                { assert snapshot(process.out.tab).match("homo_sapiens - paired_end - starfusion - tab") },
-                { assert snapshot(process.out.wig).match("homo_sapiens - paired_end - starfusion - wig") },
-                { assert snapshot(process.out.versions).match("homo_sapiens - paired_end - starfusion - versions") }
+                { assert (file(process.out.log_out[0][1]).text =~ /##### Command Line:\n(.+)/)[0][1].count('--readFilesCommand') == 1 },
+                { assert snapshot(
+                    bam(process.out.bam[0][1]).getReadsMD5(),
+                    sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])
+                ).match() }
             )
         }
     }
@@ -219,10 +224,28 @@ nextflow_process {
     test("homo_sapiens - paired_end - multiple") {
         config "./nextflow.config"
 
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
         when {
             process {
                 """
-                input[0] = Channel.of([
+                input[0] = channel.of([
                     [ id:'test', single_end:false ], // meta map
                     [
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
@@ -232,13 +255,11 @@ nextflow_process {
                     ]
                 ])
                 input[1] = STAR_GENOMEGENERATE.out.index
-                input[2] = Channel.of([
+                input[2] = channel.of([
                     [ id:'test_gtf' ],
                     [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
                 ])
                 input[3] = false
-                input[4] = 'illumina'
-                input[5] = false
                 """
             }
         }
@@ -246,22 +267,319 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(file(process.out.log_final[0][1]).name).match("homo_sapiens - paired_end - multiple - log_final") },
-                { assert snapshot(file(process.out.log_out[0][1]).name).match("homo_sapiens - paired_end - multiple - log_out") },
-                { assert snapshot(file(process.out.log_progress[0][1]).name).match("homo_sapiens - paired_end - multiple - log_progress") },
-                { assert snapshot(process.out.bam).match("homo_sapiens - paired_end - multiple - bam") },
-                { assert snapshot(process.out.bam_sorted).match("homo_sapiens - paired_end - multiple - bam_sorted") },
-                { assert snapshot(process.out.bam_transcript).match("homo_sapiens - paired_end - multiple - bam_transcript") },
-                { assert snapshot(process.out.bam_unsorted).match("homo_sapiens - paired_end - multiple - bam_unsorted") },
-                { assert snapshot(process.out.bedgraph).match("homo_sapiens - paired_end - multiple - bedgraph") },
-                { assert snapshot(process.out.fastq).match("homo_sapiens - paired_end - multiple - fastq") },
-                { assert snapshot(process.out.junction).match("homo_sapiens - paired_end - multiple - junction") },
-                { assert snapshot(process.out.read_per_gene_tab).match("homo_sapiens - paired_end - multiple - read_per_gene_tab") },
-                { assert snapshot(process.out.sam).match("homo_sapiens - paired_end - multiple - sam") },
-                { assert snapshot(process.out.spl_junc_tab).match("homo_sapiens - paired_end - multiple - spl_junc_tab") },
-                { assert snapshot(process.out.tab).match("homo_sapiens - paired_end - multiple - tab") },
-                { assert snapshot(process.out.wig).match("homo_sapiens - paired_end - multiple - wig") },
-                { assert snapshot(process.out.versions).match("homo_sapiens - paired_end - multiple - versions") }
+                { assert (file(process.out.log_out[0][1]).text =~ /##### Command Line:\n(.+)/)[0][1].contains('--readFilesCommand zcat') },
+                { assert snapshot(
+                    bam(process.out.bam[0][1]).getReadsMD5(),
+                    bam(process.out.bam_sorted_aligned[0][1]).getReadsMD5(),
+                    sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])
+                ).match() }
+            )
+        }
+    }
+
+    test("homo_sapiens - single_end - uncompressed") {
+        config "./nextflow.config"
+
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+            run("GUNZIP") {
+                script "../../../gunzip/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = GUNZIP.out.gunzip.map { meta, fastq -> [ [ id:'test', single_end:true ], fastq ] }
+                input[1] = STAR_GENOMEGENERATE.out.index
+                input[2] = channel.of([
+                    [ id:'test_gtf' ],
+                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                ])
+                input[3] = false
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert !((file(process.out.log_out[0][1]).text =~ /##### Command Line:\n(.+)/)[0][1].contains('--readFilesCommand')) },
+                { assert snapshot(
+                    bam(process.out.bam[0][1]).getReadsMD5(),
+                    sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])
+                ).match() }
+            )
+        }
+    }
+
+    test("homo_sapiens - single_end - stub") {
+        options "-stub"
+        config "./nextflow.config"
+
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'test', single_end:true ], // meta map
+                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true) ]
+                ])
+                input[1] = STAR_GENOMEGENERATE.out.index
+                input[2] = channel.of([
+                    [ id:'test_gtf' ],
+                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                ])
+                input[3] = false
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])).match() }
+            )
+        }
+    }
+
+    test("homo_sapiens - paired_end - stub") {
+        options "-stub"
+        config "./nextflow.config"
+
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'test', single_end:false ], // meta map
+                    [
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_2.fastq.gz', checkIfExists: true)
+                    ]
+                ])
+                input[1] = STAR_GENOMEGENERATE.out.index
+                input[2] = channel.of([
+                    [ id:'test_gtf' ],
+                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                ])
+                input[3] = false
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])).match() }
+            )
+        }
+    }
+
+    test("homo_sapiens - paired_end - arriba - stub") {
+        options "-stub"
+        config "./nextflow.arriba.config"
+
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'test', single_end:false ], // meta map
+                    [
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_2.fastq.gz', checkIfExists: true)
+                    ]
+                ])
+                input[1] = STAR_GENOMEGENERATE.out.index
+                input[2] = channel.of([
+                    [ id:'test_gtf' ],
+                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                ])
+                input[3] = false
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])).match() }
+            )
+        }
+    }
+
+    test("homo_sapiens - paired_end - starfusion - stub") {
+        options "-stub"
+        config "./nextflow.starfusion.config"
+
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'test', single_end:false ], // meta map
+                    [
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_2.fastq.gz', checkIfExists: true)
+                    ]
+                ])
+                input[1] = STAR_GENOMEGENERATE.out.index
+                input[2] = channel.of([
+                    [ id:'test_gtf' ],
+                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                ])
+                input[3] = false
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])).match() }
+            )
+        }
+    }
+
+    test("homo_sapiens - paired_end - multiple - stub") {
+        options "-stub"
+        config "./nextflow.config"
+
+        setup {
+            run("STAR_GENOMEGENERATE") {
+                script "../../../star/genomegenerate/main.nf"
+                process {
+                    """
+                    input[0] = channel.of([
+                        [ id:'test_fasta' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true) ]
+                    ])
+                    input[1] = channel.of([
+                        [ id:'test_gtf' ],
+                        [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                    ])
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'test', single_end:false ], // meta map
+                    [
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_2.fastq.gz', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_1.fastq.gz', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/fastq/test_rnaseq_2.fastq.gz', checkIfExists: true)
+                    ]
+                ])
+                input[1] = STAR_GENOMEGENERATE.out.index
+                input[2] = channel.of([
+                    [ id:'test_gtf' ],
+                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.gtf', checkIfExists: true) ]
+                ])
+                input[3] = false
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out, unstableKeys: [ 'log_final', 'log_out', 'log_progress', 'bam', 'bam_sorted', 'bam_sorted_aligned', 'bam_transcript', 'bam_unsorted', 'junction' ])).match() }
             )
         }
     }
