@@ -49,8 +49,9 @@ workflow RNA_ALIGN {
     //
     // SUBWORKFLOW: Sort, index BAM file
     //
-    SAMTOOLS_SORT_rDNA( BOWTIE_ALIGN.out.bam, fasta )
+    SAMTOOLS_SORT_rDNA( BOWTIE_ALIGN.out.bam, fasta, '' )
     SAMTOOLS_INDEX_rDNA( SAMTOOLS_SORT_rDNA.out.bam )
+
 
     ch_versions = ch_versions.mix(SAMTOOLS_SORT_rDNA.out.versions)
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX_rDNA.out.versions)
@@ -67,7 +68,7 @@ workflow RNA_ALIGN {
     )
     ch_versions = ch_versions.mix(BOWTIE_ALIGN_K1.out.versions)
 
-    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta )
+    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta, '' )
     ch_versions = ch_versions.mix(SAMTOOLS_SORT_rDNA_K1.out.versions)
 
     SAMTOOLS_INDEX_rDNA_K1 ( SAMTOOLS_SORT_rDNA_K1.out.bam )
@@ -81,9 +82,7 @@ workflow RNA_ALIGN {
             BOWTIE_ALIGN.out.fastq,
             star_index,
             gtf,
-            false,
-            '',
-            ''
+            false
         )
         ch_versions = ch_versions.mix(STAR_ALIGN_GENOME_ONLY.out.versions)
 
@@ -112,8 +111,10 @@ workflow RNA_ALIGN {
         */
         GONLY_SAMTOOLS_VIEW_GENOME (
             ch_coord_bam_bai,
+            [[],[],[]],
             [[],[]],
-            []
+            [[],[]],
+            ''
         )
         ch_versions = ch_versions.mix(GONLY_SAMTOOLS_VIEW_GENOME.out.versions)
 
@@ -132,9 +133,7 @@ workflow RNA_ALIGN {
             BOWTIE_ALIGN.out.fastq,
             star_index,
             gtf,
-            false,
-            '',
-            ''
+            false
         )
         ch_versions = ch_versions.mix(STAR_ALIGN_WITH_TRANSCRIPTOME.out.versions)
 
@@ -161,7 +160,7 @@ workflow RNA_ALIGN {
         //
         // MODULE: Sort and index transcript BAM file
         //
-        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, fasta )
+        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, fasta, '' )
         ch_versions = ch_versions.mix(SAMTOOLS_SORT_TRANS.out.versions)
         SAMTOOLS_INDEX_TRANS( SAMTOOLS_SORT_TRANS.out.bam )
         ch_versions = ch_versions.mix(SAMTOOLS_INDEX_TRANS.out.versions)
@@ -185,14 +184,18 @@ workflow RNA_ALIGN {
         */
         TONLY_SAMTOOLS_VIEW_GENOME (
             ch_coord_bam_bai,
+            [[],[],[]],
             [[],[]],
-            []
+            [[],[]],
+            ''
         )
 
         TONLY_SAMTOOLS_VIEW_TRANSCRIPT (
             ch_transcript_bam_bai,
+            [[],[],[]],
             [[],[]],
-            []
+            [[],[]],
+            ''
         )
 
         ch_genome_log             = STAR_ALIGN_WITH_TRANSCRIPTOME.out.log
