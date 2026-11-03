@@ -1,12 +1,14 @@
+// Copyright (c) the nf-core community under an open-source MIT license.
+// See https://github.com/nf-core/modules for full license, file patching instructions and upstream contributing.
+
 process TETRANSCRIPTS {
     tag "$meta_c.id"
     label 'process_single'
-    label 'process_high_memory'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/tetranscripts:2.2.3--pyh7cba7a3_0':
-        'biocontainers/tetranscripts:2.2.3--pyh7cba7a3_0' }"
+        'quay.io/biocontainers/tetranscripts:2.2.3--pyh7cba7a3_0' }"
 
     input:
     tuple val(meta_t), path(bam_t)
@@ -19,7 +21,6 @@ process TETRANSCRIPTS {
     tuple val(meta_t), path("*.R"), emit: log2fc
     tuple val(meta_t), path("*_analysis.txt"), emit: analysis, optional: true
     tuple val(meta_t), path("*_gene_TE.txt"), emit: sigdiff, optional: true
-    tuple val(meta_t), path("*_tetranscripts.log"), emit: log
     tuple val("${task.process}"), val('tetranscripts'), eval("tetranscripts version | sed '1!d;s/.* //'"), emit: versions_tetranscripts, topic: versions
 
     when:
@@ -32,16 +33,13 @@ process TETRANSCRIPTS {
     def treatment_bams = [bam_t].flatten().join(' ')
     def control_bams = [bam_c].flatten().join(' ')
     """
-    echo -n "" > "$prefix"_tetranscripts.log
-
     TEtranscripts \\
-        -t ${treatment_bams} \\
-        -c ${control_bams} \\
-        --GTF $g_gtf \\
-        --TE $te_gtf \\
-        --project ${prefix} \\
-        $args \\
-        > "$prefix"_tetranscripts.log 2>&1
+	-t ${treatment_bams} \\
+	-c ${control_bams} \\
+	--GTF $g_gtf \\
+	--TE $te_gtf \\
+	--project ${prefix} \\
+        $args
 
     """
 
@@ -55,7 +53,6 @@ process TETRANSCRIPTS {
     touch ${prefix}.cntTable
     touch ${prefix}_gene_TE_analysis.txt
     touch ${prefix}_sigdiff_gene_TE.txt
-    touch ${prefix}_tetranscripts.log
 
     """
 }

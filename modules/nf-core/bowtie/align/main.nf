@@ -1,11 +1,14 @@
+// Copyright (c) the nf-core community under an open-source MIT license.
+// See https://github.com/nf-core/modules for full license, file patching instructions and upstream contributing.
+
 process BOWTIE_ALIGN {
     tag "$meta.id"
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c8/c8c0819a9b1f520c49c933e667ae50de2a0730ece4c8b9efe79ac5e403963a9f/data' :
-        'community.wave.seqera.io/library/bowtie_samtools:e1a14e1ce4e0170d' }"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/6f/6f5ca09fd5aab931d9b87c532c69e0122ce5ff8ec88732f906e12108d48425e9/data' :
+        'community.wave.seqera.io/library/bowtie_htslib_samtools:e1e242368ffcb5d3' }"
 
     input:
     tuple val(meta), path(reads)
@@ -16,7 +19,9 @@ process BOWTIE_ALIGN {
     tuple val(meta), path('*.bam')     , emit: bam
     tuple val(meta), path('*.out')     , emit: log
     tuple val(meta), path('*fastq.gz') , emit: fastq, optional : true
-    path  "versions.yml"               , emit: versions
+    tuple val("${task.process}"), val('bowtie'), eval("bowtie --version 2>&1 | sed -n 's/.*bowtie-align-s version //p'"), emit: versions_bowtie, topic: versions
+    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), emit: versions_samtools, topic: versions
+    tuple val("${task.process}"), val('gzip'), eval("gzip --version 2>&1 | sed '1!d;s/gzip //'"), emit: versions_gzip, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -38,7 +43,7 @@ process BOWTIE_ALIGN {
         $unaligned \\
         $args \\
         $endedness \\
-        2> >(tee ${prefix}.out >&2) \\
+        2>| >(tee ${prefix}.out >&2) \\
         | samtools view $args2 -@ $task.cpus -bS -o ${prefix}.bam -
 
     if [ -f ${prefix}.unmapped.fastq ]; then
@@ -48,31 +53,18 @@ process BOWTIE_ALIGN {
         gzip ${prefix}.unmapped_1.fastq
         gzip ${prefix}.unmapped_2.fastq
     fi
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        bowtie: \$(echo \$(bowtie --version 2>&1) | sed 's/^.*bowtie-align-s version //; s/ .*\$//')
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     def unaligned = save_unaligned ?
-                    meta.single_end ? "echo '' | gzip > ${prefix}.unmapped.fastq.gz" :
-                        "echo '' | gzip > ${prefix}.unmapped_1.fastq.gz; echo '' | gzip > ${prefix}.unmapped_2.fastq.gz"
-                    : ''
+        meta.single_end ? "echo '' | gzip > ${prefix}.unmapped.fastq.gz" :
+            "echo '' | gzip > ${prefix}.unmapped_1.fastq.gz; echo '' | gzip > ${prefix}.unmapped_2.fastq.gz" :
+                ''
     """
     touch ${prefix}.bam
     touch ${prefix}.out
     $unaligned
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        bowtie: \$(echo \$(bowtie --version 2>&1) | sed 's/^.*bowtie-align-s version //; s/ .*\$//')
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
     """
-
 
 }
