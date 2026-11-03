@@ -1,0 +1,7 @@
+sample_name,group_name,input_name,fastq
+TDP43_1,TDP43,,s3://ngi-igenomes/test-data/clipseq/fastq/ERR1530360.fastq.gz
+TDP43_2,TDP43,,s3://ngi-igenomes/test-data/clipseq/fastq/ERR1530361.fastq.gz
+MATR3_1,MATR3,,s3://ngi-igenomes/test-data/clipseq/fastq/ERR2210802.fastq.gz
+MATR3_2,MATR3,,s3://ngi-igenomes/test-data/clipseq/fastq/ERR2210803.fastq.gz
+PTBP1_1,PTBP1,,s3://ngi-igenomes/test-data/clipseq/fastq/ERR2214592.fastq.gz
+PTBP1_2,PTBP1,,s3://ngi-igenomes/test-data/clipseq/fastq/ERR2214593.fastq.gz
