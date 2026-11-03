@@ -445,9 +445,6 @@ workflow CLIPSEQ {
         ch_umi_ncrna_log      = NCRNA_K1_DEDUP.out.umi_log
     }
 
-    // telescope gtf now required
-    ch_rpt_annotation_gtf = Channel.value([[id: 'te_annotations'], file(params.ch_rpt_annotation_gtf, checkIfExists: true)])
-
     // Overall read assignment //
     // 1: get single xlink coordinates only
 
@@ -469,75 +466,85 @@ workflow CLIPSEQ {
         SORT_INIT_ALIGNED_XLINKS.out.bam
     )
 
-    // 2: Binning to assign to TEs/ncRNA/tRNA
-
-    BIN_ncRNA(
-        ch_init_aligned_xlinks,
-        ch_rpt_annotation_gtf,
-    )
-
-    // 3: Identify reads which were not assigned from 1st binning
-
-    IDENTIFY_UNBINNED(
-        ch_init_aligned_xlinks,
-        BIN_ncRNA.out.discarded_reads
-    )
-
-    ch_init_unbinned_xlinks = IDENTIFY_UNBINNED.out.bam
-        .map { meta, bam -> bam }
-        .collect()
-        .map { bams -> [[id: 'all_samples'], bams] }
-
-    // 4: Run binning again on unassigned reads, at regional level (e.g. 5UTR | CDS | intron)
-
-    BIN_REGIONS(
-        ch_init_unbinned_xlinks,
-        ch_regions_resolved_gtf
-    )
-
-    // 5: Count pre-mapped reads
-
-    COUNT_PREMAPPED_READS(
-        ch_ncrna_k1_bam.map { meta, bam -> [meta, bam, []] },
-        [[],[]],
-        []
-    )
-
-    ch_premapped_counts = COUNT_PREMAPPED_READS.out.bam
-        .map { meta, bam -> bam}
-        .collect()
-
-    // 5: Combine assignments from both bins
-
-    COMBINE_BINS(
-        BIN_ncRNA.out.counted_reads,
-        BIN_REGIONS.out.counted_reads,
-        ch_premapped_counts
-    )
-
-
-    // tRNA summary insert //
-
-    if(params.run_tRNA_summary) {
-
-        ch_for_intersection = SORT_INIT_ALIGNED_XLINKS.out.bam
-            .combine(ch_rpt_annotation_gtf.map { meta_gtf, gtf -> gtf })
-            .map { meta, bed, gtf -> [meta, bed, gtf] }
-
-        BEDTOOLS_INTERSECT(
-            ch_for_intersection,
-            [[],[]],
-            "bed"
-        )
-
-        tRNA_SUMMARY(
-           BEDTOOLS_INTERSECT.out.intersect
-        )
-    }
-
     // TE quantifcation insert //
 
+    if(!params.run_te){
+
+        ch_combine_bins = Channel.empty()
+    }
+
     if(params.run_te) {
+
+        // repeats gtf required for te reassignment
+        ch_rpt_annotation_gtf = Channel.value([[id: 'te_annotations'], file(params.ch_rpt_annotation_gtf, checkIfExists: true)])
+
+        // 2: Binning to assign to TEs/ncRNA/tRNA
+
+        BIN_ncRNA(
+            ch_init_aligned_xlinks,
+            ch_rpt_annotation_gtf,
+        )
+
+        // 3: Identify reads which were not assigned from 1st binning
+
+        IDENTIFY_UNBINNED(
+            ch_init_aligned_xlinks,
+            BIN_ncRNA.out.discarded_reads
+        )
+
+        ch_init_unbinned_xlinks = IDENTIFY_UNBINNED.out.bam
+            .map { meta, bam -> bam }
+            .collect()
+            .map { bams -> [[id: 'all_samples'], bams] }
+
+        // 4: Run binning again on unassigned reads, at regional level (e.g. 5UTR | CDS | intron)
+
+        BIN_REGIONS(
+            ch_init_unbinned_xlinks,
+            ch_regions_resolved_gtf
+        )
+
+        // 5: Count pre-mapped reads
+
+        COUNT_PREMAPPED_READS(
+            ch_ncrna_k1_bam.map { meta, bam -> [meta, bam, []] },
+            [[],[]],
+            []
+        )
+
+        ch_premapped_counts = COUNT_PREMAPPED_READS.out.bam
+            .map { meta, bam -> bam}
+            .collect()
+
+        // 5: Combine assignments from both bins
+
+        COMBINE_BINS(
+            BIN_ncRNA.out.counted_reads,
+            BIN_REGIONS.out.counted_reads,
+            ch_premapped_counts
+        )
+
+        ch_combine_bins = COMBINE_BINS.out.csv
+
+        // tRNA summary insert //
+
+        if(params.run_tRNA_summary) {
+
+            ch_for_intersection = SORT_INIT_ALIGNED_XLINKS.out.bam
+                .combine(ch_rpt_annotation_gtf.map { meta_gtf, gtf -> gtf })
+                .map { meta, bed, gtf -> [meta, bed, gtf] }
+
+            BEDTOOLS_INTERSECT(
+                ch_for_intersection,
+                [[],[]],
+                "bed"
+            )
+
+            tRNA_SUMMARY(
+            BEDTOOLS_INTERSECT.out.intersect
+            )
+        }
+
         // Check rmsk GTF has been provided
         if (!params.tetranscripts_gtf) {
             error "ERROR: --tetranscripts_gtf is required when --run_te is specified"
@@ -1084,7 +1091,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(COMBINE_BINS.out.csv.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_combine_bins.collect{it[1]}.ifEmpty([]))
 
         if(params.run_crosslinking) {
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.subtype.collect().ifEmpty([]))
@@ -1093,7 +1100,9 @@ workflow CLIPSEQ {
 
         ch_tmp = ch_ncrna_log.collect{it[1]}
 
+        if (params.run_te){
         ch_multiqc_custom_config = ch_multiqc_custom_config.mix(COMBINE_BINS.out.config.ifEmpty([]))
+        }
 
         MULTIQC (
             ch_multiqc_files.collect(),
