@@ -51,7 +51,6 @@ workflow PREPARE_GENOME {
     ch_fasta = Channel.empty()
     if (fasta.toString().endsWith(".gz")) {
         ch_fasta    = GUNZIP_FASTA ( [ [id:fasta.baseName], fasta ] ).gunzip
-        ch_versions = ch_versions.mix(GUNZIP_FASTA.out.versions)
     } else {
         ch_fasta = Channel.of([ [id:fasta.baseName], fasta ])
     }
@@ -64,7 +63,6 @@ workflow PREPARE_GENOME {
     ch_rDNA_fasta = Channel.empty()
     if (rDNA_fasta.toString().endsWith(".gz")) {
         ch_rDNA_fasta = GUNZIP_rDNA_FASTA ( [ [id:rDNA_fasta.baseName], rDNA_fasta ] ).gunzip
-        ch_versions = ch_versions.mix(GUNZIP_rDNA_FASTA.out.versions)
     } else {
         ch_rDNA_fasta = Channel.of([ [id:rDNA_fasta.baseName], rDNA_fasta ])
     }
@@ -77,7 +75,6 @@ workflow PREPARE_GENOME {
     ch_gtf = Channel.empty()
     if (gtf.toString().endsWith(".gz")) {
         ch_gtf      = GUNZIP_GTF ( [ [id:gtf.baseName], gtf ] ).gunzip
-        ch_versions = ch_versions.mix(GUNZIP_GTF.out.versions)
     } else {
         ch_gtf = Channel.of([ [id:gtf.baseName], gtf ])
     }
@@ -91,14 +88,12 @@ workflow PREPARE_GENOME {
     if (genome_index) {
         if (genome_index.toString().endsWith(".tar.gz")) {
             ch_star_index = UNTAR_STAR ( [ [:], genome_index ] ).untar
-            ch_versions  = ch_versions.mix(UNTAR_STAR.out.versions)
         } else {
             ch_star_index = Channel.of([ [:] , genome_index ])
         }
     }
     else {
         ch_star_index = STAR_GENOMEGENERATE ( ch_fasta, ch_gtf ).index
-        ch_versions = ch_versions.mix(STAR_GENOMEGENERATE.out.versions)
     }
 
     //
@@ -108,14 +103,12 @@ workflow PREPARE_GENOME {
     if (rDNA_genome_index) {
         if (rDNA_genome_index.toString().endsWith(".tar.gz")) {
             ch_bt_index = UNTAR_BT ( [ [:], rDNA_genome_index ] ).untar
-            ch_versions  = ch_versions.mix(UNTAR_BT.out.versions)
         } else {
             ch_bt_index = Channel.of([ [:] , rDNA_genome_index ])
         }
     }
     else {
         ch_bt_index = BOWTIE_BUILD ( ch_rDNA_fasta).index
-        ch_versions = ch_versions.mix(BOWTIE_BUILD.out.versions)
     }
 
     //
@@ -251,7 +244,6 @@ workflow PREPARE_GENOME {
         )
         ch_seg_gtf     = ICOUNT_SEG_GTF.out.gtf
         ch_regions_gtf = ICOUNT_SEG_GTF.out.regions
-        ch_versions    = ch_versions.mix(ICOUNT_SEG_GTF.out.versions)
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
     //ICOUNT_SEG_GTF.out.gtf | view

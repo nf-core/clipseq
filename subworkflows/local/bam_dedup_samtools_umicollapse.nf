@@ -27,17 +27,15 @@ workflow BAM_DEDUP_SAMTOOLS_UMICOLLAPSE {
     //
     UMICOLLAPSE (
         bam_bai,
-        'bam' 
+        'bam'
     )
-    ch_versions = ch_versions.mix(UMICOLLAPSE.out.versions)
 
     //
     // MODULE: Index BAM file
     //
     SAMTOOLS_INDEX (
-        UMICOLLAPSE.out.bam 
+        UMICOLLAPSE.out.bam
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
 
     //
     // CHANNEL: Merge reads and index

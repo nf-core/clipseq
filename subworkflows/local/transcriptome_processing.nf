@@ -47,12 +47,10 @@ workflow TRANSCRIPTOME_PROCESSING {
         //
         // Sort, index filtered bam
         //
-        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam , [[],[],[]], '' )
-        ch_versions       = ch_versions.mix(SAMTOOLS_SORT_FILT_TRANSCRIPT.out.versions)
+        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam , [[],[]] )
         ch_transcript_bam = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
 
         SAMTOOLS_INDEX_FILT_TRANSCRIPT ( SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam )
-        ch_versions       = ch_versions.mix(SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.versions)
         ch_transcript_bai = SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.bai
     }
 
@@ -127,7 +125,6 @@ workflow TRANSCRIPTOME_PROCESSING {
         [[],[],[],[]],
         ''
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_MERGE_TRANSCRIPTOME.out.versions)
     ch_grouped_transcript_bam = SAMTOOLS_MERGE_TRANSCRIPTOME.out.bam
 
     //ch_grouped_transcript_bam.view { item -> "Grouped transcript BAM: $item" }
@@ -139,7 +136,6 @@ workflow TRANSCRIPTOME_PROCESSING {
     SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX (
         ch_transcript_peakcalling_bam
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX.out.versions)
     ch_transcript_peakcalling_bai = SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX.out.bai
 
     if(params.run_crosslinking) {
@@ -186,7 +182,6 @@ workflow TRANSCRIPTOME_PROCESSING {
             )
 
             ch_clippy_transcriptome_peaks    = CLIPPY_TRANSCRIPTOME.out.peaks
-            ch_versions                      = ch_versions.mix(CLIPPY_TRANSCRIPTOME.out.versions)
         }
 
         if('paraclu' in callers) {
@@ -195,7 +190,6 @@ workflow TRANSCRIPTOME_PROCESSING {
                 ch_paraclu_mincluster
             )
             ch_paraclu_transcriptome_peaks          = PARACLU_TRANSCRIPTOME.out.bed
-            ch_versions                             = ch_versions.mix(PARACLU_TRANSCRIPTOME.out.versions)
         }
     }
 

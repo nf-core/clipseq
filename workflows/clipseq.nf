@@ -296,7 +296,6 @@ workflow CLIPSEQ {
             params.umi_discard_read,
             params.min_trimmed_reads
         )
-        ch_versions = ch_versions.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.versions)
         ch_fastq    = FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.reads
     }
     //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:true], [FASTQ]]
@@ -766,7 +765,6 @@ workflow CLIPSEQ {
                 ch_gtf_used.map{ it[1] },
                 ch_fasta_fai.map{ it[1] }
             )
-            ch_versions             = ch_versions.mix(CLIPPY_GENOME.out.versions)
             ch_clippy_genome_peaks  = CLIPPY_GENOME.out.peaks
 
             if(params.consensus_peak){
@@ -798,7 +796,6 @@ workflow CLIPSEQ {
                     ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
                     ch_regions_used.map{ it[1] }
                 )
-                ch_versions = ch_versions.mix(PEKA_CLIPPY.out.versions)
                 ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_CLIPPY.out.distribution)
             }
 
@@ -812,7 +809,6 @@ workflow CLIPSEQ {
 
             )
 
-            ch_versions                      = ch_versions.mix(ICOUNTMINI_SIGXLS.out.versions)
             ch_icountmini_sigxls_gz          = ICOUNTMINI_SIGXLS.out.sigxls
 
             // CHANNEL: Create combined channel of input crosslinks and sigxls
@@ -826,21 +822,18 @@ workflow CLIPSEQ {
                 ch_peaks_input
             )
 
-            ch_versions                      = ch_versions.mix(ICOUNTMINI_PEAKS.out.versions)
             ch_icountmini_peaks_gz           = ICOUNTMINI_PEAKS.out.peaks
 
             GUNZIP_ICOUNTMINI_SIGXLS (
                 ch_icountmini_sigxls_gz
             )
 
-            ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_SIGXLS.out.versions)
             ch_icountmini_sigxls             = GUNZIP_ICOUNTMINI_SIGXLS.out.gunzip
 
             GUNZIP_ICOUNTMINI_PEAKS (
                 ch_icountmini_peaks_gz
             )
 
-            ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_PEAKS.out.versions)
             ch_icountmini_peaks              = GUNZIP_ICOUNTMINI_PEAKS.out.gunzip
 
             if(params.consensus_peak){
@@ -885,7 +878,6 @@ workflow CLIPSEQ {
                     ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
                     ch_regions_used.map{ it[1] }
                 )
-                ch_versions = ch_versions.mix(PEKA_ICOUNT.out.versions)
                 ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_ICOUNT.out.distribution)
             }
 
@@ -900,7 +892,6 @@ workflow CLIPSEQ {
                 ch_paraclu_mincluster
             )
 
-            ch_versions                      = ch_versions.mix(PARACLU_GENOME.out.versions)
             ch_paraclu_genome_peaks          = PARACLU_GENOME.out.bed
 
             if(params.consensus_peak){
@@ -931,7 +922,6 @@ workflow CLIPSEQ {
                     ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
                     ch_regions_used.map{ it[1] }
                 )
-                ch_versions = ch_versions.mix(PEKA_PARACLU.out.versions)
                 ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_PARACLU.out.distribution)
             }
         }
@@ -1002,8 +992,6 @@ workflow CLIPSEQ {
             )
 
             // Outputs from PURECLIP processes collected
-            ch_versions                        = ch_versions.mix(PURECLIP_WITH_CONTROL.out.versions)
-            ch_versions                        = ch_versions.mix(PURECLIP_NO_CONTROL.out.versions)
             ch_pureclip_genome_crosslinks      = PURECLIP_WITH_CONTROL.out.crosslinks.mix(PURECLIP_NO_CONTROL.out.crosslinks)
             ch_pureclip_genome_peaks           = PURECLIP_WITH_CONTROL.out.peaks.mix(PURECLIP_NO_CONTROL.out.peaks)
 
@@ -1027,7 +1015,6 @@ workflow CLIPSEQ {
                     ch_fasta.combine(ch_fasta_fai).map{ meta, fa, meta_fai, fai -> [meta, fa, fai] },
                     ch_regions_used.map{ it[1] }
                 )
-                ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
                 ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_PURECLIP.out.distribution)
             }
         }
@@ -1082,6 +1069,16 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_combine_bins.collect{it[1]}.ifEmpty([]))
 
+        // Software versions: `versions` topic (nf-core modules) plus versions.yml from local modules
+        ch_collated_versions = channel.topic('versions')
+            .unique()
+            .map { proc_name, tool, version -> [ proc_name.tokenize(':').last(), "    ${tool}: ${version}" ] }
+            .groupTuple()
+            .map { name, entries -> "${name}:\n" + entries.sort().join('\n') }
+            .mix(ch_versions.map { versions_file -> versions_file.text }.unique())
+            .collectFile(storeDir: "${params.outdir}/pipeline_info", name: 'software_versions_mqc.yml', sort: true, newLine: true)
+        ch_multiqc_files = ch_multiqc_files.mix(ch_collated_versions)
+
         if(params.run_crosslinking) {
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.subtype.collect().ifEmpty([]))
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.type.collect().ifEmpty([]))
@@ -1102,7 +1099,7 @@ workflow CLIPSEQ {
         MULTIQC (
             ch_multiqc_input
         )
-        multiqc_report = MULTIQC.out.report.toList()
+        multiqc_report = MULTIQC.out.report.map { meta, html -> html }.toList()
 
     }
 

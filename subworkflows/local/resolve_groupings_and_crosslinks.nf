@@ -60,7 +60,6 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
         ch_fasta.combine(ch_fasta_fai).map { meta, fa, meta_fai, fai -> [meta, fa, fai, []] },
         ''
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_MERGE.out.versions)
     ch_grouped_bam = SAMTOOLS_MERGE.out.bam
 
     ch_grouped_bam.concat(ch_bam_branches.noGroup).set { ch_peakcalling_bam }
@@ -68,7 +67,6 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     SAMTOOLS_GROUP_INDEX (
         ch_peakcalling_bam
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_GROUP_INDEX.out.versions)
     ch_peakcalling_bai = SAMTOOLS_GROUP_INDEX.out.bai
 
 
@@ -101,13 +99,11 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
         STRAND_SPLIT_INDIVIDUAL.out.pos_bedgraph,
         ch_fasta_fai.map{ it[1] }
     )
-    ch_versions = ch_versions.mix(BIGWIG_POS_INDIVIDUAL.out.versions)
 
     BIGWIG_NEG_INDIVIDUAL (
         STRAND_SPLIT_INDIVIDUAL.out.neg_bedgraph,
         ch_fasta_fai.map{ it[1] }
     )
-    ch_versions = ch_versions.mix(BIGWIG_NEG_INDIVIDUAL.out.versions)
 
     //
     // MODULE: Run crosslink calculation for samples WITH A GROUP individually
@@ -138,13 +134,11 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
         STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.pos_bedgraph,
         ch_fasta_fai.map{ it[1] }
     )
-    ch_versions = ch_versions.mix(BIGWIG_POS_INDIVIDUAL_HASGROUP.out.versions)
 
     BIGWIG_NEG_INDIVIDUAL_HASGROUP (
         STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.neg_bedgraph,
         ch_fasta_fai.map{ it[1] }
     )
-    ch_versions = ch_versions.mix(BIGWIG_NEG_INDIVIDUAL_HASGROUP.out.versions)
 
     //
     // MODULE: Run crosslink calculation for samples WITH A GROUP AS A GROUP
@@ -175,13 +169,11 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
         STRAND_SPLIT_GROUP_HASGROUP.out.pos_bedgraph,
         ch_fasta_fai.map{ it[1] }
     )
-    ch_versions = ch_versions.mix(BIGWIG_POS_GROUP_HASGROUP.out.versions)
 
     BIGWIG_NEG_GROUP_HASGROUP (
         STRAND_SPLIT_GROUP_HASGROUP.out.neg_bedgraph,
         ch_fasta_fai.map{ it[1] }
     )
-    ch_versions = ch_versions.mix(BIGWIG_NEG_GROUP_HASGROUP.out.versions)
 
     //
     // Combine crosslinking results for moving forwards

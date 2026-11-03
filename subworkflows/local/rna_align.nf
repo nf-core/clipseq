@@ -44,7 +44,6 @@ workflow RNA_ALIGN {
         bt_index,
         true
     )
-    ch_versions = ch_versions.mix(BOWTIE_ALIGN.out.versions)
 
     //
     // SUBWORKFLOW: Sort, index BAM file
@@ -53,8 +52,6 @@ workflow RNA_ALIGN {
     SAMTOOLS_INDEX_rDNA( SAMTOOLS_SORT_rDNA.out.bam )
 
 
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT_rDNA.out.versions)
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX_rDNA.out.versions)
 
     /*
     * MODULE: Align reads to smrna genome, here allowing 100 multimappers but only reporting one alignment per multimapped read
@@ -66,13 +63,10 @@ workflow RNA_ALIGN {
         bt_index,
         true
     )
-    ch_versions = ch_versions.mix(BOWTIE_ALIGN_K1.out.versions)
 
-    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta, '' )
-    ch_versions = ch_versions.mix(SAMTOOLS_SORT_rDNA_K1.out.versions)
+    SAMTOOLS_SORT_rDNA_K1 ( BOWTIE_ALIGN_K1.out.bam, fasta )
 
     SAMTOOLS_INDEX_rDNA_K1 ( SAMTOOLS_SORT_rDNA_K1.out.bam )
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX_rDNA_K1.out.versions)
 
     //
     // MODULE: Align reads that did not align to the rDNA genome to the primary genome
@@ -84,13 +78,11 @@ workflow RNA_ALIGN {
             gtf,
             false
         )
-        ch_versions = ch_versions.mix(STAR_ALIGN_GENOME_ONLY.out.versions)
 
         //
         // MODULE: Index the coord reads
         //
         SAMTOOLS_INDEX_COORD_GONLY( STAR_ALIGN_GENOME_ONLY.out.bam_sorted )
-        ch_versions = ch_versions.mix(SAMTOOLS_INDEX_COORD_GONLY.out.versions)
 
         //
         // CHANNEL: Merge reads and index
@@ -116,7 +108,6 @@ workflow RNA_ALIGN {
             [[],[]],
             ''
         )
-        ch_versions = ch_versions.mix(GONLY_SAMTOOLS_VIEW_GENOME.out.versions)
 
         ch_genome_log             = STAR_ALIGN_GENOME_ONLY.log
         ch_genome_log_final       = STAR_ALIGN_GENOME_ONLY.out.log_final
@@ -135,13 +126,11 @@ workflow RNA_ALIGN {
             gtf,
             false
         )
-        ch_versions = ch_versions.mix(STAR_ALIGN_WITH_TRANSCRIPTOME.out.versions)
 
         //
         // MODULE: Index the coord reads
         //
         SAMTOOLS_INDEX_COORD_TONLY( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted )
-        ch_versions = ch_versions.mix(SAMTOOLS_INDEX_COORD_TONLY.out.versions)
 
         //
         // CHANNEL: Merge reads and index
@@ -160,10 +149,8 @@ workflow RNA_ALIGN {
         //
         // MODULE: Sort and index transcript BAM file
         //
-        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, fasta, '' )
-        ch_versions = ch_versions.mix(SAMTOOLS_SORT_TRANS.out.versions)
+        SAMTOOLS_SORT_TRANS( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_transcript, fasta )
         SAMTOOLS_INDEX_TRANS( SAMTOOLS_SORT_TRANS.out.bam )
-        ch_versions = ch_versions.mix(SAMTOOLS_INDEX_TRANS.out.versions)
 
         /*
         * CHANNEL: Join transcriptbam and bai files

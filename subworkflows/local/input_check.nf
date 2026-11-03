@@ -27,7 +27,6 @@ workflow INPUT_CHECK {
         CAT_FASTQ (
             ch_fastq.multiple
         )
-        ch_versions  = ch_versions.mix(CAT_FASTQ.out.versions)
         reads = CAT_FASTQ.out.reads.mix(ch_fastq.single)
     } else if (source == 'dedupe_bam') { // dedupe bam ready for grouped crosslink/peak analysis
         SAMPLESHEET_CHECK ( samplesheet, source )
