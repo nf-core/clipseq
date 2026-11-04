@@ -61,38 +61,20 @@ The environment includes pre-installed nf-core tools, Nextflow, and a few other 
 
 To get started, open the repository in [Codespaces](https://github.com/nf-core/clipseq/codespaces).
 
-### Development requirements
-
-Use the following versions to match the repository's development and test configuration:
-
-- **Nextflow 25.10.4**: the minimum version in `nextflow.config` and the minimum tested by CI.
-- **Java 17 through 25**: the supported Java range for [Nextflow 25.10.4](https://github.com/nextflow-io/nextflow/blob/v25.10.4/docs/install.md).
-- **nf-core/tools 4.2.1**: the version recorded in `.nf-core.yml` and installed by linting CI.
-- **nf-test 0.9.5**: the version used by the nf-test CI workflow.
-- **Python 3.12**: the version used by linting CI. nf-core/tools 4.2.1 supports Python >=3.10 and <4.
-
-The manifest permits newer Nextflow releases, but check parser compatibility when upgrading.
-Nextflow 26.04 and newer enable the stricter v2 parser by default; code using legacy syntax may need `NXF_SYNTAX_PARSER=v1` until migrated.
-See the [Nextflow parser-version guidance](https://training.nextflow.io/latest/info/nxf_versions/).
-
-The pipeline pins `nf-schema@2.7.3` in `nextflow.config` for parameter validation.
-That plugin requires Nextflow >=25.10.0 and Java >=17, so the versions above meet its requirements.
-Install Docker or Apptainer for container-based tests.
-
 ### Testing
 
 Once you have made your changes, run the pipeline with nf-test to test them locally.
 For additional information, use the `--verbose` flag to view the Nextflow console log output.
 
 ```bash
-nf-test test tests/nf_test/test --profile debug,test,docker --verbose
+nf-test test --tag test --profile +docker --verbose
 ```
 
 If you have added new functionality, ensure you update the test assertions in the `.nf.test` files in the `tests/` directory.
-Inspect any snapshot differences first. If they are expected consequences of your changes, update the affected snapshots with the following command:
+Update the snapshots with the following command:
 
 ```bash
-nf-test test tests/nf_test/test --profile debug,test,docker --verbose --update-snapshots
+nf-test test --tag test --profile +docker --verbose --update-snapshots
 ```
 
 When you create a pull request with changes, GitHub Actions will run automatic tests.
@@ -106,7 +88,7 @@ nf-core has a [set of guidelines](https://nf-co.re/docs/specifications/overview)
 To enforce these, run linting with nf-core/tools:
 
 ```bash
-nf-core pipelines lint --dir .
+nf-core pipelines lint <pipeline_directory>
 ```
 
 If you encounter failures or warnings, follow the linked documentation printed to screen.
@@ -139,13 +121,13 @@ Please also refer to the [pipeline-specific contribution guidelines](#pipeline-s
 
 - [ ] Define the corresponding [input channel](#channel-naming-schemes) into your new process from the expected previous process channel.
 - [ ] Install a module with nf-core/tools, or write a local module (see [default processes resource requirements](#default-processes-resource-requirements)), and add it to the target `<workflow>.nf`.
-- [ ] Define the output channels if needed. Follow the pipeline-specific version-reporting conventions below and add relevant reports to the MultiQC input channel.
+- [ ] Define the output channel if needed. Mix the version output channel into `ch_versions` and relevant files into `ch_multiqc`.
 - [ ] Add new or updated parameters to `nextflow.config` with a [default value](#default-parameter-values).
 - [ ] Add new or updated parameters and relevant help text to `nextflow_schema.json` with [nf-core/tools](#default-parameter-values).
-- [ ] Add validation for relevant parameters to the pipeline initialization subworkflow, `subworkflows/local/utils_nfcore_clipseq_pipeline/main.nf`.
+- [ ] Add validation for relevant parameters to the pipeline utilisation section of `utils_nfcore_\_pipeline/main.nf` subworkflow.
 - [ ] Perform local tests to validate that the new code works as expected.
   - [ ] If applicable, add a new test in the `tests` directory.
-- [ ] Update `docs/usage.md`, `docs/output.md`, and `CITATIONS.md` as appropriate.
+- [ ] Update `usage.md`, `output.md`, and `citation.md` as appropriate.
 - [ ] [Lint](#lint-tests) the code with nf-core/tools.
 - [ ] Update any diagrams or pipeline images as necessary.
 - [ ] Update MultiQC config `assets/multiqc_config.yml` so relevant suffixes, file name cleanup, and module plots are in the appropriate order.
@@ -198,83 +180,6 @@ nf-core pipelines bump-version --nextflow . <min_nf_version>
 
 If you update images or graphics, follow the nf-core [style guidelines](https://nf-co.re/docs/community/brand/workflow-schematics).
 
-## Pipeline-specific contribution guidelines
+## Pipeline specific contribution guidelines
 
-### CLIPseq development branches
-
-The general nf-core contribution workflow targets `dev`.
-For work on the ongoing CLIPseq 2.0 development, coordinate the pull request target with the maintainers; the current integration branch is `feat-2-0`.
-Create a focused feature branch from the intended target and keep unrelated changes out of the pull request.
-
-### Workflow and module structure
-
-`main.nf` initializes the pipeline and calls `workflows/clipseq.nf`.
-Reusable CLIPseq processing logic belongs in `subworkflows/local/`, and pipeline-specific processes belong in `modules/local/`.
-Follow the structure, process aliases, and channel conventions of nearby code.
-
-Use nf-core/tools to install or update shared components under `modules/nf-core/` and `subworkflows/nf-core/`, and include the corresponding `modules.json` changes.
-Keep local customization separate from upstream components where possible; record any necessary upstream module patches through nf-core/tools.
-
-### Parameter and samplesheet validation
-
-Define parameter defaults in `nextflow.config` and document their types, defaults, descriptions, and help text in `nextflow_schema.json`.
-The parameter schema uses JSON Schema draft 2020-12, with `$defs` and matching references.
-Use the pinned `nf-schema` plugin for parameter validation, help, and parameter summaries.
-Pipeline-specific initialization checks belong in `subworkflows/local/utils_nfcore_clipseq_pipeline/main.nf`.
-
-Preserve the source-specific samplesheet validation performed by `INPUT_CHECK` and its local samplesheet-checking module.
-FASTQ input uses `sample_name,group_name,input_name,fastq` columns; deduplicated BAM input uses `sample_name,group_name,input_name,bam`.
-When changing samplesheet handling, test sample merging, replicate groups, control assignments, and validation failures as appropriate.
-
-### Software versions and MultiQC
-
-Updated nf-core modules publish software versions to the `versions` topic.
-Local modules that still emit `versions.yml` must have those outputs mixed into `ch_versions`.
-The reporting section of `workflows/clipseq.nf` combines both sources for MultiQC.
-Do not reintroduce the removed Groovy schema helpers or a separate software-version scraping process.
-
-When adding reports, connect them to the appropriate MultiQC input channels and update `assets/multiqc_config.yml` and `docs/output.md` as needed.
-Preserve the workflow summary, methods description, and optional completion reporting.
-
-### Resources and containers
-
-Use the shared resource labels in `conf/base.config` and pass allocated resources to tools through `task.cpus` and `task.memory` where supported.
-Resource caps use `process.resourceLimits`; do not add the removed `max_cpus`, `max_memory`, or `max_time` parameters.
-
-Use pinned, fully qualified container references.
-The local BioContainers modules use explicit Quay addresses for Docker, Singularity, and Apptainer.
-Shared nf-core modules retain their upstream container definitions, including Seqera Containers where supplied.
-Verify that the referenced tag exists before changing a container address or version.
-
-### Targeted tests and cluster execution
-
-Existing pipeline tests live in `tests/nf_test/test/`.
-Start with tests covering the changed stage, including relevant skip flags and optional workflow branches.
-For example, run the preprocessing tests with Docker:
-
-```bash
-nf-test test tests/nf_test/test/test_only_preprocessing.nf.test --profile debug,test,docker --verbose
-```
-
-Replace `docker` with `apptainer` when testing on a system configured for Apptainer.
-For lightweight startup and parameter-validation checks, use:
-
-```bash
-nf-test test tests/nf_test/test/schema_validation.nf.test --verbose
-```
-
-Run data-processing tests on allocated cluster resources or through CI, rather than on a login node.
-When each task should be a separate Slurm job, load a cluster configuration that sets `process.executor = 'slurm'`.
-The Nextflow controller and its tasks must be able to access the repository, work directory, inputs, outputs, and container cache.
-
-The `test_full` profile exercises larger scenarios; use it after targeted tests pass and request resources appropriate to the selected data.
-Document which tests you ran and any validation that remains incomplete in the pull request.
-
-### Documentation and acknowledgements
-
-Update `CHANGELOG.md` for user-visible changes and dependency updates.
-Update `docs/usage.md`, `docs/output.md`, `README.md`, and `CITATIONS.md` where affected.
-For contributor acknowledgements, provide the person's preferred name and GitHub handle, and describe their contribution using the existing README conventions.
-Record people in `manifest.contributors` in `nextflow.config`, using `name`, `github` where known, and a `contribution` list containing `author`, `maintainer`, or `contributor`.
-A person can have multiple roles, for example `contribution: ['author', 'maintainer']`.
-Author roles are recorded in the structured contributor entries; keep the `.nf-core.yml` template author list consistent with those entries.
+<!-- TODO nf-core: Add any pipeline specific contribution guidelines here, such as coding styles, procedures, checklists etc. -->
