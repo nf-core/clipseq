@@ -14,14 +14,5 @@ process rDNA_SUMMARY {
     path  "versions.yml"                            ,emit: versions
 
     script:
-    """
-
-    Rscript $projectDir/modules/local/rDNA_summary/templates/rDNA_summary.R
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-tidyverse: \$(Rscript -e "library(tidyverse); cat(as.character(packageVersion('tidyverse')))")
-        r-ggridges: \$(Rscript -e "library(ggridges); cat(as.character(packageVersion('ggridges')))")
-    END_VERSIONS
-    """
+    template 'rDNA_summary.R'
 }
