@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  nf_test:
+  nf-test:
     name: nf-test tests
     if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/clipseq') }}"
     runs-on: ubuntu-latest
