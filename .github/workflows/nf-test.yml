@@ -1,11 +1,15 @@
 name: nf-test
 on:
-  push:
-    branches:
-      - dev
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/meta.yml"
+      - "**/*.md"
+      - "**/*.png"
+      - "**/*.svg{% raw %}"
   release:
     types: [published]
+  workflow_dispatch:
 
 env:
   NXF_ANSI_LOG: false
