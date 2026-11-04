@@ -95,11 +95,6 @@
                         "git_sha": "7b3452a23773f687ededb4befd037920e5a51341",
                         "installed_by": ["modules"]
                     },
-                    "icountmini/segment": {
-                        "branch": "master",
-                        "git_sha": "7b3452a23773f687ededb4befd037920e5a51341",
-                        "installed_by": ["modules"]
-                    },
                     "icountmini/sigxls": {
                         "branch": "master",
                         "git_sha": "7b3452a23773f687ededb4befd037920e5a51341",
