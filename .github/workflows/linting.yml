@@ -1,7 +1,7 @@
 name: nf-core linting
 # This workflow is triggered on pushes and PRs to the repository.
 # It runs the `nf-core pipelines lint` and markdown lint tests to ensure
-# that the code meets the nf-core guidelines. {%- raw %}
+# that the code meets the nf-core guidelines.
 on:
   pull_request:
   release:
@@ -91,4 +91,4 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pr-comment
-          path: pr-comment/{%- endraw %}
+          path: pr-comment/

@@ -1,6 +1,4 @@
-{% if email -%}
 email_template.html
-{%- endif %}
 .nextflow*
 work/
 data/
@@ -11,10 +9,6 @@ testing*
 *.pyc
 bin/
 .nf-test/
-{%- if rocrate %}
 ro-crate-metadata.json
-{%- endif %}
-{%- if modules %}
 modules/nf-core/
 subworkflows/nf-core/
-{%- endif %}
