@@ -4,8 +4,19 @@ lint:
     - assets/email_template.txt
 nf_core_version: 4.2.1
 repository_type: pipeline
+# Contributor roles are defined in nextflow.config under manifest.contributors.
+# Contributor reference:
+#   - Charlotte West (@charlotte-west)
+#   - Chris Cheshire
+#   - Simon Murray
+#   - Svetlana Lebedeva (@slebedeva)
+#   - Melina Klostermann (@MelinaKlostermann)
+#   - Klara Kuret Hodnik (@kkuret)
+#   - Martina Pedna (@MartiPedna)
+#   - Karen Irawan (GitHub handle not yet verified)
+#   - Simran Chhabria (@SimranChhabria)
 template:
-  author: Anob Chakrabarti, Charlotte Capitanchik, Charlotte West, Chris Cheshire, Simon Murray
+  author: Anob Chakrabarti, Charlotte Capitanchik, Hannah Jones
   description: CLIP analysis pipeline
   force: false
   is_nfcore: true
