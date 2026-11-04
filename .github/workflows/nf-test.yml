@@ -6,7 +6,7 @@ on:
       - "**/meta.yml"
       - "**/*.md"
       - "**/*.png"
-      - "**/*.svg{% raw %}"
+      - "**/*.svg"
   release:
     types: [published]
   workflow_dispatch:

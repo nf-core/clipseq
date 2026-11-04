@@ -9,6 +9,8 @@ on:
       - main
       - master
   workflow_dispatch:
+  release:
+    types: [published]
   pull_request_review:
     types: [submitted]
 
