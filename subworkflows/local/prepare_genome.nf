@@ -15,8 +15,8 @@ include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                  
 include { SAMTOOLS_FAIDX as GENOME_CHROM_SIZE                                    } from '../../modules/nf-core/samtools/faidx/main'
 include { SAMTOOLS_FAIDX as rDNA_CHROM_SIZE                                      } from '../../modules/nf-core/samtools/faidx/main'
 include { FILTER_GTF_BY_TRANSCRIPT                                               } from '../../modules/local/filter_gtf_by_transcript/main'
-include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
-include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
+include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/local/icountmini/segment/main'
+include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/local/icountmini/segment/main'
 include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS             } from '../../modules/local/resolve_unannotated/main'
 
 workflow PREPARE_GENOME {
