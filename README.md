@@ -174,16 +174,30 @@ Key outputs (filtering disabled):
 
 ## Credits
 
+The pipeline authors listed in the manifest are Anob Chakrabarti ([@amchakra](https://github.com/amchakra)), Charlotte Capitanchik ([@CharlotteAnne](https://github.com/charlotteanne)), and Hannah Jones ([@hanalysis](https://github.com/hanalysis)).
+
 nf-core/clipseq was originally written by Charlotte West ([@charlotte-west](https://github.com/charlotte-west)) and Anob Chakrabarti ([@amchakra](https://github.com/amchakra)) from [Luscombe Lab](https://www.crick.ac.uk/research/labs/nicholas-luscombe) at [The Francis Crick Institute](https://www.crick.ac.uk/), London, UK. It started life in April 2020 as a Nextflow DSL2 Luscombe Lab ([@luslab](https://github.com/luslab)) lockdown hackathon day and we thank all the lab members for their early contributions.
 
-v2.0 was spearheaded by [Ule lab](https://github.com/ulelab) in collaboration with [Goodwright Ltd.](https://goodwright.com/); namely Charlotte Capitanchik ([@CharlotteAnne](https://github.com/charlotteanne)), Chris Cheshire and Sam Ireland.
+v2.0 was spearheaded by [Ule lab](https://github.com/ulelab) in collaboration with [Goodwright Ltd.](https://goodwright.com/); namely Charlotte Capitanchik ([@CharlotteAnne](https://github.com/charlotteanne)), Chris Cheshire ([@chris-cheshire](https://github.com/chris-cheshire)) and Sam Ireland and Hannah Jones ([@hanalysis](https://github.com/hanalysis)).
 
 We thank the following people for their extensive assistance in the development of this pipeline:
-Ira Iosub, Marc Jones, Rupert Faraway, Oscar G. Wilkins, Klara Kuret, Simon Murray
+
+- Ira Iosub
+- Marc Jones
+- Rupert Faraway
+- Oscar G. Wilkins
+- [Klara Kuret Hodnik (@kkuret)](https://github.com/kkuret)
+- [Simon Murray (@just-simon-5)](https://github.com/just-simon-5)
+- [Hannah Jones (@hanalysis)](https://github.com/hanalysis)
+- [Svetlana Lebedeva (@slebedeva)](https://github.com/slebedeva)
+- [Melina Klostermann (@MelinaKlostermann)](https://github.com/MelinaKlostermann)
+- [Martina Pedna (@MartiPedna)](https://github.com/MartiPedna)
+- [Karen Irawan (@karenirawan)](https://github.com/karenirawan)
+- [Simran Chhabria (@SimranChhabria)](https://github.com/SimranChhabria)
 
 ## Contributions and Support
 
-If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
+If you would like to contribute to this pipeline, please see the [contributing guidelines](docs/CONTRIBUTING.md).
 
 For further information or help, don't hesitate to get in touch on the [Slack `#clipseq` channel](https://nfcore.slack.com/channels/clipseq) (you can join with [this invite](https://nf-co.re/join/slack)).
 
