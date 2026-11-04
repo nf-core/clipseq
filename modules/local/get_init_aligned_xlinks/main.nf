@@ -14,17 +14,5 @@ process GET_INIT_ALIGNED_XLINKS {
     path  "versions.yml"                            ,emit: versions
 
     script:
-    def args = task.ext.args ?: ''
-    """
-
-    python ${projectDir}/modules/local/get_init_aligned_xlinks/templates/get_xlinks.py \
-    -i ${bam} \
-    ${args}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version | sed 's/Python //')
-        pysam: \$(python -c "import pysam; print(pysam.__version__)")
-    END_VERSIONS
-    """
+    template 'get_xlinks.py'
 }
