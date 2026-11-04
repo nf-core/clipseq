@@ -117,8 +117,8 @@ def methodsDescriptionText(run_workflow, mqc_methods_yaml) {
 def completionNotification(summary_params, hook_url) {
 
     def summary = [:]
-    for (group in summary_params.keySet()) {
-        summary << summary_params[group]
+    summary_params.values().each { group_params ->
+        summary << group_params
     }
 
     def misc_fields = [:]
