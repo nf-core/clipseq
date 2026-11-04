@@ -85,12 +85,12 @@ workflow RNA_ALIGN {
         //
         // MODULE: Index the coord reads
         //
-        SAMTOOLS_INDEX_COORD_GONLY( STAR_ALIGN_GENOME_ONLY.out.bam_sorted )
+        SAMTOOLS_INDEX_COORD_GONLY( STAR_ALIGN_GENOME_ONLY.out.bam_sorted_aligned )
 
         //
         // CHANNEL: Merge reads and index
         //
-        ch_coord_bam_bai = STAR_ALIGN_GENOME_ONLY.out.bam_sorted
+        ch_coord_bam_bai = STAR_ALIGN_GENOME_ONLY.out.bam_sorted_aligned
             .join(SAMTOOLS_INDEX_COORD_GONLY.out.index, by: [0])
         /*
         * CHANNEL: Filter for uniquely mapping reads for downstream analysis; samtools view -b -q 5 -o output.bam alignments.bam
@@ -105,7 +105,7 @@ workflow RNA_ALIGN {
 
         ch_genome_log             = STAR_ALIGN_GENOME_ONLY.out.log_final
         ch_genome_log_final       = STAR_ALIGN_GENOME_ONLY.out.log_final
-        ch_genome_multi_bam       = STAR_ALIGN_GENOME_ONLY.out.bam_sorted
+        ch_genome_multi_bam       = STAR_ALIGN_GENOME_ONLY.out.bam_sorted_aligned
         ch_genome_multi_bai       = SAMTOOLS_INDEX_COORD_GONLY.out.index
         ch_genome_unique_bam      = GONLY_SAMTOOLS_VIEW_GENOME.out.bam
         ch_genome_unique_bai      = GONLY_SAMTOOLS_VIEW_GENOME.out.bai
@@ -124,12 +124,12 @@ workflow RNA_ALIGN {
         //
         // MODULE: Index the coord reads
         //
-        SAMTOOLS_INDEX_COORD_TONLY( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted )
+        SAMTOOLS_INDEX_COORD_TONLY( STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted_aligned )
 
         //
         // CHANNEL: Merge reads and index
         //
-        ch_coord_bam_bai = STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted
+        ch_coord_bam_bai = STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted_aligned
             .join(SAMTOOLS_INDEX_COORD_TONLY.out.index, by: [0])
         //
         // MODULE: Sort and index transcript BAM file
@@ -163,7 +163,7 @@ workflow RNA_ALIGN {
 
         ch_genome_log             = STAR_ALIGN_WITH_TRANSCRIPTOME.out.log_final
         ch_genome_log_final       = STAR_ALIGN_WITH_TRANSCRIPTOME.out.log_final
-        ch_genome_multi_bam       = STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted
+        ch_genome_multi_bam       = STAR_ALIGN_WITH_TRANSCRIPTOME.out.bam_sorted_aligned
         ch_genome_multi_bai       = SAMTOOLS_INDEX_COORD_TONLY.out.index
         ch_genome_unique_bam      = TONLY_SAMTOOLS_VIEW_GENOME.out.bam
         ch_genome_unique_bai      = TONLY_SAMTOOLS_VIEW_GENOME.out.bai
