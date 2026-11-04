@@ -5,22 +5,75 @@
     "description": "CLIP analysis pipeline",
     "type": "object",
     "$defs": {
+        "trimming_options": {
+            "title": "Trimming options",
+            "type": "object",
+            "description": "",
+            "properties": {
+                "umitools_extract_method": {
+                    "type": "string",
+                    "default": "string"
+                },
+                "extra_trimgalore_args": {
+                    "type": "string",
+                    "default": "--length 10"
+                },
+                "min_trimmed_reads": {
+                    "type": "integer",
+                    "default": 10000
+                }
+            }
+        },
+        "umi_options": {
+            "title": "UMI options",
+            "type": "object",
+            "description": "",
+            "properties": {
+                "umitools_dedup_stats": {
+                    "type": "boolean"
+                },
+                "umitools_umi_separator": {
+                    "type": "string",
+                    "default": "rbc:"
+                },
+                "umitools_bc_pattern2": {
+                    "type": "string"
+                },
+                "umitools_bc_pattern": {
+                    "type": "string"
+                },
+                "umitools_grouping_method": {
+                    "type": "string",
+                    "default": "directional"
+                },
+                "umi_discard_read": {
+                    "type": "integer",
+                    "description": "Read to discard after UMI extraction: 0 keeps both reads, 1 discards R1, and 2 discards R2."
+                },
+                "encode_eclip": {
+                    "type": "boolean",
+                    "description": "Enable ENCODE eCLIP-specific UMI handling.",
+                    "default": false
+                }
+            }
+        },
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": [
+                "input",
+                "outdir"
+            ],
             "properties": {
                 "input": {
                     "type": "string",
                     "format": "file-path",
-                    "exists": true,
-                    "schema": "assets/schema_input.json",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/clipseq/usage#samplesheet-input).",
+                    "help_text": "Provide a CSV samplesheet with sample_name, group_name, input_name, and fastq columns for FASTQ input, or bam instead of fastq for deduplicated BAM input. The pipeline validates its contents with the source-specific samplesheet checker.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -40,6 +93,11 @@
                     "type": "string",
                     "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
                     "fa_icon": "fas fa-file-signature"
+                },
+                "source": {
+                    "type": "string",
+                    "description": "Input data source: fastq or dedupe_bam.",
+                    "default": "fastq"
                 }
             }
         },
@@ -58,12 +116,87 @@
                 "fasta": {
                     "type": "string",
                     "format": "file-path",
-                    "exists": true,
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
                     "description": "Path to FASTA genome file.",
                     "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
                     "fa_icon": "far fa-file-code"
+                },
+                "regions_gtf": {
+                    "type": "string"
+                },
+                "star_params": {
+                    "type": "string",
+                    "default": "--outFilterMultimapNmax 100 --outFilterMultimapScoreRange 1 --outSAMattributes All --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterType BySJout --alignIntronMin 20 --alignIntronMax 1000000 --outFilterScoreMin 10 --alignEndsType Extend5pOfRead1 --twopassMode Basic"
+                },
+                "regions_filt_gtf": {
+                    "type": "string"
+                },
+                "rDNA_fasta": {
+                    "type": "string"
+                },
+                "regions_resolved_gtf_genic": {
+                    "type": "string"
+                },
+                "filtered_gtf": {
+                    "type": "string"
+                },
+                "representative_transcript_fai": {
+                    "type": "string"
+                },
+                "fasta_fai": {
+                    "type": "string"
+                },
+                "genome_index": {
+                    "type": "string"
+                },
+                "rDNA_fasta_fai": {
+                    "type": "string"
+                },
+                "seg_resolved_gtf": {
+                    "type": "string"
+                },
+                "gtf": {
+                    "type": "string"
+                },
+                "representative_transcript_gtf": {
+                    "type": "string"
+                },
+                "representative_transcript": {
+                    "type": "string"
+                },
+                "rDNA_chrom_sizes": {
+                    "type": "string"
+                },
+                "seg_resolved_gtf_genic": {
+                    "type": "string"
+                },
+                "genome_chrom_sizes": {
+                    "type": "string"
+                },
+                "seg_filt_gtf": {
+                    "type": "string"
+                },
+                "rDNA_genome_index": {
+                    "type": "string"
+                },
+                "seg_gtf": {
+                    "type": "string"
+                },
+                "regions_resolved_gtf": {
+                    "type": "string"
+                },
+                "bowtie_params": {
+                    "type": "string",
+                    "default": "-v 2 -m 100 --best --strata -k 100"
+                },
+                "igenomes_base": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Directory / URL base for iGenomes references.",
+                    "default": "s3://ngi-igenomes/igenomes",
+                    "fa_icon": "fas fa-cloud-download-alt",
+                    "hidden": true
                 },
                 "igenomes_ignore": {
                     "type": "boolean",
@@ -72,12 +205,230 @@
                     "hidden": true,
                     "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
                 },
-                "igenomes_base": {
+                "skip_filter_gtf": {
+                    "type": "boolean",
+                    "description": "Skip filtering the GTF annotation by transcript.",
+                    "default": false
+                },
+                "ch_rpt_annotation_gtf": {
                     "type": "string",
-                    "description": "The base path to the igenomes reference files",
-                    "fa_icon": "fas fa-ban",
-                    "hidden": true,
-                    "default": "s3://ngi-igenomes/igenomes/"
+                    "description": "Path to the repeat annotation GTF for transposable element quantification."
+                },
+                "tetranscripts_params": {
+                    "type": "string",
+                    "description": "Additional command-line arguments for TEtranscripts."
+                },
+                "telescope_params": {
+                    "type": "string",
+                    "description": "Command-line arguments for Telescope assignment.",
+                    "default": "--attribute 'transcript_id' --updated_sam --conf_prob 0.5 --reassign_mode conf"
+                },
+                "tRNA_summary_params": {
+                    "type": "string",
+                    "description": "Additional command-line arguments for the transfer RNA summary."
+                },
+                "bowtie_params_k1": {
+                    "type": "string",
+                    "description": "Bowtie command-line arguments for reporting a single alignment per read.",
+                    "default": "-v 2 -m 100 --best -k 1"
+                }
+            }
+        },
+        "output_options": {
+            "title": "Output options",
+            "type": "object",
+            "description": "",
+            "properties": {
+                "save_trimmed": {
+                    "type": "boolean"
+                },
+                "save_align_intermed": {
+                    "type": "boolean"
+                },
+                "save_unaligned_output": {
+                    "type": "boolean"
+                },
+                "save_reference": {
+                    "type": "boolean"
+                },
+                "save_unaligned": {
+                    "type": "boolean",
+                    "description": "Retain unmapped Bowtie reads for STAR alignment. Required for the alignment workflow.",
+                    "default": true,
+                    "hidden": true
+                }
+            }
+        },
+        "logic_options": {
+            "title": "Logic options",
+            "type": "object",
+            "description": "",
+            "properties": {
+                "debug": {
+                    "type": "boolean"
+                },
+                "skip_fastqc": {
+                    "type": "boolean"
+                },
+                "skip_trimming": {
+                    "type": "boolean"
+                },
+                "skip_umi_extract": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "save_umi_intermeds": {
+                    "type": "boolean"
+                },
+                "skip_transcriptome": {
+                    "type": "boolean",
+                    "description": "Skip transcriptome alignment and processing.",
+                    "default": true
+                },
+                "skip_deseq2_qc": {
+                    "type": "boolean",
+                    "description": "Skip DESeq2 quality control.",
+                    "default": false
+                },
+                "run_rDNA_summary": {
+                    "type": "boolean",
+                    "description": "Generate the ribosomal DNA summary.",
+                    "default": true
+                },
+                "run_te": {
+                    "type": "boolean",
+                    "description": "Run transposable element quantification.",
+                    "default": false
+                },
+                "run_tRNA_summary": {
+                    "type": "boolean",
+                    "description": "Generate the transfer RNA summary.",
+                    "default": true
+                },
+                "peakcaller": {
+                    "type": "string",
+                    "description": "Comma-separated peak callers to run: clippy, icount, paraclu, or pureclip.",
+                    "default": "clippy"
+                },
+                "clippy_params": {
+                    "type": "string",
+                    "description": "Additional command-line arguments for Clippy."
+                },
+                "icount_sigxl_params": {
+                    "type": "string",
+                    "description": "Additional command-line arguments for iCount-mini significant crosslinks."
+                },
+                "icount_peaks_params": {
+                    "type": "string",
+                    "description": "Additional command-line arguments for iCount-mini peak calling."
+                },
+                "paraclu_minValue": {
+                    "type": "integer",
+                    "description": "Minimum signal value for Paraclu clustering.",
+                    "default": 10
+                },
+                "pureclip_params": {
+                    "type": "string",
+                    "description": "Additional command-line arguments for PureCLIP."
+                },
+                "consensus_peak": {
+                    "type": "boolean",
+                    "description": "Generate consensus peaks across replicates.",
+                    "default": false
+                },
+                "peka_params": {
+                    "type": "string",
+                    "description": "Additional command-line arguments for PEKA."
+                },
+                "only_input": {
+                    "type": "boolean",
+                    "description": "Run the pipeline in input-only mode.",
+                    "default": false
+                },
+                "only_genome": {
+                    "type": "boolean",
+                    "description": "Run the pipeline in genome-only mode.",
+                    "default": false
+                },
+                "only_preprocessing": {
+                    "type": "boolean",
+                    "description": "Run the pipeline in preprocessing-only mode.",
+                    "default": false
+                },
+                "only_alignment": {
+                    "type": "boolean",
+                    "description": "Run the pipeline in alignment-only mode.",
+                    "default": false
+                },
+                "only_filtering": {
+                    "type": "boolean",
+                    "description": "Run the pipeline in filtering-only mode.",
+                    "default": false
+                },
+                "only_dedup": {
+                    "type": "boolean",
+                    "description": "Run the pipeline in dedup-only mode.",
+                    "default": false
+                },
+                "only_crosslinks": {
+                    "type": "boolean",
+                    "description": "Run the pipeline in crosslinks-only mode.",
+                    "default": false
+                },
+                "only_peakcalling": {
+                    "type": "boolean",
+                    "description": "Run the pipeline in peakcalling-only mode.",
+                    "default": false
+                },
+                "run_input_check": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_genome_prep": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_preprocessing": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_alignment": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_filtering": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_dedup": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_crosslinking": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_peakcalling": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_peka": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
+                },
+                "run_reporting": {
+                    "type": "boolean",
+                    "description": "Internal stage flag calculated from the only_* parameters in conf/logic.config.",
+                    "hidden": true
                 }
             }
         },
@@ -136,6 +487,15 @@
             "description": "Less common options for the pipeline, typically set in a config file.",
             "help_text": "These options are common to all nf-core pipelines and allow you to customise some of the core preferences for how the pipeline runs.\n\nTypically these options would be set in a Nextflow config file loaded for all pipeline runs, such as `~/.nextflow/config`.",
             "properties": {
+                "help": {
+                    "type": [
+                        "boolean",
+                        "string"
+                    ],
+                    "description": "Display help, optionally for a specific parameter.",
+                    "fa_icon": "fas fa-question-circle",
+                    "hidden": true
+                },
                 "version": {
                     "type": "boolean",
                     "description": "Display version and exit.",
@@ -148,7 +508,14 @@
                     "description": "Method used to save pipeline results to output directory.",
                     "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
                     "fa_icon": "fas fa-copy",
-                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
+                    "enum": [
+                        "symlink",
+                        "rellink",
+                        "link",
+                        "copy",
+                        "copyNoFollow",
+                        "move"
+                    ],
                     "hidden": true
                 },
                 "email_on_fail": {
@@ -179,9 +546,15 @@
                     "fa_icon": "fas fa-palette",
                     "hidden": true
                 },
+                "hook_url": {
+                    "type": "string",
+                    "description": "Incoming hook URL for messaging service",
+                    "fa_icon": "fas fa-people-group",
+                    "help_text": "Incoming hook URL for messaging service. Currently, MS Teams and Slack are supported.",
+                    "hidden": true
+                },
                 "multiqc_config": {
                     "type": "string",
-                    "format": "file-path",
                     "description": "Custom config file to supply to MultiQC.",
                     "fa_icon": "fas fa-cog",
                     "hidden": true
@@ -197,6 +570,12 @@
                     "description": "Custom MultiQC yaml file containing HTML including a methods description.",
                     "fa_icon": "fas fa-cog"
                 },
+                "tracedir": {
+                    "type": "string",
+                    "description": "Directory to keep pipeline Nextflow logs and reports. Defaults to the pipeline_info directory within outdir.",
+                    "fa_icon": "fas fa-cogs",
+                    "hidden": true
+                },
                 "validate_params": {
                     "type": "boolean",
                     "description": "Boolean whether to validate parameters against the schema at runtime",
@@ -204,40 +583,49 @@
                     "fa_icon": "fas fa-check-square",
                     "hidden": true
                 },
-                "pipelines_testdata_base_path": {
-                    "type": "string",
-                    "fa_icon": "far fa-check-circle",
-                    "description": "Base URL or local path to location of pipeline test dataset files",
-                    "default": "https://raw.githubusercontent.com/nf-core/test-datasets/",
-                    "hidden": true
+                "show_hidden_params": {
+                    "type": "boolean",
+                    "fa_icon": "far fa-eye-slash",
+                    "description": "Legacy alias for show_hidden; include hidden parameters in the help message.",
+                    "hidden": true,
+                    "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
                 },
-                "trace_report_suffix": {
+                "trace_timestamp": {
                     "type": "string",
-                    "fa_icon": "far fa-calendar",
-                    "description": "Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.",
+                    "description": "Timestamp generated at startup for execution report filenames.",
                     "hidden": true
-                },
-                "help": {
-                    "type": ["boolean", "string"],
-                    "description": "Display the help message."
                 },
                 "help_full": {
                     "type": "boolean",
-                    "description": "Display the full detailed help message."
+                    "description": "Display the full parameter help.",
+                    "hidden": true
                 },
                 "show_hidden": {
                     "type": "boolean",
-                    "description": "Display hidden parameters in the help message (only works when --help or --help_full are provided)."
+                    "description": "Include hidden parameters in the help message.",
+                    "hidden": true
                 }
             }
         }
     },
     "allOf": [
         {
+            "$ref": "#/$defs/trimming_options"
+        },
+        {
+            "$ref": "#/$defs/umi_options"
+        },
+        {
             "$ref": "#/$defs/input_output_options"
         },
         {
             "$ref": "#/$defs/reference_genome_options"
+        },
+        {
+            "$ref": "#/$defs/output_options"
+        },
+        {
+            "$ref": "#/$defs/logic_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
