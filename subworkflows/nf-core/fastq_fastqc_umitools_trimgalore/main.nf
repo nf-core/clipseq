@@ -55,7 +55,7 @@ workflow FASTQ_FASTQC_UMITOOLS_TRIMGALORE {
         ch_trimmer_reads = UMITOOLS_EXTRACT.out.reads
         ch_umi_reads = UMITOOLS_EXTRACT.out.reads
         ch_umi_log = UMITOOLS_EXTRACT.out.log
-    
+
         // Discard R1 / R2 if required
         if (umi_discard_read in [1, 2]) {
             UMITOOLS_EXTRACT.out.reads
