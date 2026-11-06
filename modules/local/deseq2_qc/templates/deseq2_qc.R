@@ -31,40 +31,6 @@ suppressPackageStartupMessages({
 ################################################
 ################################################
 
-# opt <- list(
-#     output_prefix = ifelse('$task.ext.prefix' == 'null', '$meta.id', '$task.ext.prefix'),
-#     count_file = '$counts',
-#     count_col = 3,
-#     vst_name = 'vst',
-#     vst = TRUE,
-#     id_col = "PeakID")
-
-# opt_types <- lapply(opt, class)
-
-# # Apply parameter overrides
-
-# args_opt <- parse_args('$task.ext.args')
-# for ( ao in names(args_opt)){
-#     if (! ao %in% names(opt)){
-#         stop(paste("Invalid option:", ao))
-#     }else{
-
-#         # Preserve classes from defaults where possible
-#         if (! is.null(opt[[ao]])){
-#             args_opt[[ao]] <- as(args_opt[[ao]], opt_types[[ao]])
-#         }
-#         opt[[ao]] <- args_opt[[ao]]
-#     }
-# }
-# if ( ! is.null(opt\$round_digits)){
-#     opt\$round_digits <- as.numeric(opt\$round_digits)
-# }
-
-# if (is.null(opt$count_file)){
-#     print_help(opt_parser)
-#     stop("Please provide a counts file.", call.=FALSE)
-# }
-
 
 option_list <- list(
     make_option(c("-i", "--count_file"), type="character", help="Count matrix"),
@@ -74,16 +40,19 @@ option_list <- list(
     make_option(c("--vst"), action="store_true", default=TRUE)
 )
 
-opt <- parse_args(OptionParser(option_list=option_list))
+opt <- parse_args(
+    OptionParser(option_list=option_list),
+    args = c("-i", "${counts}", "-c", "3", "-d", "PeakID", "-o", "${task.ext.prefix ?: meta.id}", "--vst")
+)
 
 ################################################
 ################################################
 ## READ IN COUNTS FILE                        ##
 ################################################
 
-count.table           <- read.delim(file=opt$count_file,header=TRUE,check.names=FALSE, na.strings = c(".", "NA", ""))
-rownames(count.table) <- count.table[,opt$id_col]
-count.table           <- count.table[,opt$count_col:ncol(count.table),drop=FALSE]
+count.table           <- read.delim(file=opt[["count_file"]],header=TRUE,check.names=FALSE, na.strings = c(".", "NA", ""))
+rownames(count.table) <- count.table[,opt[["id_col"]]]
+count.table           <- count.table[,opt[["count_col"]]:ncol(count.table),drop=FALSE]
 
 count.table[is.na(count.table)] <- 0
 
@@ -112,18 +81,18 @@ if (decompose) {
     }
 }
 
-DDSFile <- paste(opt$output_prefix,".dds.RData",sep="")
+DDSFile <- paste(opt[["output_prefix"]],".dds.RData",sep="")
 
 counts  <- count.table[,samples.vec,drop=FALSE]
 dds     <- DESeqDataSetFromMatrix(countData=round(counts), colData=coldata, design=~ 1)
 dds     <- estimateSizeFactors(dds)
 if (min(dim(count.table))<=1)  { # No point if only one sample, or one gene
     save(dds,file=DDSFile)
-    saveRDS(dds, file = paste(opt$output_prefix,"rds", sep = '.'))
+    saveRDS(dds, file = paste(opt[["output_prefix"]],"rds", sep = '.'))
     warning("Not enough samples or genes in counts file for PCA.", call.=FALSE)
     quit(save = "no", status = 0, runLast = FALSE)
 }
-if (!opt$vst) {
+if (!opt[["vst"]]) {
     vst_name <- "rlog"
     rld      <- rlog(dds)
 } else {
@@ -133,7 +102,7 @@ if (!opt$vst) {
 
 assay(dds, vst_name) <- assay(rld)
 save(dds,file=DDSFile)
-saveRDS(dds, file = paste(opt$output_prefix, "rds", sep = '.'))
+saveRDS(dds, file = paste(opt[["output_prefix"]], "rds", sep = '.'))
 
 ################################################
 ################################################
@@ -159,16 +128,16 @@ plotPCA_vst <- function (object,  ntop = 500, assay=length(assays(object))) {
     rv         <- rowVars(assay(object, assay))
     select     <- order(rv, decreasing = TRUE)[seq_len(min(ntop, length(rv)))]
     pca        <- prcomp(t(assay(object, assay)[select, ]), center=TRUE, scale=FALSE)
-    percentVar <- pca$sdev^2/sum(pca$sdev^2)
-    df         <- cbind( as.data.frame(colData(object)), pca$x)
+    percentVar <- pca[["sdev"]]^2/sum(pca[["sdev"]]^2)
+    df         <- cbind( as.data.frame(colData(object)), pca[["x"]])
     #Order points so extreme samples are more likely to get label
-    ord        <- order(abs(rank(df$PC1)-median(df$PC1)), abs(rank(df$PC2)-median(df$PC2)))
+    ord        <- order(abs(rank(df[["PC1"]])-median(df[["PC1"]])), abs(rank(df[["PC2"]])-median(df[["PC2"]])))
     df         <- df[ord,]
     attr(df, "percentVar") <- data.frame(PC=seq(along=percentVar), percentVar=100*percentVar)
     return(df)
 }
 
-PlotFile <- paste(opt$output_prefix,".plots.pdf",sep="")
+PlotFile <- paste(opt[["output_prefix"]],".plots.pdf",sep="")
 
 pdf(file=PlotFile, onefile=TRUE, width=7, height=7)
 ## PCA
@@ -180,7 +149,7 @@ index <- 1
 ntop <- c(500, Inf)
 for (n_top_var in ntop) {
     pca.data      <- plotPCA_vst(dds, assay=vst_name, ntop=n_top_var)
-    percentVar    <- round(attr(pca.data, "percentVar")$percentVar)
+    percentVar    <- round(attr(pca.data, "percentVar")[["percentVar"]])
     plot_subtitle <- ifelse(n_top_var==Inf, "All peaks", paste("Top", n_top_var, "peaks"))
     plots[[index]] <- ggplot(pca.data, aes(PC1, PC2, label=paste0(" ", sample, " "))) +
         geom_point(size = 1) +
@@ -198,13 +167,13 @@ for (n_top_var in ntop) {
     plot_titles[[index]] <- gsub(" ", "_", paste0("First PCs on ", vst_name, "-transformed data"))
 
     if (decompose) {
-        pc_names <- paste0("PC", attr(pca.data, "percentVar")$PC)
+        pc_names <- paste0("PC", attr(pca.data, "percentVar")[["PC"]])
         long_pc <- reshape(pca.data, varying=pc_names, direction="long", sep="", timevar="component", idvar="pcrow")
         long_pc <- subset(long_pc, component<=5)
         long_pc_grp <- reshape(long_pc, varying=names(groupings), direction="long", sep="", timevar="grouper")
         long_pc_grp <- subset(long_pc_grp, grouper<=5)
-        long_pc_grp$component <- paste("PC", long_pc_grp$component)
-        long_pc_grp$grouper <- paste0(long_pc_grp$grouper, c("st","nd","rd","th","th")[long_pc_grp$grouper], " prefix")
+        long_pc_grp[["component"]] <- paste("PC", long_pc_grp[["component"]])
+        long_pc_grp[["grouper"]] <- paste0(long_pc_grp[["grouper"]], c("st","nd","rd","th","th")[long_pc_grp[["grouper"]]], " prefix")
         plots[[index]]  <- ggplot(long_pc_grp, aes(x=Group, y=PC)) +
             geom_point(size = 1) +
             stat_summary(fun=mean, geom="line", aes(group = 1)) +
@@ -223,8 +192,8 @@ for (n_top_var in ntop) {
 pca.vals           <- pca.data[,c("PC1","PC2")]
 colnames(pca.vals) <- paste0(colnames(pca.vals), ": ", percentVar[1:2], '% variance')
 pca.vals           <- cbind(sample = rownames(pca.vals), pca.vals)
-write.table(pca.vals, file = paste(opt$output_prefix, ".pca.vals.txt", sep=""),
-            row.names = FALSE, col.names = TRUE, sep = "\t", quote = TRUE)
+write.table(pca.vals, file = paste(opt[["output_prefix"]], ".pca.vals.txt", sep=""),
+            row.names = FALSE, col.names = TRUE, sep = intToUtf8(9), quote = TRUE)
 
 ## SAMPLE CORRELATION HEATMAP
 sampleDists      <- dist(t(assay(dds, vst_name)))
@@ -246,8 +215,8 @@ corr_heatmap <- pheatmap(
 print(corr_heatmap)
 
 ## WRITE SAMPLE DISTANCES TO FILE
-write.table(cbind(sample = rownames(sampleDistMatrix), sampleDistMatrix),file=paste(opt$output_prefix, ".sample.dists.txt", sep=""),
-            row.names=FALSE, col.names=TRUE, sep="\t", quote=FALSE)
+write.table(cbind(sample = rownames(sampleDistMatrix), sampleDistMatrix),file=paste(opt[["output_prefix"]], ".sample.dists.txt", sep=""),
+            row.names=FALSE, col.names=TRUE, sep=intToUtf8(9), quote=FALSE)
 dev.off()
 
 ## Save PCA plots and correlation heatmap separately to include in MULTIQC
@@ -275,7 +244,7 @@ if (file.exists(SizeFactorsDir) == FALSE) {
     dir.create(SizeFactorsDir, recursive=TRUE)
 }
 
-NormFactorsFile <- paste(SizeFactorsDir,opt$output_prefix, ".size_factors.RData", sep="")
+NormFactorsFile <- paste(SizeFactorsDir,opt[["output_prefix"]], ".size_factors.RData", sep="")
 
 normFactors <- sizeFactors(dds)
 save(normFactors, file=NormFactorsFile)
