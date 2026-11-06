@@ -467,7 +467,7 @@ workflow CLIPSEQ {
     if(params.run_te) {
 
         // repeats gtf required for te reassignment
-        ch_rpt_annotation_gtf = channel.value([[id: 'te_annotations'], file(params.ch_rpt_annotation_gtf, checkIfExists: true)])
+        ch_rpt_annotation_gtf = channel.value([[id: 'te_annotations'], file(params.rpt_annotation_gtf, checkIfExists: true)])
 
         // 2: Binning to assign to TEs/ncRNA/tRNA
 
@@ -539,15 +539,11 @@ workflow CLIPSEQ {
         }
 
         // Check rmsk GTF has been provided
-        if (!params.tetranscripts_gtf) {
-            error "ERROR: --tetranscripts_gtf is required when --run_te is specified"
-        }
-        // Check rmsk GTF has been provided
         if (!params.ch_rpt_annotation_gtf) {
-            error "ERROR: --ch_rpt_annotation_gtf is required when --run_te is specified"
+            error "ERROR: --rpt_annotation_gtf is required when --run_te is specified"
         }
 
-        ch_tetranscripts_gtf = channel.value([[id: 'te_annotations'], file(params.tetranscripts_gtf, checkIfExists: true)])
+        ch_tetranscripts_gtf = channel.value([[id: 'te_annotations'], file(params.ch_rpt_annotation_gtf, checkIfExists: true)])
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
         ch_bam_c = channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')

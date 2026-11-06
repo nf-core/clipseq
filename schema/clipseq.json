@@ -327,7 +327,7 @@
                     "description": "Requires an appropriate GTF annotation, for details see: https://www.mghlab.org/software/tetranscripts",
                     "type": "data"
                 },
-                "ch_rpt_annotation_gtf": {
+                "rpt_annotation_gtf": {
                     "name": "Telescope GTF file",
                     "description": "An extension of TETranscripts GTF file including also the repetitive ncRNAs: snRNA, snoRNA, 7SK, Y RNA",
                     "type": "data"
