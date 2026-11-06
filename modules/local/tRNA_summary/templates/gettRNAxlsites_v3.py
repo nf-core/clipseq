@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Hannah Jones
 # 20/10/2026
 # based on gettRNAxlinksites from Charlotte Capitanchik
@@ -12,6 +13,7 @@ import argparse
 import re
 import pandas as pd
 import os
+import platform
 
 # -- Arguments --------------------------------------------------------------------
 
@@ -23,7 +25,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-i', '--input',
                     help = "Bedfile intersected with gtf annotation")
 
-args = parser.parse_args()
+args = parser.parse_args(["-i", "${bedfile}"])
 
 # -- Configuration ------------------------------------------------------------------
 
@@ -40,7 +42,7 @@ reads_dict = {}
 
 with open(bedfile) as bf:
     for line in bf:
-        f = line.rstrip("\n").split("\t")
+        f = line.rstrip(chr(10)).split(chr(9))
         # check for tRNA
         if f[13] != "tRNA_db":
             continue
@@ -154,3 +156,10 @@ ignore_index = True)
 sample_name = os.path.basename(bedfile).split("_intersect")[0]
 
 all_df.to_csv(f"{sample_name}_tRNA_summary.csv", index=False)
+
+# -- 5. Versions ----------------------------------------------------------------------------
+
+with open("versions.yml", "w") as out_f:
+    print('"${task.process}":', file=out_f)
+    print("    python: " + platform.python_version(), file=out_f)
+    print("    pandas: " + pd.__version__, file=out_f)
