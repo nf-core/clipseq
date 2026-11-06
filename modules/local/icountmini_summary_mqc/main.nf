@@ -15,15 +15,7 @@ process ICOUNTMINI_SUMMARY_MQC{
      task.ext.when == null || task.ext.when
 
      script:
-
-     """
-     Rscript $projectDir/modules/local/icountmini_summary_mqc/templates/icount_mini_summary_reformat.R
-
-     cat <<-END_VERSIONS > versions.yml
-     "${task.process}":
-        r-tidyverse: \$(Rscript -e "library(tidyverse); cat(as.character(packageVersion('tidyverse')))")
-     END_VERSIONS
-     """
+     template 'icount_mini_summary_reformat.R'
 
      stub:
      """

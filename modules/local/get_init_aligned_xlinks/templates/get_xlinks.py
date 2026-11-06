@@ -1,5 +1,9 @@
-import pysam
+#!/usr/bin/env python3
+
 import argparse
+import platform
+import shlex
+import pysam
 
 # --- Arguments
 
@@ -10,14 +14,17 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('-i', '--input',
-                    help = "A comma separated list of bam files to be edited.", \
+                    help = "A comma separated list of bam files to be edited.",
                     nargs="+")
 
-args = parser.parse_args()
+# Nextflow substitutes $bam (a single file or a space-separated list),
+# task.ext.args and $task.process
+args = parser.parse_args(["-i"] + "$bam".split() + shlex.split("${task.ext.args ?: ''}"))
 
 # --- Configuration
 
 BAM_FILES = args.input
+PROCESS_NAME = "$task.process"
 
 
 # --- Helpers
@@ -55,3 +62,10 @@ for BAM in BAM_FILES:
 
     file.close()
     xlink_file.close()
+
+# --- Versions
+
+with open("versions.yml", "w") as out_f:
+    print(PROCESS_NAME + ":", file=out_f)
+    print("    python: " + platform.python_version(), file=out_f)
+    print("    pysam: " + pysam.__version__, file=out_f)

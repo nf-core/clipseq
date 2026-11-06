@@ -9,6 +9,8 @@ import pysam
 import pandas as pd
 import argparse
 import os
+import platform
+import shlex
 
 # Argparse
 
@@ -23,16 +25,16 @@ parser.add_argument('-b', '--bam',
                     nargs="+")
 
 parser.add_argument('-d', '--discarded',
-                    help = 'List of reads discarded by multimap_class_binning.py due to class' \
+                    help = 'List of reads discarded by multimap_class_binning.py due to class'
                     'ambiguity, in .tsv format')
 
-args = parser.parse_args()
+args = parser.parse_args(shlex.split('-b ${bam} -d ${discarded}'))
 
 bams = args.bam
 
 ## Read in discarded read names
 
-discarded_reads =  pd.read_csv(args.discarded, sep='\t')
+discarded_reads =  pd.read_csv(args.discarded, sep=chr(9))
 
 discarded_reads_grouped = discarded_reads.groupby("sample")
 
@@ -73,3 +75,9 @@ for bam in bams:
 
     pysam.sort("-o", f"{label}.discarded_reads_sorted.bam", f"{label}.discarded_reads.bam")
     pysam.index(f"{label}.discarded_reads_sorted.bam")
+
+with open("versions.yml", "w") as out_f:
+    print('"${task.process}":', file=out_f)
+    print("    python: " + platform.python_version(), file=out_f)
+    print("    pandas: " + pd.__version__, file=out_f)
+    print("    pysam: " + pysam.__version__, file=out_f)

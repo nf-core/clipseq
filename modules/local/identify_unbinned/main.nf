@@ -20,20 +20,7 @@ process IDENTIFY_UNBINNED {
     task.ext.when == null || task.ext.when
 
     script:
-
-    """
-
-     python ${projectDir}/modules/local/identify_unbinned/templates/identify_unassigned.py \
-     -b ${bam} \
-     -d ${discarded}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version | sed 's/Python //')
-        pandas: \$(python -c "import pandas; print(pandas.__version__)")
-        pysam: \$(python -c "import pysam; print(pysam.__version__)")
-    END_VERSIONS
-    """
+    template 'identify_unassigned.py'
 
     stub:
     """

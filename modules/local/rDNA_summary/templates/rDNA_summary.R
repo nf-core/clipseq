@@ -1,11 +1,14 @@
+#!/usr/bin/env Rscript
+
 library(tidyverse)
 library(ggridges)
 
+# Keep backslashes and dollar signs out of this file: Nextflow templates treat them as escapes/placeholders
 files <- list.files(path = ".",
-           pattern = "\\.xl\\.CPMnorm\\.bedgraph$",
            all.files = FALSE,
            full.names = TRUE,
            recursive = FALSE)
+files <- files[endsWith(files, ".xl.CPMnorm.bedgraph")]
 
 for (i in 1:length(files)){
   if (i == 1){
@@ -46,3 +49,9 @@ ggsave("rDNA_summary.png",
        plot = plot,
        dpi = 450,
        units = "cm")
+
+writeLines(c(
+  '"${task.process}":',
+  paste0("    r-tidyverse: ", as.character(packageVersion("tidyverse"))),
+  paste0("    r-ggridges: ", as.character(packageVersion("ggridges")))
+), "versions.yml")
