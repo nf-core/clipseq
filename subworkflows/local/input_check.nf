@@ -1,5 +1,5 @@
 include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check.nf'
-include { CAT_FASTQ } from '../../modules/nf-core/cat/fastq'
+include { FIND_CONCATENATE as CAT_FASTQ } from '../../modules/nf-core/find/concatenate'
 
 workflow INPUT_CHECK {
     take:
