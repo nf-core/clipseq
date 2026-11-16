@@ -61,7 +61,7 @@ include { MERGE_AND_SORT_TELESCOPE_BAMS                                         
 include { BEDTOOLS_GROUPBY as CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY } from '../modules/nf-core/bedtools/groupby/main'
 include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_SORT                } from '../modules/local/linux_command'
 include { BEDTOOLS_MAP as CLIPPY_CONSENSUS_MAP                      } from '../modules/nf-core/bedtools/map/main'
-include { CAT_CAT as CONSENSUS_CROSSLINKS_CAT_CAT                   } from '../modules/nf-core/cat/cat/main'
+include { FIND_CONCATENATE as CONSENSUS_CROSSLINKS_CAT_CAT          } from '../modules/nf-core/find/concatenate/main'
 include { MULTIQC                                                   } from '../modules/nf-core/multiqc/main'
 include { CLIPPY as CLIPPY_GENOME                                   } from "../modules/nf-core/clippy/main"
 include { CLIPPY as CLIPPY_GENOME_CONSENSUS                         } from "../modules/nf-core/clippy/main"
