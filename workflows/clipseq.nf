@@ -548,18 +548,34 @@ workflow CLIPSEQ {
         ch_bam_c = channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
              .map { file -> [[id: 'control'], file] }
 
-        if (params.run_dedup){
-        ch_all_t_bams = GENOME_MULTI_DEDUP.out.bam
-            .map { _meta, bam -> bam }
+
+        // TEtranscripts requires split between control and treatment bams
+
+
+        if(params.tetranscripts_conditions != null){
+            ch_control_bams = ch_all_aligned_reads
+            .filter{ meta, file -> !meta.id.contains(params.tetranscripts_conditions.toString()) }
+            .map { meta, bam -> bam }
             .collect()
-            .map { bams -> [[id: 'all_samples'], bams] }
+            .map { bams -> [[id: 'control_samples'], bams] }
+
+            ch_tx_bams = ch_all_aligned_reads
+                .filter{ meta, file -> meta.id.contains(params.tetranscripts_conditions.toString())}
+                .map { meta, bam -> bam }
+                .collect()
+                .map { bams -> [[id: 'tx_samples'], bams] }
         }
 
-        if(!params.run_dedup){
-        ch_all_t_bams = RNA_ALIGN.out.genome_multi_bam
-            .map { _meta, bam -> bam }
-            .collect()
-            .map { bams -> [[id: 'all_samples'], bams] }
+        if(params.tetranscripts_conditions == null){
+            ch_sorted = ch_all_aligned_reads
+                .map { meta, bam -> bam }
+                .toSortedList({ it.name })
+
+            ch_control_bams = ch_sorted
+                .map { bams -> [[id: 'control_samples'], bams.take(1)]}
+
+            ch_tx_bams = ch_sorted
+                .map { bams -> [[id: 'control_samples'], bams.drop(1)]}
         }
 
         TETRANSCRIPTS(
