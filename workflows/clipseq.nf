@@ -575,7 +575,7 @@ workflow CLIPSEQ {
                 .map { bams -> [[id: 'control_samples'], bams.take(1)]}
 
             ch_tx_bams = ch_sorted
-                .map { bams -> [[id: 'control_samples'], bams.drop(1)]}
+                .map { bams -> [[id: 'tx_samples'], bams.drop(1)]}
         }
 
         TETRANSCRIPTS(
