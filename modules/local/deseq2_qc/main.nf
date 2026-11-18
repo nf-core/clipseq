@@ -26,18 +26,7 @@ process DESEQ2_QC {
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-
-    //template 'deseq2_qc.R'
-    """
-    Rscript $projectDir/modules/local/deseq2_qc/templates/deseq2_qc.R \
-    -i ${counts} \
-    -c 3 \
-    -d "PeakID" \
-    -o ${prefix} \
-    --vst
-    """
+    template 'deseq2_qc.R'
 
     stub:
     """

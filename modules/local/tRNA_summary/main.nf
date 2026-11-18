@@ -16,15 +16,5 @@ process tRNA_SUMMARY {
     task.ext.when == null || task.ext.when
 
     script:
-
-    """
-    python ${projectDir}/modules/local/tRNA_summary/templates/gettRNAxlsites_v3.py -i ${bedfile}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version | sed 's/Python //')
-        pandas: \$(python -c "import pandas; print(pandas.__version__)")
-    END_VERSIONS
-
-    """
+    template 'gettRNAxlsites_v3.py'
 }

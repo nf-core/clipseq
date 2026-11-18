@@ -18,12 +18,14 @@ import pysam
 import pandas as pd
 import re
 import os
+import platform
+import shlex
 
 # -- Arguments ----------------------------------------------------------------
 
 parser = argparse.ArgumentParser(
     prog='Count repeat reads',
-    description='Counts multi-mapped reads which have been assigned multiple times' \
+    description='Counts multi-mapped reads which have been assigned multiple times'
     'to a single class of repeat element. Discards other reads.'
 )
 
@@ -38,7 +40,7 @@ parser.add_argument('-i', '--input',
                     help = "Comma separated list of coord-sorted bam files",
                     nargs="+")
 parser.add_argument('--classifiers',
-                    help = "Comma separated list of strings which identify classifiers for bucketing from" \
+                    help = "Comma separated list of strings which identify classifiers for bucketing from"
                     "the 9th column of your GTF, e.g. 'gene_type, class'", default = "")
 parser.add_argument('--col',
                     help= "Column which you want the features to be read from",
@@ -50,7 +52,13 @@ parser.add_argument('--strand',
                     help = "Strandedness argument for bedtools intersect, either -s or -S",
                     default = "")
 
-args = parser.parse_args()
+# Nextflow template: avoid backslashes and dollar signs in this file
+TAB = chr(9)
+NL = chr(10)
+
+args = parser.parse_args(shlex.split(
+    '--bamdir . --gtf ${gtf} -i ${bam} -o . ${task.ext.args ?: ""}'
+))
 
 # ── Configuration ────────────────────────────────────────────────────────────
 GTF_PATH = args.gtf
@@ -68,7 +76,7 @@ def extract_sample_name(bam_filename):
     return bam_filename.split(".")[0]
 
 def parse_attr(attr_str, key):
-    m = re.search(rf'{key}\s+"([^"]+)"', attr_str)
+    m = re.search(rf'{key}[ {TAB}]+"([^"]+)"', attr_str)
     return m.group(1) if m else None
 
 
@@ -107,7 +115,7 @@ def gtf_to_category_bed(gtf_path):
         for line in fin:
             if line.startswith("#"):
                 continue
-            cols = line.split("\t")
+            cols = line.split(TAB)
             if len(cols) < 9:
                 continue
             chrom = cols[0].strip()
@@ -133,14 +141,14 @@ def gtf_to_category_bed(gtf_path):
                 cat = cat.replace(" ", "_")
                 cats_list.append(cat)
                 cat = source + ": " + cat
-                fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
+                fout.write(f"{chrom}{TAB}{start}{TAB}{end}{TAB}{cat}{TAB}0{TAB}{strand}{NL}")
                 n += 1
             else:
                 cat = cols[int(COL)-1]
                 cats_list.append(cat)
                 cat = source + ": " + cat
                 cat = cat.replace(" ", "_")
-                fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
+                fout.write(f"{chrom}{TAB}{start}{TAB}{end}{TAB}{cat}{TAB}0{TAB}{strand}{NL}")
                 n += 1
             sources_list.append(source)
 
@@ -191,11 +199,11 @@ def process_bam(bam_path, feature_bed_path):
     chroms.sort(key=lambda x: x[0])
     with open(genome_tmp, "w") as f:
         for c, l in chroms:
-            f.write(f"{c}\t{l}\n")
+            f.write(f"{c}{TAB}{l}{NL}")
 
     # Entire pipeline in C / awk — no Python iteration
     # intersect output: BED6(read) + BED4(feature) + overlap
-    #   $4 = read_name, $10 = category
+    #   field 4 = read_name, field 10 = category
     #
     # The awk script:
     #   1) For each line, records the read's category set.
@@ -203,9 +211,9 @@ def process_bam(bam_path, feature_bed_path):
     #      and prints multi-category reads to stderr.
     awk_script = r"""
     {
-        if ($10 == ".") { no_feature[$4] = 1; next }
-        rn = $4
-        cat = $10
+        if (@10 == ".") { no_feature[@4] = 1; next }
+        rn = @4
+        cat = @10
         if (!(rn in cats)) {
             cats[rn] = cat
         } else {
@@ -221,7 +229,7 @@ def process_bam(bam_path, feature_bed_path):
     END {
         for (rn in no_feature) {
             if (!(rn in cats))
-            printf "NO_FEATURE\t%s\n", rn > "/dev/stderr"
+            print "NO_FEATURE" FS rn > "/dev/stderr"
             }
         for (rn in cats) {
             n = split(cats[rn], arr, SUBSEP)
@@ -229,14 +237,14 @@ def process_bam(bam_path, feature_bed_path):
                 count[arr[1]]++
             } else {
                 # ambiguous → stderr
-                printf "%s\t%s\n", rn, cats[rn] > "/dev/stderr"
+                print rn FS cats[rn] > "/dev/stderr"
                 ambig++
             }
         }
-        for (c in count) print count[c] "\t" c
-        printf "AMBIG\t%d\n", ambig+0 > "/dev/stderr"
+        for (c in count) print count[c] FS c
+        print "AMBIG" FS ambig+0 > "/dev/stderr"
     }
-    """
+    """.replace("@", chr(36))
 
     with open(os.path.join(OUTPUT_DIR, "_awk_dedup.awk"), "w") as f:
         f.write(awk_script)
@@ -250,7 +258,7 @@ def process_bam(bam_path, feature_bed_path):
         f"| bedtools intersect -a stdin -b '{feature_bed_path}' "
         f"  -loj -sorted {STRAND} -g '{genome_tmp}' "
         f"| tee '{intersect_path}' "
-        f"| awk -F'\\t' -f '{OUTPUT_DIR}/_awk_dedup.awk'"
+        f"| awk -F'{TAB}' -f '{OUTPUT_DIR}/_awk_dedup.awk'"
     )
 
     result = subprocess.run(
@@ -262,25 +270,25 @@ def process_bam(bam_path, feature_bed_path):
 
     # Parse counts (stdout)
     counts = {}
-    for line in result.stdout.strip().split("\n"):
+    for line in result.stdout.strip().split(NL):
         if not line:
             continue
-        parts = line.split("\t", 1)
+        parts = line.split(TAB, 1)
         if len(parts) == 2 and parts[0].isdigit():
             counts[parts[1]] = int(parts[0])
 
     # Parse ambiguous count and reads (stderr)
-    ambig_lines = result.stderr.strip().split("\n") if result.stderr.strip() else []
+    ambig_lines = result.stderr.strip().split(NL) if result.stderr.strip() else []
     n_ambiguous = 0
     ambig_reads = []
     for line in ambig_lines:
-        if line.startswith("AMBIG\t"):
-            n_ambiguous = int(line.split("\t")[1])
-        elif line.startswith("NO_FEATURE\t"):
-            rn = line.split("\t")[1]
+        if line.startswith("AMBIG" + TAB):
+            n_ambiguous = int(line.split(TAB)[1])
+        elif line.startswith("NO_FEATURE" + TAB):
+            rn = line.split(TAB)[1]
             ambig_reads.append((rn, "no_feature"))
         else:
-            parts = line.split("\t", 1)
+            parts = line.split(TAB, 1)
             if len(parts) == 2:
                 ambig_reads.append((parts[0], parts[1]))
 
@@ -328,7 +336,7 @@ def main():
 
     csv_path = os.path.join(OUTPUT_DIR, f"repeat_ncRNA_read_counts_{NAME}.csv")
     df_wide.to_csv(csv_path, index=False)
-    print(f"\nSummary saved to: {csv_path}")
+    print(f"{NL}Summary saved to: {csv_path}")
 
     csv_path_5p = os.path.join(OUTPUT_DIR, f"repeat_ncRNA_read_counts5_perc_{NAME}.csv")
     df_5perc_wide.to_csv(csv_path_5p, index=False)
@@ -342,15 +350,22 @@ def main():
     # ── Log discarded ambiguous reads ────────────────────────────────────
     log_path = os.path.join(OUTPUT_DIR, f"discarded_ambiguous_reads_{NAME}.tsv")
     with open(log_path, "w") as f:
-        f.write("sample\tread_name\tcategories\n")
+        f.write(TAB.join(["sample", "read_name", "categories"]) + NL)
         for sample, ambig_list in all_ambiguous.items():
             for rname, cats_str in ambig_list:
                 # cats_str uses SUBSEP (0x1c) as separator from awk
-                cats = cats_str.replace("\x1c", ",")
-                f.write(f"{sample}\t{rname}\t{cats}\n")
+                cats = cats_str.replace(chr(28), ",")
+                f.write(f"{sample}{TAB}{rname}{TAB}{cats}{NL}")
     n_total_ambig = sum(len(v) for v in all_ambiguous.values())
-    print(f"\n{n_total_ambig:,} ambiguous reads logged to: {log_path}")
+    print(f"{NL}{n_total_ambig:,} ambiguous reads logged to: {log_path}")
 
 
 if __name__ == "__main__":
     main()
+
+with open("versions.yml", "w") as out_f:
+    print('"${task.process}":', file=out_f)
+    print("    python: " + platform.python_version(), file=out_f)
+    print("    pandas: " + pd.__version__, file=out_f)
+    print("    pybedtools: " + pybedtools.__version__, file=out_f)
+    print("    pysam: " + pysam.__version__, file=out_f)

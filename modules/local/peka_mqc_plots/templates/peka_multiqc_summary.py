@@ -8,18 +8,20 @@ and produce:
 """
 
 import argparse
+import platform
 from pathlib import Path
 
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_distances
 import seaborn as sns
+import matplotlib
 import matplotlib.pyplot as plt
 
 
 def load_and_z(df_path, score_col='PEKA-score'):
     # load; keep missing scores as NaN
-    df = pd.read_csv(df_path, sep='\t', index_col=0)
+    df = pd.read_csv(df_path, sep=chr(9), index_col=0)
     print(df)
     # compute mean and std ignoring NaNs
     mean = df[score_col].mean(skipna=True)
@@ -94,7 +96,10 @@ def main():
                    help='space-separated list of TSV file paths')
     p.add_argument('-o', '--outdir', type=Path, default=Path('.'),
                    help='output directory for PNGs')
-    args = p.parse_args()
+    # To run this script on its own, uncomment the next line and comment out the one below it
+    # args = p.parse_args()
+    # Nextflow fills in the file list; replaces the command line a template can't take
+    args = p.parse_args(["${ch_peka_mqc_plots.join(' ')}"])
 
     # convert input string to Path objects
     tsv_paths = [Path(x) for x in args.tsv_string.split()]
@@ -129,6 +134,16 @@ def main():
         cluster=(len(zseries) > 1),
         topk=topn
     )
+
+    # versions.yml (written here because a template replaces the whole script block)
+    import sklearn
+    with open('versions.yml', 'w') as out_f:
+        print('"${task.process}":', file=out_f)
+        print('    python: ' + platform.python_version(), file=out_f)
+        print('    pandas: ' + pd.__version__, file=out_f)
+        print('    matplotlib: ' + matplotlib.__version__, file=out_f)
+        print('    sklearn: ' + sklearn.__version__, file=out_f)
+        print('    seaborn: ' + sns.__version__, file=out_f)
 
 
 if __name__ == '__main__':
