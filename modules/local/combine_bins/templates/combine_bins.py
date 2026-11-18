@@ -8,6 +8,8 @@ import pandas as pd
 import argparse
 import os
 import yaml
+import platform
+import shlex
 
 parser = argparse.ArgumentParser(
     prog='Merge assigned reads from binning',
@@ -25,7 +27,7 @@ parser.add_argument('-premap',
                     nargs = "+",
                     help = "List of samtools view -c bams with counts of reads")
 
-args = parser.parse_args()
+args = parser.parse_args(shlex.split('-a ${bin_ncRNA} -b ${bin_regions} -premap ${premap_logs}'))
 
 
 TE_counts = pd.read_csv(args.a)
@@ -83,3 +85,8 @@ cats_config = {
 
 with open("colours_mqc_config.yaml", "w") as f:
     yaml.dump(cats_config, f, default_flow_style=False)
+
+with open("versions.yml", "w") as out_f:
+    print('"${task.process}":', file=out_f)
+    print("    python: " + platform.python_version(), file=out_f)
+    print("    pandas: " + pd.__version__, file=out_f)
