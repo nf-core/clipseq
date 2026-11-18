@@ -553,13 +553,13 @@ workflow CLIPSEQ {
 
 
         if(params.tetranscripts_conditions != null){
-            ch_control_bams = ch_all_aligned_reads
+            ch_control_bams = ch_init_aligned_xlinks
             .filter{ meta, file -> !meta.id.contains(params.tetranscripts_conditions.toString()) }
             .map { meta, bam -> bam }
             .collect()
             .map { bams -> [[id: 'control_samples'], bams] }
 
-            ch_tx_bams = ch_all_aligned_reads
+            ch_tx_bams = ch_init_aligned_xlinks
                 .filter{ meta, file -> meta.id.contains(params.tetranscripts_conditions.toString())}
                 .map { meta, bam -> bam }
                 .collect()
@@ -567,7 +567,7 @@ workflow CLIPSEQ {
         }
 
         if(params.tetranscripts_conditions == null){
-            ch_sorted = ch_all_aligned_reads
+            ch_sorted = ch_init_aligned_xlinks
                 .map { meta, bam -> bam }
                 .toSortedList({ it.name })
 
@@ -579,8 +579,8 @@ workflow CLIPSEQ {
         }
 
         TETRANSCRIPTS(
-            ch_init_aligned_xlinks, // tx bam
-            ch_bam_c, // control bam
+            ch_tx_bams, // tx bam
+            ch_control_bams, // control bam
             ch_gtf, // genome GTF
             ch_tetranscripts_gtf // te GTF
         )
