@@ -544,11 +544,6 @@ workflow CLIPSEQ {
 
         ch_tetranscripts_gtf = ch_rpt_annotation_gtf
 
-        // Faux control .bam as not using DESeq2 aspect of TEtranscripts
-        ch_bam_c = channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
-             .map { file -> [[id: 'control'], file] }
-
-
         // TEtranscripts requires split between control and treatment bams
 
 
