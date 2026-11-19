@@ -548,29 +548,29 @@ workflow CLIPSEQ {
 
 
         if(params.tetranscripts_conditions != null){
-            ch_control_bams = ch_init_aligned_xlinks
-            .filter{ meta, file -> !meta.id.contains(params.tetranscripts_conditions.toString()) }
-            .map { meta, bam -> bam }
-            .collect()
-            .map { bams -> [[id: 'control_samples'], bams] }
+            ch_control_bams = SORT_INIT_ALIGNED_XLINKS.out.bam
+                .filter{ meta, _bam -> !meta.id.contains(params.tetranscripts_conditions.toString()) }
+                .map { _meta, bam -> bam }
+                .toSortedList{ bam -> bam.name }
+                .map { bams -> [[id: 'control_samples'], bams] }
 
-            ch_tx_bams = ch_init_aligned_xlinks
-                .filter{ meta, file -> meta.id.contains(params.tetranscripts_conditions.toString())}
-                .map { meta, bam -> bam }
-                .collect()
+            ch_tx_bams = SORT_INIT_ALIGNED_XLINKS.out.bam
+                .filter{ meta, _bam -> meta.id.contains(params.tetranscripts_conditions.toString()) }
+                .map { _meta, bam -> bam }
+                .toSortedList{ bam -> bam.name }
                 .map { bams -> [[id: 'tx_samples'], bams] }
         }
 
         if(params.tetranscripts_conditions == null){
-            ch_sorted = ch_init_aligned_xlinks
-                .map { meta, bam -> bam }
-                .toSortedList({ it.name })
+            ch_sorted = SORT_INIT_ALIGNED_XLINKS.out.bam
+                .map { _meta, bam -> bam }
+                .toSortedList{ bam -> bam.name }
 
             ch_control_bams = ch_sorted
-                .map { bams -> [[id: 'control_samples'], bams.take(1)]}
+                .map { bams -> [[id: 'control_samples'], bams.take(1)] }
 
             ch_tx_bams = ch_sorted
-                .map { bams -> [[id: 'tx_samples'], bams.drop(1)]}
+                .map { bams -> [[id: 'tx_samples'], bams.drop(1)] }
         }
 
         TETRANSCRIPTS(
