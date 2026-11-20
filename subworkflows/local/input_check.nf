@@ -1,5 +1,5 @@
 include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check.nf'
-include { CAT_FASTQ } from '../../modules/nf-core/cat/fastq'
+include { FIND_CONCATENATE as CAT_FASTQ } from '../../modules/nf-core/find/concatenate'
 
 workflow INPUT_CHECK {
     take:
@@ -27,7 +27,7 @@ workflow INPUT_CHECK {
         CAT_FASTQ (
             ch_fastq.multiple
         )
-        reads = CAT_FASTQ.out.reads.mix(ch_fastq.single)
+        reads = CAT_FASTQ.out.file_out.mix(ch_fastq.single)
     } else if (source == 'dedupe_bam') { // dedupe bam ready for grouped crosslink/peak analysis
         SAMPLESHEET_CHECK ( samplesheet, source )
         reads = SAMPLESHEET_CHECK.out.csv

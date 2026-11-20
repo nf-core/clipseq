@@ -544,27 +544,38 @@ workflow CLIPSEQ {
 
         ch_tetranscripts_gtf = ch_rpt_annotation_gtf
 
-        // Faux control .bam as not using DESeq2 aspect of TEtranscripts
-        ch_bam_c = channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
-             .map { file -> [[id: 'control'], file] }
+        // TEtranscripts requires split between control and treatment bams
 
-        if (params.run_dedup){
-        ch_all_t_bams = GENOME_MULTI_DEDUP.out.bam
-            .map { _meta, bam -> bam }
-            .collect()
-            .map { bams -> [[id: 'all_samples'], bams] }
+
+        if(params.tetranscripts_conditions != null){
+            ch_control_bams = SORT_INIT_ALIGNED_XLINKS.out.bam
+                .filter{ meta, _bam -> !meta.id.contains(params.tetranscripts_conditions.toString()) }
+                .map { _meta, bam -> bam }
+                .toSortedList{ bam -> bam.name }
+                .map { bams -> [[id: 'control_samples'], bams] }
+
+            ch_tx_bams = SORT_INIT_ALIGNED_XLINKS.out.bam
+                .filter{ meta, _bam -> meta.id.contains(params.tetranscripts_conditions.toString()) }
+                .map { _meta, bam -> bam }
+                .toSortedList{ bam -> bam.name }
+                .map { bams -> [[id: 'tx_samples'], bams] }
         }
 
-        if(!params.run_dedup){
-        ch_all_t_bams = RNA_ALIGN.out.genome_multi_bam
-            .map { _meta, bam -> bam }
-            .collect()
-            .map { bams -> [[id: 'all_samples'], bams] }
+        if(params.tetranscripts_conditions == null){
+            ch_sorted = SORT_INIT_ALIGNED_XLINKS.out.bam
+                .map { _meta, bam -> bam }
+                .toSortedList{ bam -> bam.name }
+
+            ch_control_bams = ch_sorted
+                .map { bams -> [[id: 'control_samples'], bams.take(1)] }
+
+            ch_tx_bams = ch_sorted
+                .map { bams -> [[id: 'tx_samples'], bams.drop(1)] }
         }
 
         TETRANSCRIPTS(
-            ch_init_aligned_xlinks, // tx bam
-            ch_bam_c, // control bam
+            ch_tx_bams, // tx bam
+            ch_control_bams, // control bam
             ch_gtf, // genome GTF
             ch_tetranscripts_gtf // te GTF
         )
